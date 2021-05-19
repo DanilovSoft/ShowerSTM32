@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|VisualGDB">
+      <Configuration>Debug</Configuration>
+      <Platform>VisualGDB</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|VisualGDB">
+      <Configuration>Release</Configuration>
+      <Platform>VisualGDB</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{7149AD5B-476C-4588-8F42-588B4A3D1804}</ProjectGuid>
+    <BSP_ID>com.sysprogs.arm.stm32</BSP_ID>
+    <BSP_VERSION>2021.02</BSP_VERSION>
+    <InPlaceBSPSubdir />
+    <ProjectName>ShowerSTM32</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|VisualGDB'">
+    <MCUPropertyListFile>$(ProjectDir)stm32.props</MCUPropertyListFile>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|VisualGDB'">
+    <MCUPropertyListFile>$(ProjectDir)stm32.props</MCUPropertyListFile>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|VisualGDB'">
+    <GNUConfigurationType>Debug</GNUConfigurationType>
+    <Toolchain>c:\SysGCC\arm-eabi</Toolchain>
+    <ToolchainID>com.visualgdb.arm-eabi</ToolchainID>
+    <ToolchainVersion>9.3.1/9.2.0/r2</ToolchainVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|VisualGDB'">
+    <Toolchain>c:\SysGCC\arm-eabi</Toolchain>
+    <ToolchainID>com.visualgdb.arm-eabi</ToolchainID>
+    <ToolchainVersion>9.3.1/9.2.0/r2</ToolchainVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|VisualGDB'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>StdPeriph/Inc;FreeRTOS/Source/include;FreeRTOS/Source/portable/GCC/ARM_CM3;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG=1;STM32F10X_MD;STD=C++14;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CPPLanguageStandard>GNUPP14</CPPLanguageStandard>
+      <CLanguageStandard>C99</CLanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalLinkerInputs>;%(Link.AdditionalLinkerInputs)</AdditionalLinkerInputs>
+      <LibrarySearchDirectories>;%(Link.LibrarySearchDirectories)</LibrarySearchDirectories>
+      <AdditionalLibraryNames>;%(Link.AdditionalLibraryNames)</AdditionalLibraryNames>
+      <LinkerScript>C:\Users\miles\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\LinkerScripts\STM32F103R8_flash.lds</LinkerScript>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|VisualGDB'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>StdPeriph/Inc;FreeRTOS/Source/include;FreeRTOS/Source/portable/GCC/ARM_CM3;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG=1;RELEASE=1;STM32F10X_MD;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLinkerInputs>;%(Link.AdditionalLinkerInputs)</AdditionalLinkerInputs>
+      <LibrarySearchDirectories>;%(Link.LibrarySearchDirectories)</LibrarySearchDirectories>
+      <AdditionalLibraryNames>;%(Link.AdditionalLibraryNames)</AdditionalLibraryNames>
+      <LinkerScript>C:\Users\miles\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F1xxxx\LinkerScripts\STM32F103R8_flash.lds</LinkerScript>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="additional_defines.c" />
+    <ClCompile Include="ButtonsTask.cpp" />
+    <ClCompile Include="Buzzer.cpp" />
+    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="ConnectionsBuffer.cpp" />
+    <ClCompile Include="Eeprom.cpp" />
+    <ClCompile Include="EepromTask.cpp" />
+    <ClCompile Include="FreeRTOS\Source\croutine.c" />
+    <ClCompile Include="FreeRTOS\Source\event_groups.c" />
+    <ClCompile Include="FreeRTOS\Source\list.c" />
+    <ClCompile Include="FreeRTOS\Source\portable\GCC\ARM_CM3\port.c" />
+    <ClCompile Include="FreeRTOS\Source\queue.c" />
+    <ClCompile Include="FreeRTOS\Source\stream_buffer.c" />
+    <ClCompile Include="FreeRTOS\Source\tasks.c" />
+    <ClCompile Include="FreeRTOS\Source\timers.c" />
+    <ClCompile Include="FrontPanelButton.cpp" />
+    <ClCompile Include="HeaterTask.cpp" />
+    <ClCompile Include="HeaterTempLimit.cpp" />
+    <ClCompile Include="HeaterWatchdog.cpp" />
+    <ClCompile Include="HeatingTimeLeft.cpp" />
+    <ClCompile Include="I2C.cpp" />
+    <ClCompile Include="IpdBuffer.cpp" />
+    <ClCompile Include="IRQ.cpp" />
+    <ClCompile Include="LcdTask.cpp" />
+    <ClCompile Include="LedLightTask.cpp" />
+    <ClCompile Include="LiquidCrystal.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MedianFilter.cpp" />
+    <ClCompile Include="MovingAverage.cpp" />
+    <ClCompile Include="Properties.cpp" />
+    <ClCompile Include="RTCInterval.cpp" />
+    <ClCompile Include="RTOSwrapper.cpp" />
+    <ClCompile Include="SensorSwitch.cpp" />
+    <ClCompile Include="StdPeriph\Src\misc.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_adc.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_bkp.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_can.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_cec.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_crc.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_dac.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_dbgmcu.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_dma.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_exti.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_flash.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_fsmc.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_gpio.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_i2c.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_iwdg.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_pwr.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_rcc.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_rtc.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_sdio.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_spi.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_tim.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_usart.c" />
+    <ClCompile Include="StdPeriph\Src\stm32f10x_wwdg.c" />
+    <ClCompile Include="Stopwatch.cpp" />
+    <ClCompile Include="system_stm32f10x.c" />
+    <ClCompile Include="TaskHelper.cpp" />
+    <ClCompile Include="TempSensor.cpp" />
+    <ClCompile Include="UartStream.cpp" />
+    <ClCompile Include="ValveTask.cpp" />
+    <ClCompile Include="WatchDogTask.cpp" />
+    <ClCompile Include="WaterLevelAnimTask.cpp" />
+    <ClCompile Include="WaterLevelTask.cpp" />
+    <ClCompile Include="WiFi.cpp" />
+    <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="stm32-shower-Debug.vgdbsettings" />
+    <None Include="stm32-shower-Release.vgdbsettings" />
+    <None Include="stm32.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="stm32.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <LinkerScript Include="STM32F103R8_flash.lds" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ButtonDebounce.h" />
+    <ClInclude Include="ButtonsTask.h" />
+    <ClInclude Include="Buzzer.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="ConnectionsBuffer.h" />
+    <ClInclude Include="Dwt.h" />
+    <ClInclude Include="Eeprom.h" />
+    <ClInclude Include="EepromTask.h" />
+    <ClInclude Include="FreeRTOSConfig.h" />
+    <ClInclude Include="FreeRTOS\Source\include\task.h" />
+    <ClInclude Include="FreeRTOS\Source\portable\GCC\ARM_CM3\portmacro.h" />
+    <ClInclude Include="FrontPanelButton.h" />
+    <ClInclude Include="HeaterTask.h" />
+    <ClInclude Include="HeaterTempLimit.h" />
+    <ClInclude Include="HeaterWatchdog.h" />
+    <ClInclude Include="HeatingTimeLeft.h" />
+    <ClInclude Include="I2C.h" />
+    <ClInclude Include="iActiveTask.h" />
+    <ClInclude Include="Interlocked.h" />
+    <ClInclude Include="IpdBuffer.h" />
+    <ClInclude Include="LcdTask.h" />
+    <ClInclude Include="LedLight.h" />
+    <ClInclude Include="LedLightTask.h" />
+    <ClInclude Include="LiquidCrystal.h" />
+    <ClInclude Include="MedianFilter.h" />
+    <ClInclude Include="MovingAverage.h" />
+    <ClInclude Include="Properties.h" />
+    <ClInclude Include="Request.h" />
+    <ClInclude Include="RTCInterval.h" />
+    <ClInclude Include="RTOSwrapper.h" />
+    <ClInclude Include="SensorSwitch.h" />
+    <ClInclude Include="Settings.h" />
+    <ClInclude Include="ShowerCode.h" />
+    <ClInclude Include="StdPeriph\Inc\core_cm3.h" />
+    <ClInclude Include="StdPeriph\Inc\core_cmFunc.h" />
+    <ClInclude Include="StdPeriph\Inc\core_cmInstr.h" />
+    <ClInclude Include="StdPeriph\Inc\misc.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_adc.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_bkp.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_can.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_cec.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_conf.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_crc.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_dac.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_dbgmcu.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_dma.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_exti.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_flash.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_fsmc.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_gpio.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_i2c.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_iwdg.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_pwr.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_rcc.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_rtc.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_sdio.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_spi.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_tim.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_usart.h" />
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_wwdg.h" />
+    <ClInclude Include="StdPeriph\Inc\system_stm32f10x.h" />
+    <ClInclude Include="Stopwatch.h" />
+    <ClInclude Include="TaskHelper.h" />
+    <ClInclude Include="TaskSemaphoreSlim.h" />
+    <ClInclude Include="TempSensor.h" />
+    <ClInclude Include="TickCounter.h" />
+    <ClInclude Include="Timeout.h" />
+    <ClInclude Include="UartBuffer.h" />
+    <ClInclude Include="UartStream.h" />
+    <ClInclude Include="ValveTask.h" />
+    <ClInclude Include="WatchDogTask.h" />
+    <ClInclude Include="WaterLevelAnimTask.h" />
+    <ClInclude Include="WaterLevelTask.h" />
+    <ClInclude Include="WiFi.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

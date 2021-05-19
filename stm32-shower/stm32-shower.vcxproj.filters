@@ -1,0 +1,496 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{20e6a70b-faf2-425f-95d1-ebde51d34e54}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{d0f19717-d94c-4bac-b057-4b46a1a6902f}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{e24f4897-9287-4eae-a404-2c5f2526f0ff}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="VisualGDB settings">
+      <UniqueIdentifier>{07348f21-213c-4121-a3f7-062a039e42ea}</UniqueIdentifier>
+      <Extensions>*.vgdbsettings</Extensions>
+    </Filter>
+    <Filter Include="Source files\Device-specific files">
+      <UniqueIdentifier>{5b23b7ee-0f47-4d84-91e5-8b094653874b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files\Device-specific files">
+      <UniqueIdentifier>{9ff69a4e-270c-4a26-992d-a31388f28ac9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files\StdPeriph">
+      <UniqueIdentifier>{4dc38f2d-5c9d-4eae-9d7e-f1eae8564ffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\StdPeriph">
+      <UniqueIdentifier>{4623706e-6b24-4db1-ba6b-d121b93678b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files\FreeRTOS">
+      <UniqueIdentifier>{3a19c38a-328e-4d22-81b4-e2cd5f752a06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\FreeRTOS">
+      <UniqueIdentifier>{b049bb23-bb22-44c4-ae07-6d2387faa495}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Source">
+      <UniqueIdentifier>{01c44d8f-7ef1-46b8-adc8-f67d0d8b4841}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files\Source">
+      <UniqueIdentifier>{12acbea5-aea8-42ce-b38f-236244653f00}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="system_stm32f10x.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\misc.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_adc.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_bkp.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_can.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_cec.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_crc.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_dac.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_dbgmcu.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_dma.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_exti.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_flash.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_fsmc.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_gpio.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_i2c.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_iwdg.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_pwr.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_rcc.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_rtc.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_sdio.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_spi.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_tim.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_usart.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="StdPeriph\Src\stm32f10x_wwdg.c">
+      <Filter>Source files\StdPeriph</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\croutine.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\event_groups.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\list.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\queue.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\stream_buffer.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\tasks.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\timers.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeRTOS\Source\portable\GCC\ARM_CM3\port.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="TaskHelper.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="WiFi.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="LcdTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="additional_defines.c">
+      <Filter>Source files\FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="ButtonsTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Buzzer.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectionsBuffer.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Eeprom.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="EepromTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaterTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaterTempLimit.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaterWatchdog.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeatingTimeLeft.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="I2C.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="IpdBuffer.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="IRQ.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="LedLightTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="LiquidCrystal.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="MedianFilter.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="MovingAverage.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Properties.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="RTCInterval.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="RTOSwrapper.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Stopwatch.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="TempSensor.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="UartStream.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="ValveTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="WatchDogTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="WaterLevelAnimTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="WaterLevelTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
+      <Filter>Source files\Device-specific files</Filter>
+    </ClCompile>
+    <ClCompile Include="FrontPanelButton.cpp">
+      <Filter>Source files\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SensorSwitch.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="stm32-shower-Debug.vgdbsettings">
+      <Filter>VisualGDB settings</Filter>
+    </None>
+    <None Include="stm32-shower-Release.vgdbsettings">
+      <Filter>VisualGDB settings</Filter>
+    </None>
+    <None Include="stm32.props">
+      <Filter>Source files\Device-specific files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="stm32.xml">
+      <Filter>VisualGDB settings</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <LinkerScript Include="STM32F103R8_flash.lds">
+      <Filter>Source files</Filter>
+    </LinkerScript>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="StdPeriph\Inc\core_cm3.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\core_cmFunc.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\core_cmInstr.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\misc.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_adc.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_bkp.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_can.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_cec.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_conf.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_crc.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_dac.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_dbgmcu.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_dma.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_exti.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_flash.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_fsmc.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_gpio.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_i2c.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_iwdg.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_pwr.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_rcc.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_rtc.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_sdio.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_spi.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_tim.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_usart.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\stm32f10x_wwdg.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="StdPeriph\Inc\system_stm32f10x.h">
+      <Filter>Header files\StdPeriph</Filter>
+    </ClInclude>
+    <ClInclude Include="FreeRTOSConfig.h">
+      <Filter>Header files\FreeRTOS</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskHelper.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="iActiveTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="WiFi.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="FreeRTOS\Source\portable\GCC\ARM_CM3\portmacro.h">
+      <Filter>Header files\FreeRTOS</Filter>
+    </ClInclude>
+    <ClInclude Include="LcdTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="ButtonDebounce.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="ButtonsTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Buzzer.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectionsBuffer.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dwt.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Eeprom.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="EepromTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaterTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaterTempLimit.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaterWatchdog.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeatingTimeLeft.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="I2C.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Interlocked.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="IpdBuffer.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="LedLight.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="LiquidCrystal.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="MedianFilter.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="MovingAverage.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Properties.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Request.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="RTCInterval.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="RTOSwrapper.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Settings.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShowerCode.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stopwatch.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskSemaphoreSlim.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="TempSensor.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="TickCounter.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Timeout.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="UartBuffer.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="UartStream.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="ValveTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="WatchDogTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="WaterLevelAnimTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="WaterLevelTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="LedLightTask.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="FreeRTOS\Source\include\task.h">
+      <Filter>Header files\FreeRTOS</Filter>
+    </ClInclude>
+    <ClInclude Include="FrontPanelButton.h">
+      <Filter>Header files\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="SensorSwitch.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
