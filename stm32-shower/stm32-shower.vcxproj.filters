@@ -41,6 +41,9 @@
     <Filter Include="Header files\Source">
       <UniqueIdentifier>{12acbea5-aea8-42ce-b38f-236244653f00}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source files\Tasks">
+      <UniqueIdentifier>{b0bfd951-9de2-4c14-86be-42b18b978977}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="system_stm32f10x.c">
@@ -139,23 +142,11 @@
     <ClCompile Include="FreeRTOS\Source\portable\GCC\ARM_CM3\port.c">
       <Filter>Source files\FreeRTOS</Filter>
     </ClCompile>
-    <ClCompile Include="TaskHelper.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="WiFi.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="LcdTask.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="additional_defines.c">
       <Filter>Source files\FreeRTOS</Filter>
-    </ClCompile>
-    <ClCompile Include="ButtonsTask.cpp">
-      <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="Buzzer.cpp">
       <Filter>Source files</Filter>
@@ -167,12 +158,6 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="Eeprom.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="EepromTask.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="HeaterTask.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="HeaterTempLimit.cpp">
@@ -191,9 +176,6 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="IRQ.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="LedLightTask.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="LiquidCrystal.cpp">
@@ -217,22 +199,7 @@
     <ClCompile Include="Stopwatch.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="TempSensor.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="UartStream.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="ValveTask.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="WatchDogTask.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterLevelAnimTask.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterLevelTask.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
@@ -243,6 +210,42 @@
     </ClCompile>
     <ClCompile Include="SensorSwitch.cpp">
       <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="ButtonsTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="EepromTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaterTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="LcdTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="LedLightTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="ValveTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="WatchDogTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="WaterLevelTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="WiFi.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="WaterLevelAnimTask.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="TempSensor.cpp">
+      <Filter>Source files\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="TaskHelper.cpp">
+      <Filter>Source files\Tasks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
