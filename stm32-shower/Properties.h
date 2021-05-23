@@ -3,7 +3,7 @@
 #include "math.h"
 #include "MedianFilter.h"
 
-#define WL_BUF_MAX_SIZE         (255)
+#define WL_AVG_BUF_MAX_SIZE         (129) // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
 constexpr auto InternalTempLimit = (42); // максимальная температура воды в баке
 const uint8_t LOWER_BOUND = 15; // минимальна¤ температура на улице 
 const uint8_t UPPER_BOUND = 40; // максимальна¤ температура на улице
@@ -273,8 +273,11 @@ struct SettingsData
 		// Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
 		uint8_t WaterLevel_Measure_IntervalMsec;
 		
-		// Размер скользящего окна.
-		uint8_t WaterLevel_Ring_Buffer_Size;
+		// Размер буфера медианного фильтра для сырых показаний датчика уровня воды.
+		uint8_t WaterLevel_Median_Buffer_Size;
+		
+		// Размер буфера для усреднения показаний после медианного фильтра.
+		uint8_t WaterLevel_Avg_Buffer_Size;
 		
 		// Порог отключения клапана набора воды.
 		uint8_t WaterValve_Cut_Off_Percent;
@@ -287,21 +290,6 @@ struct SettingsData
 		
 		// Максимальное время набора воды, если выше уровня 'Cut-Off' в секундах.
 		uint8_t WaterValve_TimeoutSec;
-		
-    	uint8_t SetWaterLevel_Ring_Buffer_Size(uint8_t value)
-    	{
-        	if (value > 0)
-        	{	
-	        	if (value > WL_BUF_MAX_SIZE)
-	        	{
-		        	value = WL_BUF_MAX_SIZE;
-	        	}
-        	
-            	WaterLevel_Ring_Buffer_Size = value;
-        	}
-        	
-        	return WaterLevel_Ring_Buffer_Size;
-    	}
     	
 		void SelfTest()
 		{
@@ -310,9 +298,14 @@ struct SettingsData
 				WaterLevel_Measure_IntervalMsec = 100;
 			}
 		
-    		if (WaterLevel_Ring_Buffer_Size == 0 || WaterLevel_Ring_Buffer_Size > WL_BUF_MAX_SIZE)
+			if (WaterLevel_Median_Buffer_Size == 0 || WaterLevel_Median_Buffer_Size > WL_MEDIAN_BUF_MAX_SIZE)
 			{
-				WaterLevel_Ring_Buffer_Size = 32;
+				WaterLevel_Median_Buffer_Size = 33; // Лучше не чётное число.
+			}
+			
+    		if (WaterLevel_Avg_Buffer_Size == 0 || WaterLevel_Avg_Buffer_Size > WL_AVG_BUF_MAX_SIZE)
+			{
+				WaterLevel_Avg_Buffer_Size = 8;
 			}
 			
 			if (WaterValve_Cut_Off_Percent < 90 || WaterValve_Cut_Off_Percent > 99)

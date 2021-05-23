@@ -8,4 +8,4 @@ class EepromTask : public iActiveTask
     void Init() { }
 };
 
-extern EepromTask eepromTask;
+extern EepromTask _eepromTask;

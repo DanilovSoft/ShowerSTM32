@@ -1,83 +1,87 @@
 #include "MedianFilter.h"
 
-
-uint16_t MedianFilter::median_filter(uint16_t datum)
+void MedianFilter::Init(const uint8_t medianFilterSize)
 {
-	struct pair *successor;                              /* Pointer to successor of replaced data item */
-	struct pair *scan;                                   /* Pointer used to scan down the sorted list */
-	struct pair *scanold;                                /* Previous value of scan */
-	struct pair *median;                                 /* Pointer to median */
+	_medianFilterSize = medianFilterSize;
+}
+
+uint16_t MedianFilter::AddValue(uint16_t datum)
+{
+	struct Pair *successor;                             // Pointer to successor of replaced data item.
+	struct Pair *scan;                                  // Pointer used to scan down the sorted list.
+	struct Pair *scanold;                               // Previous value of scan.
+	struct Pair *median;                                // Pointer to median.
 	uint16_t i;
 
 	if (datum == STOPPER)
 	{
-		datum = STOPPER + 1;                             /* No stoppers allowed. */
+		datum = STOPPER + 1;                            // No stoppers allowed.
 	}
 
-	if ((++datpoint - buffer) >= MEDIAN_FILTER_SIZE)
+	if ((++_datpoint - _buffer) >= _medianFilterSize)
 	{
-		datpoint = buffer;                               /* Increment and wrap data in pointer.*/
+		_datpoint = _buffer;                            // Increment and wrap data in pointer.
 	}
 
-	datpoint->value = datum;                           /* Copy in new datum */
-	successor = datpoint->point;                       /* Save pointer to old value's successor */
-	median = &big;                                     /* Median initially to first in chain */
-	scanold = NULL;                                    /* Scanold initially null. */
-	scan = &big;                                       /* Points to pointer to first (largest) datum in chain */
+	_datpoint->Value = datum;                           // Copy in new datum.
+	successor = _datpoint->Point;                       // Save pointer to old value's successor.
+	median = &_big;                                     // Median initially to first in chain.
+	scanold = NULL;										// Scanold initially null.
+	scan = &_big;                                       // Points to pointer to first (largest) datum in chain.
 
-	/* Handle chain-out of first item in chain as special case */
-	if (scan->point == datpoint)
+	// Handle chain-out of first item in chain as special case
+	if (scan->Point == _datpoint)
 	{
-		scan->point = successor;
+		scan->Point = successor;
 	}
-	scanold = scan;                                     /* Save this pointer and   */
-	scan = scan->point;                                /* step down chain */
+	scanold = scan;                                     // Save this pointer and
+	scan = scan->Point;									// step down chain.
 
-	/* Loop through the chain, normal loop exit via break. */
-	for (i = 0; i < MEDIAN_FILTER_SIZE; ++i)
+	// Loop through the chain, normal loop exit via break.
+	for (i = 0; i < _medianFilterSize; ++i)
 	{
-	    /* Handle odd-numbered item in chain  */
-		if (scan->point == datpoint)
+	    // Handle odd-numbered item in chain.
+		if (scan->Point == _datpoint)
 		{
-			scan->point = successor;                      /* Chain out the old datum.*/
+			scan->Point = successor;                      // Chain out the old datum.
 		}
 
-		if (scan->value < datum)                        /* If datum is larger than scanned value,*/
+		if (scan->Value < datum)						  // If datum is larger than scanned value,
 		{
-			datpoint->point = scanold->point;             /* Chain it in here.  */
-			scanold->point = datpoint;                    /* Mark it chained in. */
+			_datpoint->Point = scanold->Point;            // Chain it in here.
+			scanold->Point = _datpoint;                   // Mark it chained in.
 			datum = STOPPER;
 		}
 
-		/* Step median pointer down chain after doing odd-numbered element */
-		median = median->point;                       /* Step median pointer.  */
-		if (scan == &small)
+		// Step median pointer down chain after doing odd-numbered element.
+		median = median->Point;                       // Step median pointer.
+		if (scan == &_small)
 		{
-			break;                                      /* Break at end of chain  */
+			break;									  // Break at end of chain.
 		}
-		scanold = scan;                               /* Save this pointer and   */
-		scan = scan->point;                           /* step down chain */
+		scanold = scan;                               // Save this pointer and
+		scan = scan->Point;                           // step down chain.
 
-		/* Handle even-numbered item in chain.  */
-		if (scan->point == datpoint)
+		// Handle even-numbered item in chain.
+		if (scan->Point == _datpoint)
 		{
-			scan->point = successor;
+			scan->Point = successor;
 		}
 
-		if (scan->value < datum)
+		if (scan->Value < datum)
 		{
-			datpoint->point = scanold->point;
-			scanold->point = datpoint;
+			_datpoint->Point = scanold->Point;
+			scanold->Point = _datpoint;
 			datum = STOPPER;
 		}
 
-		if (scan == &small)
+		if (scan == &_small)
 		{
 			break;
 		}
 
 		scanold = scan;
-		scan = scan->point;
+		scan = scan->Point;
 	}
-	return median->value;
+	return median->Value;
 }

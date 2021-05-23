@@ -97,7 +97,7 @@
     <ClCompile Include="LiquidCrystal.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MedianFilter.cpp" />
-    <ClCompile Include="MovingAverage.cpp" />
+    <ClCompile Include="MovingAverageFilter.cpp" />
     <ClCompile Include="Properties.cpp" />
     <ClCompile Include="RTCInterval.cpp" />
     <ClCompile Include="RTOSwrapper.cpp" />
@@ -174,7 +174,7 @@
     <ClInclude Include="LedLightTask.h" />
     <ClInclude Include="LiquidCrystal.h" />
     <ClInclude Include="MedianFilter.h" />
-    <ClInclude Include="MovingAverage.h" />
+    <ClInclude Include="MovingAverageFilter.h" />
     <ClInclude Include="Properties.h" />
     <ClInclude Include="Request.h" />
     <ClInclude Include="RTCInterval.h" />

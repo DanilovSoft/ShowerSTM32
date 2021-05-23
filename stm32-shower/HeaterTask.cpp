@@ -278,7 +278,7 @@ void HeaterTask::TurnOnNoSound()
 void HeaterTask::TurnOn()
 {
     BeepTurnOn();
-    heatingTimeLeft.StartHeating();
+    _heatingTimeLeft.StartHeating();
     TurnOnNoSound();
 }
 

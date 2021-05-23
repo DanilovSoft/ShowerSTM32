@@ -342,7 +342,7 @@ bool WiFi::DoEvents()
 		}
 	case GetTimeLeft:
 		{
-			uint8_t value = heatingTimeLeft.GetTimeLeft();
+			uint8_t value = _heatingTimeLeft.GetTimeLeft();
 			req.SendResponse(value);
 			break;
 		}
@@ -434,7 +434,7 @@ bool WiFi::DoEvents()
 		}
 	case GetHeatingProgress:
 		{
-			uint8_t value = heatingTimeLeft.GetProgress();
+			uint8_t value = _heatingTimeLeft.GetProgress();
 			req.SendResponse(value);
 			break;
 		}
@@ -469,17 +469,32 @@ bool WiFi::DoEvents()
 			req.SendResponse(OK);
 			break;
 		}
-	case GetWaterLevelRingBufferSize:
+	case GetWaterLevelMedianBufferSize:
 		{
-			req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterLevel_Ring_Buffer_Size);
+			req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterLevel_Median_Buffer_Size);
 			break;
 		}
-	case SetWaterLevelRingBufferSize:
+	case SetWaterLevelMedianBufferSize:
+		{
+			if (length == 1)
+			{
+				auto value = *_data;
+				_writeOnlyPropertiesStruct.Customs.WaterLevel_Median_Buffer_Size = value;
+				req.SendResponse(OK);
+			}
+			break;
+		}
+	case GetWaterLevelAverageBufferSize:
+		{
+			req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterLevel_Avg_Buffer_Size);
+			break;
+		}
+	case SetWaterLevelAverageBufferSize:
 		{
 			if (length == 1)
 			{
     			auto value = *_data;
-    			uint8_t result = _writeOnlyPropertiesStruct.Customs.SetWaterLevel_Ring_Buffer_Size(value);
+				_writeOnlyPropertiesStruct.Customs.WaterLevel_Avg_Buffer_Size = value;
     			req.SendResponse(OK);
 			}
 			break;

@@ -2,22 +2,37 @@
 #include "stdint.h"
 #include <cstdlib>
 
-#define		STOPPER 0                                      /* Smaller than any datum */
-#define		MEDIAN_FILTER_SIZE    (255)
+#define		STOPPER 0   // Smaller than any datum.
+#define WL_MEDIAN_BUF_MAX_SIZE      (255) // Максимально допустимый размер медианного фильтра для уровня воды.
 
 class MedianFilter
 {
-    struct pair
+    struct Pair
     {
-        struct pair   *point;                              /* Pointers forming list linked in sorted order */
-        uint16_t  value; /* Values to sort */
+	    // Pointers forming list linked in sorted order.
+        struct Pair *Point;
+	    
+	    // Values to sort.
+        uint16_t Value;
     };
-    struct pair buffer[MEDIAN_FILTER_SIZE] = { 0 }; /* Buffer of nwidth pairs */
-    struct pair *datpoint = buffer; /* Pointer into circular buffer of data */
-    struct pair small = { NULL, STOPPER }; /* Chain stopper */
-    struct pair big = { &small, 0 }; /* Pointer to head (largest) of linked list.*/
+	
+	// Buffer of nwidth pairs.
+    struct Pair _buffer[WL_MEDIAN_BUF_MAX_SIZE] = { 0 };
+
+	// Pointer into circular buffer of data.
+    struct Pair *_datpoint = _buffer;
+
+	// Chain stopper.
+	struct Pair _small = { NULL, STOPPER };
     
+	// Pointer to head (largest) of linked list.
+	struct Pair _big = { &_small, 0 };
+    
+	uint8_t _medianFilterSize;
+	
 public:
-	uint16_t median_filter(uint16_t datum);
+	
+	void Init(const uint8_t medianFilterSize);
+	uint16_t AddValue(uint16_t datum);
 };
 

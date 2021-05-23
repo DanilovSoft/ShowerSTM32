@@ -1,7 +1,7 @@
 #pragma once
 #include "iActiveTask.h"
 #include "MedianFilter.h"
-#include "MovingAverage.h"
+#include "MovingAverageFilter.h"
 
 #define WL_SPI                      (SPI2)
 #define WL_TIM                      (TIM1)
@@ -39,11 +39,11 @@ class WaterLevelTask : public iActiveTask
     const static uint8_t HysteresisPoints = 4;
     
 	// Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
-	uint8_t IntervalPauseMsec = 0;
+	uint8_t _intervalPauseMsec = 0;
     // Ширина полного диаппазона в микросекундах.
 	uint16_t _usecRange = 0;
-	MovingAverage movingAverage;
-	MedianFilter medianFilter;
+	MovingAverageFilter _movingAverageFilter;
+	MedianFilter _medianFilter;
 
     // По умолчанию для гистерезиса считать что вода подымается.
     bool _waterIsRising = true;
@@ -82,7 +82,8 @@ class WaterLevelTask : public iActiveTask
    
 
 public:
-	/* Последнее измеренное значение после усреднений */
+	
+	// Последнее измеренное значение после усреднений.
 	volatile uint16_t AvgUsec = 0;
     volatile int16_t UsecRaw = -1;
     

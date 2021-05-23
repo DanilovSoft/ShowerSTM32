@@ -23,7 +23,6 @@ bool Eeprom::EE_SafeBufferRead(uint8_t* pBuffer, uint8_t ReadAddr, uint8_t NumBy
 		
     return true;
 }
-	
 
 bool Eeprom::InitProps()
 {
@@ -43,7 +42,6 @@ bool Eeprom::InitProps()
 		
     return true;
 }
-	
 
 bool Eeprom::EE_SafeBufferCRC32(uint8_t ReadAddr, uint8_t NumByteToRead, uint32_t &crc32)
 {
@@ -69,7 +67,6 @@ bool Eeprom::EE_SafeBufferCRC32(uint8_t ReadAddr, uint8_t NumByteToRead, uint32_
     crc32 = CRC_GetCRC();
     return true;
 }
-	
 
 bool Eeprom::InnerSave()
 {	
@@ -117,19 +114,17 @@ bool Eeprom::InnerSave()
     _curPageAddr = pageAddress;
     return true;
 }
-    
 
 void Eeprom::InitBeforeRTOS()
 {
 	while (!InitProps())
 	{
-		// taskYIELD тут недоступен.
+		// тут недоступен taskYIELD.
 	}
 		
     _writeOnlyPropertiesStruct.SelfFix();
     Properties = _writeOnlyPropertiesStruct;
 }
-    
 
 void Eeprom::Save()
 {

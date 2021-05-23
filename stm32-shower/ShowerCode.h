@@ -45,8 +45,8 @@ enum ShowerCode
 	GetWaterValveCutOffPercent = 39,
 	SetWaterValveCutOffPercent = 40,
 	
-	GetWaterLevelRingBufferSize = 45,
-	SetWaterLevelRingBufferSize = 46,
+	GetWaterLevelAverageBufferSize = 45,
+	SetWaterLevelAverageBufferSize = 46,
 	
 	GetTempSensorInternalTempBufferSize = 47,
 	SetTempSensorInternalTempBufferSize = 48,
@@ -65,6 +65,9 @@ enum ShowerCode
     GetTempLowerBound = 56,
     GetTempUpperBound = 57,
     
+	GetWaterLevelMedianBufferSize = 58,
+	SetWaterLevelMedianBufferSize = 59,
+	
 	OK = 200,
 	Reset = 254,
 	Save = 255,

@@ -8,8 +8,6 @@
 #include "ValveTask.h"
 #include "Common.h"
 
-
-
 LcdTask _lcdTask;
 	
 void LcdTask::Init()
@@ -17,7 +15,6 @@ void LcdTask::Init()
 
 }
 	
-
 void LcdTask::DisplayTemp(char* buf, int16_t temp)
 {
     char first_char = ' ';
@@ -37,7 +34,6 @@ void LcdTask::DisplayTemp(char* buf, int16_t temp)
     buf[1] = itoa(temp % 10);
 }
 	
-
 void LcdTask::Run()
 {
 	if (!_lc.setup(16, 2))
@@ -107,7 +103,7 @@ void LcdTask::Run()
         _lc.setCursor(0, 1);	
         if (heaterEnabled)
         {
-            uint8_t timeLeft = heatingTimeLeft.GetTimeLeft();
+            uint8_t timeLeft = _heatingTimeLeft.GetTimeLeft();
 	        if (timeLeft > 99)
 	        {
 		        timeLeft = 99;

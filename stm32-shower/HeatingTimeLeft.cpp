@@ -9,39 +9,40 @@
 #include "RTCInterval.h"
 #include "WaterLevelTask.h"
 
-HeatingTimeLeft heatingTimeLeft;
-
+HeatingTimeLeft _heatingTimeLeft;
 
 uint8_t HeatingTimeLeft::CalcTimeLeft(float internalTemp, uint8_t limitTemp, uint8_t volumePercent)
 {
-    if (internalTemp >= limitTemp)
-        return 0;
-		
-    const float pi = 3.14159265358979323846;
+	if (internalTemp >= limitTemp)
+	{
+		return 0;
+	}
 
-    // V = Pi * (r^2) * h
-    const float TANK_VOLUME_PER_PERCENT = (pi * pow(Tank_Diameter / 2.0, 2) * Tank_Height) / 99.0 / 1000000.0;		// Объем в литрах
+	auto const Q = 0.00117;
+	
+	// Формула расчёта объема цилиндра V = Pi * (r^2) * h
+    const float TANK_VOLUME_PER_PERCENT = (M_PI * pow(Tank_Diameter / 2.0, 2) * Tank_Height) / 99.0 / 1000000.0; 		// Объем в литрах
     const float HEATER_POWER = (220.0 * (220.0 / Heater_Resistance)) / 1000.0;		// Мощность в киловатах
     float actualVolume = TANK_VOLUME_PER_PERCENT * volumePercent;
 		
-    // T= 0,00117*V*(tк-tн)/W
-    float timeH = 0.00117 * actualVolume * (limitTemp - internalTemp) / HEATER_POWER;
+    // T = 0,00117*V*(tк-tн)/W
+    float timeH = Q * actualVolume * (limitTemp - internalTemp) / HEATER_POWER;
 		
     // В минутах
     uint8_t minutes = round(timeH * 60.0);
 		
-    if (minutes == 0)
-        minutes = 1;
+	if (minutes == 0)
+	{
+		minutes = 1; // Нет смысла отображать что осталось 0 минут.
+	}
 		
     return minutes;
 }
-	
 
 void HeatingTimeLeft::StartHeating()
 {
     rtcInterval.Reset();
 }
-	
 
 uint8_t HeatingTimeLeft::GetTimeLeft()
 {
@@ -54,7 +55,6 @@ uint8_t HeatingTimeLeft::GetTimeLeft()
     uint8_t minutes = CalcTimeLeft(intTemp, limitTemp, volumePercent);
     return minutes;
 }
-	
 
 uint8_t HeatingTimeLeft::GetProgress()
 {
@@ -73,7 +73,6 @@ uint8_t HeatingTimeLeft::GetProgress()
 			
     return percent;
 }
-	
 
 uint8_t HeatingTimeLeft::GetProgress2()
 {

@@ -184,7 +184,7 @@
     <ClCompile Include="MedianFilter.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="MovingAverage.cpp">
+    <ClCompile Include="MovingAverageFilter.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="Properties.cpp">
@@ -429,7 +429,7 @@
     <ClInclude Include="MedianFilter.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="MovingAverage.h">
+    <ClInclude Include="MovingAverageFilter.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="Properties.h">
