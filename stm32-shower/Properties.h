@@ -7,7 +7,7 @@
 constexpr auto InternalTempLimit = (42); // максимальная температура воды в баке.
 const uint8_t LOWER_BOUND = 15; // Минимальная температура на улице.
 const uint8_t UPPER_BOUND = 40; // Максимальная температура на улице.
-#define STEPS_COUNT             (UPPER_BOUND - LOWER_BOUND)
+#define STEPS_COUNT     (UPPER_BOUND - LOWER_BOUND) // Размер таблицы температур делаем исходя из возможных значений температур окружаюшего воздуха.
 
 typedef uint8_t byte;
 typedef uint16_t ushort;
@@ -17,7 +17,7 @@ struct TempStep
 private:
 	
 	// Температура в баке
-	uint8_t Internal[STEPS_COUNT];
+	uint8_t _internal[STEPS_COUNT];
 	
 	uint8_t GetIndex(uint8_t externalTemp)
 	{
@@ -41,13 +41,13 @@ public:
 	uint8_t GetLimit(uint8_t extTemp)
 	{
 		uint8_t index = GetIndex(extTemp);
-		return Internal[index];
+		return _internal[index];
 	}
 	
 	uint8_t GetLimit(float extTemp)
 	{
 		uint8_t index = GetIndexf(extTemp);
-		return Internal[index];
+		return _internal[index];
 	}
 	
 	// Принимает температуру окружающего воздуха в грудусах, что-бы
@@ -55,14 +55,14 @@ public:
 	bool TempPlus(uint8_t extTemp)
 	{
 		const uint8_t index = GetIndex(extTemp);	
-		uint8_t value = Internal[index];
+		uint8_t value = _internal[index];
 
     	if (value < InternalTempLimit)
         // значение в допустимом пределе
 		{
     		++value;
     		
-			Internal[index] = value;
+			_internal[index] = value;
     		
     		// Сделать точки слева не меньше текущего значения. массив идет от большего к меньшему: [40][40][40][39][38][37][37][37][36][36]
             if(index > 0)
@@ -71,7 +71,7 @@ public:
                 	
         		while (leftPoints--)
         		{
-            		auto& t = Internal[leftPoints];
+            		auto& t = _internal[leftPoints];
 	        		if (t < value)
 	        		{
 		        		t = value;
@@ -84,7 +84,7 @@ public:
     		// сделать точки справа с шагом не больше 1 градуса
     		for(uint8_t i = (index + 1); i < STEPS_COUNT ; i++) // от текущей точки не включительно к началу массива
     		{
-        		auto& t = Internal[i];
+        		auto& t = _internal[i];
                 	
         		auto nextT = (prevValue - 1);   // не должно быть меньше
                 	
@@ -106,7 +106,7 @@ public:
 	{
 		const uint8_t index = GetIndex(extTemp);	
     	
-		uint8_t value = Internal[index];
+		uint8_t value = _internal[index];
     	
     	if (value > 0) // проверка на вс¤кий случай
     	{
@@ -115,12 +115,12 @@ public:
         	if(value <= InternalTempLimit)
             // значение в допустимом пределе
         	{
-            	Internal[index] = value; // установить новое значение
+            	_internal[index] = value; // установить новое значение
             	
             	// сделать точки справа не больше текущего значени¤.  [40][40][40][37][37][35][37][37][37][37]
             	for(uint8_t i = (index + 1); i < STEPS_COUNT; i++) // от следующей точки к концу массива
             	{
-                	auto& t = Internal[i];
+                	auto& t = _internal[i];
                 	if (t > value)
                     	t = value;
             	}
@@ -133,7 +133,7 @@ public:
                 	// сделать точки слева с шагом не больше 1 градуса
                 	while (leftPoints--)
                 	{
-                    	auto& t = Internal[leftPoints];
+                    	auto& t = _internal[leftPoints];
                     	auto nextT = (prevValue + 1);      // не должно превышать
                 	
                     	if(t > nextT)
@@ -150,7 +150,7 @@ public:
 	
 	void Parse(const uint8_t* data)
 	{
-		uint8_t prev = Internal[0];
+		uint8_t prev = _internal[0];
 		for (uint8_t i = 0; i < STEPS_COUNT; i++)
 		{
 			uint8_t value = data[i];
@@ -158,35 +158,37 @@ public:
 			if (i > 0)
 			{
 				if (value > prev)
+				{
 					value = prev;
+				}
 			}
 			
-			Internal[i] = value;
+			_internal[i] = value;
 			prev = value;
 		}
 	}
 	
 	void SelfTest()
 	{
-		uint8_t prevSpot = Internal[0];
+		uint8_t prevSpot = _internal[0];
 		for (int i = 0; i < STEPS_COUNT; i++)
 		{
-			uint8_t& t = Internal[i];
+			uint8_t& internalTemp = _internal[i];
 
-    		if (t == 0 || t > InternalTempLimit)
+    		if (internalTemp == 0 || internalTemp > InternalTempLimit)
 			{
-				t = 36;
+				internalTemp = 36;
 			}
 			
 			if (i > 0)
 			{
-				if (t > prevSpot)
+				if (internalTemp > prevSpot)
 				{
-					t = prevSpot;
+					internalTemp = prevSpot;
 				}
 			}
 			
-			prevSpot = t;
+			prevSpot = internalTemp;
 		}
 	}
 };
@@ -225,6 +227,7 @@ struct PropertyStruct
 	// Минимальное время зажатой кнопки для её срабатывания.
     uint8_t ButtonPressTimeMs = 40;
     
+	// Минимальное время зажатой кнопки для срабатывания длительного нажатия.
 	uint16_t ButtonLongPressTimeMs = 3000;
     
 	// 64-битный идентификатор датчика температуры внутри бака. (DS18B20)
@@ -244,7 +247,7 @@ struct PropertyStruct
 		Chart.SelfTest();
 		
 		// В одном сантиметре - 58 микросекунд.
-		if(WaterLevelEmpty < (30 * 58) || WaterLevelEmpty > (50 * 58)) // 30..50 сантиметров (1740..2900 мкс)
+		if (WaterLevelEmpty < (30 * 58) || WaterLevelEmpty > (50 * 58)) // 30..50 сантиметров (1740..2900 мкс)
 		{
 			WaterLevelEmpty = 2618;   // 45 см
 		}
@@ -280,12 +283,12 @@ struct PropertyStruct
 			WiFiPower = 56;   // 56 = 14.0 dBm
 		}
     	
-		if (WaterTankVolumeLitre < 0 || WaterTankVolumeLitre > 100)
+		if (WaterTankVolumeLitre < 0 || WaterTankVolumeLitre > 100 || isnan(WaterTankVolumeLitre))
 		{
 			WaterTankVolumeLitre = 37.32212;
 		}
 		
-		if (WaterHeaterPowerKWatt < 0 || WaterHeaterPowerKWatt > 3)
+		if (WaterHeaterPowerKWatt < 0 || WaterHeaterPowerKWatt > 3 || isnan(WaterHeaterPowerKWatt))
 		{
 			WaterHeaterPowerKWatt = 1.38624; // Полтора-киловатный ТЭН с учётом КПД.
 		}
@@ -293,6 +296,7 @@ struct PropertyStruct
 		Customs.SelfTest();
 	}
 	
+	// TODO зачем нужна эта структура?
 	struct CustomsTypeDef
 	{
 		// Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.

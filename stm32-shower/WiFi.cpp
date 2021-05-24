@@ -584,7 +584,7 @@ bool WiFi::DoEvents()
 		{
 			if (length == sizeof(_writeOnlyPropertiesStruct.WaterTankVolumeLitre))
 			{
-				_writeOnlyPropertiesStruct.WaterTankVolumeLitre = *_data;
+				_writeOnlyPropertiesStruct.WaterTankVolumeLitre = *(float*)_data;
 				_req.SendResponse(OK);
 			}
 			break;	
@@ -598,7 +598,7 @@ bool WiFi::DoEvents()
 		{
 			if (length == sizeof(_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt))
 			{
-				_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt = *_data;
+				_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt = *(float*)_data;
 				_req.SendResponse(OK);
 			}
 			break;	
