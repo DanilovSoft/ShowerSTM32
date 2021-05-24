@@ -68,7 +68,14 @@ enum ShowerCode
 	GetWaterLevelMedianBufferSize = 58,
 	SetWaterLevelMedianBufferSize = 59,
 	
+	GetWaterTankVolumeLitre = 60,
+	SetWaterTankVolumeLitre = 61,
+	
+	GetWaterHeaterPowerKWatt = 62,
+	SetWaterHeaterPowerKWatt = 63,
+	
 	OK = 200,
+	UnknownCode = 253,
 	Reset = 254,
 	Save = 255,
 };

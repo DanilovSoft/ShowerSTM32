@@ -4,11 +4,9 @@
 #include "math.h"
 #include "Common.h"
 
-
 HeaterTempLimit _heaterTempLimit;
 
-
-bool HeaterTempLimit::TryGetLimit(uint8_t& internalTempLimit)
+bool HeaterTempLimit::TryGetTargetTemperature(uint8_t& internalTempLimit)
 {
 	if (_tempSensorTask.ExternalSensorInitialized)
 	{

@@ -51,7 +51,7 @@ void LcdTask::Run()
     while (true)
     {
         uint8_t internalTempLimit = 0;
-	    bool gotInternalTempLimit = _heaterTempLimit.TryGetLimit(internalTempLimit);
+	    bool gotInternalTempLimit = _heaterTempLimit.TryGetTargetTemperature(internalTempLimit);
         bool heaterEnabled = _heaterTask.GetIsHeaterEnabled();
         bool heaterSwitchEnabled = HasMainPower();  // Включен ли автомат
         bool valveIsOpen = _valveTask.ValveIsOpen();

@@ -47,7 +47,7 @@ void Init()
     RCC_ADCCLKConfig(RCC_PCLK2_Div6);   // 72 / 6 = 12 мгц. Не должно превышать 14 мгц
 	
     // Наличие 230в для нагревателя.
-    GPIO_InitTypeDef gpioInit = 
+    GPIO_InitTypeDef gpioInit =
 	{ 
 		.GPIO_Pin = GPIO_Pin_MainPower,
 		.GPIO_Speed = GPIO_Speed_2MHz,
@@ -112,6 +112,8 @@ static void EEPROM_Task(void* parm)
 
 	// Нельзя запускать другие потоки не считав параметры из EEPROM.
 	_eeprom.InitBeforeRTOS();  // Использует шину I2C.
+	
+	_heatingTimeLeft.Init(Properties.WaterTankVolumeLitre, Properties.WaterHeaterPowerKWatt);
 	
     RTOSwrapper.CreateTask(&_wifiTask, "WI-FI", tskIDLE_PRIORITY);
     RTOSwrapper.CreateTask(&_lcdTask, "LCD", tskIDLE_PRIORITY);

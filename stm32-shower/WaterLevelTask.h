@@ -32,7 +32,9 @@ extern "C"
 
 class WaterLevelTask : public iActiveTask
 {	
+	// Горизонтальный прочерк в первом разряде индикатора.
     const static uint8_t aDash = 0b11011111;
+	// Горизонтальный прочерк во втором разряде индикатора.
     const static uint8_t bDash = 0b11111101;
 
     // Гистерезис на 4 пункта.
@@ -61,7 +63,7 @@ class WaterLevelTask : public iActiveTask
 	// Функция возвращает или point или lastPoint.
     inline uint8_t Hysteresis(uint8_t point, uint8_t lastPoint);
     
-    // От 0.0 до 50.
+    // От 0 до 99.
 	inline float GetPoint(uint16_t usec);
 	
 	void Init();
@@ -87,12 +89,14 @@ public:
 	volatile uint16_t AvgUsec = 0;
     volatile int16_t UsecRaw = -1;
     
+	// Если True то расстояние от датчика оказалось слишком малым.
 	volatile bool SensorIsBlocked = false;
 	
-	/* Отображаемый процент */
+	// Отображаемый уровень воды в баке, %.
 	volatile uint8_t DisplayingPercent = 0;
 	
 	volatile bool Preinitialized = false;
+	
 	volatile bool Initialized = false;
 	
 	void InitGPIO_ClearDisplay();

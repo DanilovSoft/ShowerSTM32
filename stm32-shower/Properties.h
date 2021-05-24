@@ -4,13 +4,18 @@
 #include "MedianFilter.h"
 
 #define WL_AVG_BUF_MAX_SIZE         (129) // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
-constexpr auto InternalTempLimit = (42); // максимальная температура воды в баке
-const uint8_t LOWER_BOUND = 15; // минимальна¤ температура на улице 
-const uint8_t UPPER_BOUND = 40; // максимальна¤ температура на улице
+constexpr auto InternalTempLimit = (42); // максимальная температура воды в баке.
+const uint8_t LOWER_BOUND = 15; // Минимальная температура на улице.
+const uint8_t UPPER_BOUND = 40; // Максимальная температура на улице.
 #define STEPS_COUNT             (UPPER_BOUND - LOWER_BOUND)
+
+typedef uint8_t byte;
+typedef uint16_t ushort;
 
 struct TempStep
 {
+private:
+	
 	// Температура в баке
 	uint8_t Internal[STEPS_COUNT];
 	
@@ -186,28 +191,28 @@ public:
 	}
 };
 
-struct SettingsData
+struct PropertyStruct
 {
 	// Температурная зависимость.
 	TempStep Chart;
 	
 	// Максимальный уровень воды в микросекундах.
-	uint16_t WaterLevelFull;
+	ushort WaterLevelFull;
 	
 	// Минимальный уровень воды в микросекундах.
-	uint16_t WaterLevelEmpty;
+	ushort WaterLevelEmpty;
 
 	// Минимальный уровень воды в баке (%) для включения нагревателя.
-	uint8_t MinimumWaterHeatingPercent;
+	byte MinimumWaterHeatingPercent;
 	
 	// Безусловное максимальное время нагрева ч.
-	uint8_t AbsoluteHeatingTimeLimitHours;
+	byte AbsoluteHeatingTimeLimitHours;
 	
 	// Максимальное время нагрева в минутах.
-	uint8_t HeatingTimeLimitMin;
+	byte HeatingTimeLimitMin;
 	
 	// Яркость освещения от 0 до 100 (%).
-	uint8_t LightBrightness;
+	byte LightBrightness;
 
 	// Мощность WiFi в единицах по 0.25 dBm.
 	// От 40 до 82 (10..20.5 dBm)
@@ -222,7 +227,13 @@ struct SettingsData
 	uint8_t InternalTempSensorId[8] = {};
 	
 	// 64-битный идентификатор датчика температуры окружающего воздуха. (DS18B20)
-	uint8_t ExternalTempSensorId[8] = {};
+	byte ExternalTempSensorId[8] = { };
+	
+	// Объём воды полного бака в литрах.
+	float WaterTankVolumeLitre;
+	
+    // Электрическая мощность нагревательного элемента — ТЭНа, кВТ.
+    float WaterHeaterPowerKWatt;
 	
 	void SelfFix()
 	{
@@ -262,9 +273,19 @@ struct SettingsData
 		// от 10 до 20.5 dBm.
 		if (WiFiPower < 40 || WiFiPower > 82)
 		{
-			WiFiPower = 56;   // 14 dBm
+			WiFiPower = 56;   // 56 = 14.0 dBm
 		}
     	
+		if (WaterTankVolumeLitre < 0 || WaterTankVolumeLitre > 100)
+		{
+			WaterTankVolumeLitre = 37.32212;
+		}
+		
+		if (WaterHeaterPowerKWatt < 0 || WaterHeaterPowerKWatt > 3)
+		{
+			WaterHeaterPowerKWatt = 1.38624; // Полтора-киловатный ТЭН с учётом КПД.
+		}
+		
 		Customs.SelfTest();
 	}
 	
@@ -330,6 +351,6 @@ struct SettingsData
 		}
 	} Customs;
 	
-} __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в EEPROM.
+} __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.
 
-extern SettingsData Properties, _writeOnlyPropertiesStruct;
+extern PropertyStruct Properties, _writeOnlyPropertiesStruct;

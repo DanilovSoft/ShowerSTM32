@@ -432,12 +432,13 @@ void UartStream::WriteData(const char* data, const uint16_t count)
 	DMAWriteData(data, count);
 }
     
-WaitStatus UartStream::SendResponse(const uint8_t connection_id, const char* data, const uint16_t count)
-{
+WaitStatus UartStream::SendResponse(const uint8_t connectionId, const char* data, const uint16_t count)
+{	
 	uint8_t dataStrLen = DigitsCount(count);
 	char cipsend[18];
 	memcpy(cipsend, "AT+CIPSEND=", 11);
-	cipsend[11] = itoa(connection_id);     // Converts an integer value to a null-terminated string
+	
+	cipsend[11] = itoa(connectionId);     // Converts an integer value to a null-terminated string
 	cipsend[12] = ',';
 	itoa(count, cipsend + 13);		// будет добавлен null-терминатор
 

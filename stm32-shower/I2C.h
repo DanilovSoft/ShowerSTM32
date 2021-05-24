@@ -27,7 +27,7 @@
 #define EE_DataAddr1					(0x0000 + 16)
 #define EE_DataAddr2					(0x0000 + 128)
 #define EE_AvailableDataSize			(EE_BlockSize / 2 - EE_FLASH_PAGESIZE)   // 112 байт
-static_assert(sizeof(SettingsData) <= EE_AvailableDataSize, "size of SettingsData struct greater than available in eeprom");
+static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of SettingsData struct greater than available in eeprom");
 
 class I2C
 {

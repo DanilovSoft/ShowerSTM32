@@ -20,8 +20,10 @@
 #define WIFI_UART_Speed         (115200)
 //#define WIFI_UART_Speed         (57600)
 
-//#pragma GCC push_options
-//#pragma GCC optimize ("O3")
+typedef uint32_t uint;
+typedef uint8_t byte;
+typedef uint16_t ushort;
+
 inline void _delay_loops(unsigned int loops)
 {
 	 asm volatile (

@@ -10,9 +10,10 @@ private:
 
 public:
 	
-	bool TryGetLimit(uint8_t& internalTempLimit);
+	// Если датчик окружающего воздуха был инициализирован то возвращает желаемую температуру воды в баке.
+	bool TryGetTargetTemperature(uint8_t& internalTempLimit);
 	
-	// Возвращает температуру окружающего воздуха в градусах.
+	// Если датчик окружающего воздуха был инициализирован то возвращает температуру окружающего воздуха в градусах.
 	bool TryGetLastExternalTemp(uint8_t& lastExternalTemp);
 };
 

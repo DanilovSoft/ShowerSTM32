@@ -32,7 +32,6 @@ void HeaterTask::BeepHeating()
     }
 }
 
-
 void HeaterTask::BeepTurnOff()
 {
     const BeepSound samples[]
@@ -48,7 +47,6 @@ void HeaterTask::BeepTurnOff()
     _tickCounter.Restart();
 }
 
-
 void HeaterTask::BeepTurnOn()
 {
     const BeepSound samples[]
@@ -63,7 +61,6 @@ void HeaterTask::BeepTurnOn()
     buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
     _tickCounter.Restart();
 }
-
 
 void HeaterTask::BeepReady()
 {
@@ -85,7 +82,6 @@ void HeaterTask::BeepReady()
         }
     }
 }
-	
 
 void HeaterTask::BeepTimeout()
 {
@@ -107,7 +103,6 @@ void HeaterTask::BeepTimeout()
     }
 }
     
-
 void HeaterTask::Init()
 {
    // Нагреватель.
@@ -134,7 +129,6 @@ void HeaterTask::Init()
 		
     TurnOffNoSound();
 }
-
 
 void HeaterTask::Run()
 {
@@ -223,12 +217,11 @@ void HeaterTask::Run()
         taskYIELD();
     }
 }
-	
 
 void HeaterTask::ControlTurnOn()
 {	
 	uint8_t limitTemp;
-	_heaterTempLimit.TryGetLimit(limitTemp);
+	_heaterTempLimit.TryGetTargetTemperature(limitTemp);
     float internalTemp = _tempSensorTask.AverageInternalTemp;
 		
     // Если уровень воды больше допустимого минимума И температура в баке меньше необходимой
@@ -237,12 +230,11 @@ void HeaterTask::ControlTurnOn()
         TurnOn();
     }
 }
-	
 
 void HeaterTask::ControlTurnOff()
 {	
 	uint8_t limitTemp;
-	_heaterTempLimit.TryGetLimit(limitTemp);
+	_heaterTempLimit.TryGetTargetTemperature(limitTemp);
     float internalTemp = _tempSensorTask.AverageInternalTemp;
 			
     // Температура в баке выше порога отключения или уровень воды меньше допустимого
@@ -252,7 +244,6 @@ void HeaterTask::ControlTurnOff()
         _heaterWatchdog.Reset();
     }
 }
-	
 
 void HeaterTask::TurnOff()
 {
@@ -260,13 +251,11 @@ void HeaterTask::TurnOff()
     BeepTurnOff();	
 }
 	
-
 void HeaterTask::TurnOffNoSound()
 {
     GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
     GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
 }
-	
 
 void HeaterTask::TurnOnNoSound()
 {
@@ -274,49 +263,42 @@ void HeaterTask::TurnOnNoSound()
     GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
 }
 	
-
 void HeaterTask::TurnOn()
 {
     BeepTurnOn();
-    _heatingTimeLeft.StartHeating();
+    _heatingTimeLeft.OnStartHeating();
     TurnOnNoSound();
 }
-
 
 bool HeaterTask::GetIsHeaterEnabled()
 {
     return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
 }
 	
-
 bool HeaterTask::WaterHeated()
 {
 	uint8_t limit;
-    _heaterTempLimit.TryGetLimit(limit);
+    _heaterTempLimit.TryGetTargetTemperature(limit);
     return _tempSensorTask.AverageInternalTemp >= limit;
 }
 	
-
 uint8_t HeaterTask::GetHeatingLimit()
 {
 	uint8_t limit;
-	_heaterTempLimit.TryGetLimit(limit);
+	_heaterTempLimit.TryGetTargetTemperature(limit);
 	return limit;
 }
 	
-
 bool HeaterTask::GetTimeoutOccured()
 {
     return _heaterWatchdog.TimeOutOccurred;
 }
 	
-
 bool HeaterTask::GetAbsoluteTimeoutOccured()
 {
     return _heaterWatchdog.AbsoluteTimeOutOccured;
 }
 	
-
 void HeaterTask::ResetBeepTime()
 {
     _tickCounter.Restart();

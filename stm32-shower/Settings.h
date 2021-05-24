@@ -10,7 +10,7 @@
 #define PAGE_63              (FLASH_BASE + 63 * 1024)
 ///////////////////////////////////////////////////////
 
-extern SettingsData _writeOnlyPropertiesStruct;
+extern PropertyStruct _writeOnlyPropertiesStruct;
 
 class Settings
 {

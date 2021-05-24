@@ -120,7 +120,9 @@ bool WiFi::WPS()
 
 	uartStream.WriteLine("AT+WPS=1\r\n");
 	if (!uartStream.WaitLine("OK", 500))
+	{
 		return false;
+	}
 		
 	return true;
 }
@@ -128,21 +130,26 @@ bool WiFi::WPS()
 
 void WiFi::Init()
 {
-	GPIO_InitTypeDef gpio_init;
-		
 	// Кнопка WPS
-	gpio_init.GPIO_Pin = GPIO_WPS_Pin;
-	gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-	gpio_init.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_InitTypeDef gpio_init = 
+	{
+		.GPIO_Pin = GPIO_WPS_Pin,
+		.GPIO_Speed = GPIO_Speed_2MHz,
+		.GPIO_Mode = GPIO_Mode_IPU
+	};
+		
 	GPIO_Init(GPIO_WPS, &gpio_init);
 	GPIO_SetBits(GPIO_WPS, GPIO_WPS_Pin);
 		
 	// CH_PD
-	gpio_init.GPIO_Pin = WIFI_GPIO_CH_PD_Pin;
-	gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-	gpio_init.GPIO_Mode = GPIO_Mode_Out_PP;
+	gpio_init = 
+	{
+		.GPIO_Pin = WIFI_GPIO_CH_PD_Pin,
+		.GPIO_Speed = GPIO_Speed_2MHz,
+		.GPIO_Mode = GPIO_Mode_Out_PP
+	};
+	
 	GPIO_Init(WIFI_GPIO, &gpio_init);
-		
 	GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
 }
 	
@@ -203,9 +210,12 @@ bool WiFi::DoEvents()
 	ShowerCode code = req.GetRequestData(_data);
 	switch (code)
 	{
-	case OK:
 	case None:
-    	break;
+	case UnknownCode:
+	case OK:
+		{
+			break;
+		}
 	case GetWaterLevelEmpty:
 		{
 			req.SendResponse(_writeOnlyPropertiesStruct.WaterLevelEmpty);
@@ -565,6 +575,39 @@ bool WiFi::DoEvents()
         	req.SendResponse(UPPER_BOUND);	
         	break;
     	}
+	case GetWaterTankVolumeLitre:
+		{
+			req.SendResponse(_writeOnlyPropertiesStruct.WaterTankVolumeLitre);
+			break;	
+		}
+	case SetWaterTankVolumeLitre:
+		{
+			if (length == sizeof(_writeOnlyPropertiesStruct.WaterTankVolumeLitre))
+			{
+				_writeOnlyPropertiesStruct.WaterTankVolumeLitre = *_data;
+				req.SendResponse(OK);
+			}
+			break;	
+		}
+	case GetWaterHeaterPowerKWatt:
+		{
+			req.SendResponse(_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt);
+			break;	
+		}
+	case SetWaterHeaterPowerKWatt:
+		{
+			if (length == sizeof(_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt))
+			{
+				_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt = *_data;
+				req.SendResponse(OK);
+			}
+			break;	
+		}
+	default:
+		{
+			req.SendResponse(UnknownCode);
+			break;
+		}
 	}
 	return true;
 }
