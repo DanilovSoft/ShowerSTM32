@@ -509,12 +509,12 @@ bool WiFi::DoEvents()
 			}
 			break;
 		}
-	case GetTempSensorInternalTempBufferSize:
+	case GetTempSensorInternalTempAverageSize:
 		{
 			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.InternalTemp_Avg_Size);
 			break;
 		}
-	case SetTempSensorInternalTempBufferSize:
+	case SetTempSensorInternalTempAverageSize:
 		{
 			if (length == 1)
 			{

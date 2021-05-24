@@ -48,8 +48,8 @@ enum ShowerCode
 	GetWaterLevelAverageBufferSize = 45,
 	SetWaterLevelAverageBufferSize = 46,
 	
-	GetTempSensorInternalTempBufferSize = 47,
-	SetTempSensorInternalTempBufferSize = 48,
+	GetTempSensorInternalTempAverageSize = 47,
+	SetTempSensorInternalTempAverageSize = 48,
 	
 	GetWaterLevelUsecPerDeg = 49,
 	SetWaterLevelUsecPerDeg = 50,
