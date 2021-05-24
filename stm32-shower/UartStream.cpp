@@ -300,18 +300,21 @@ uint8_t UartStream::ReadIpd(uint8_t &connection_id)
 	
 void UartStream::DMAWriteData(const char* data, const uint16_t count)
 {
-	DMA_InitTypeDef DMA_InitStructure;
-	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR);
-	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t) data;
-	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-	DMA_InitStructure.DMA_BufferSize = count;
-	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;  // Отправить буффер однократно
-	DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
-	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+	DMA_InitTypeDef DMA_InitStructure = 
+	{
+		.DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR),
+		.DMA_MemoryBaseAddr = (uint32_t) data,
+		.DMA_DIR = DMA_DIR_PeripheralDST,
+		.DMA_BufferSize = count,
+		.DMA_PeripheralInc = DMA_PeripheralInc_Disable,
+		.DMA_MemoryInc = DMA_MemoryInc_Enable,
+		.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
+		.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
+		.DMA_Mode = DMA_Mode_Normal,   // Отправить буффер однократно
+		.DMA_Priority = DMA_Priority_Low,
+		.DMA_M2M = DMA_M2M_Disable
+	};
+	
 	DMA_Init(WIFI_DMA_CH_TX, &DMA_InitStructure);
 		
 	DMA_Cmd(WIFI_DMA_CH_TX, ENABLE);	// Старт отправки
@@ -331,60 +334,69 @@ void UartStream::DMAWriteData(const char* data, const uint16_t count)
 
 void UartStream::Init()
 {
-	GPIO_InitTypeDef gpio_init;
-		
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
 		
-    // Настраиваем ногу TxD как выход push-pull c альтернативной функцией
-	gpio_init.GPIO_Pin = GPIO_WIFI_Pin_Tx;
-	gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-	gpio_init.GPIO_Mode = GPIO_Mode_AF_PP;
+    // Настраиваем ногу TxD как выход push-pull c альтернативной функцией.
+	GPIO_InitTypeDef gpio_init = 
+	{
+		.GPIO_Pin = GPIO_WIFI_Pin_Tx,
+		.GPIO_Speed = GPIO_Speed_50MHz,
+		.GPIO_Mode = GPIO_Mode_AF_PP
+	};
 	GPIO_Init(GPIO_WIFI_USART, &gpio_init);
 
-	    		        		// Настраиваем ногу как вход UARTа (RxD)
-	gpio_init.GPIO_Pin = GPIO_WIFI_Pin_Rx;
-	gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-	gpio_init.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	// Настраиваем ногу как вход UARTа (RxD).
+	gpio_init = 
+	{
+		.GPIO_Pin = GPIO_WIFI_Pin_Rx,
+		.GPIO_Speed = GPIO_Speed_50MHz,
+		.GPIO_Mode = GPIO_Mode_IN_FLOATING
+	};
 	GPIO_Init(GPIO_WIFI_USART, &gpio_init);
 		
-    //Заполняем структуру настройками UARTa
+    //Заполняем структуру настройками UARTa.
 	USART_InitTypeDef uart_struct;
 	USART_StructInit(&uart_struct);
-	uart_struct.USART_BaudRate = WIFI_UART_Speed;
-	uart_struct.USART_WordLength = USART_WordLength_8b;
-	uart_struct.USART_StopBits = USART_StopBits_1;
-	uart_struct.USART_Parity = USART_Parity_No;
-	uart_struct.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-	uart_struct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-		
-    /* В методе USART_Init есть ошибка, подробности по ссылке
-    http://we.easyelectronics.ru/STM32/nastroyka-uart-v-stm32-i-problemy-dvoichno-desyatichnoy-arifmetiki.html */
-	USART_Init(WIFI_USART, &uart_struct);     			// Инициализируем UART
+	uart_struct = 
+	{
+		.USART_BaudRate = WIFI_UART_Speed,
+		.USART_WordLength = USART_WordLength_8b,
+		.USART_StopBits = USART_StopBits_1,
+		.USART_Parity = USART_Parity_No,
+		.USART_Mode = USART_Mode_Rx | USART_Mode_Tx,
+		.USART_HardwareFlowControl = USART_HardwareFlowControl_None
+	};
+
+    // В методе USART_Init есть ошибка, подробности по ссылке
+    // http://we.easyelectronics.ru/STM32/nastroyka-uart-v-stm32-i-problemy-dvoichno-desyatichnoy-arifmetiki.html
+	USART_Init(WIFI_USART, &uart_struct);  // Инициализируем UART
 		
 	DMA_DeInit(WIFI_DMA_CH_RX);
 	DMA_DeInit(WIFI_DMA_CH_TX);
         
-	DMA_InitTypeDef DMA_InitStructure;
-	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR);
-	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t) RX_FIFO_BUF;
-	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-	DMA_InitStructure.DMA_BufferSize = RX_FIFO_SZ;
-	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
-	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+	DMA_InitTypeDef DMA_InitStructure = 
+	{
+		.DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR),
+		.DMA_MemoryBaseAddr = (uint32_t) RX_FIFO_BUF,
+		.DMA_DIR = DMA_DIR_PeripheralSRC,
+		.DMA_BufferSize = RX_FIFO_SZ,
+		.DMA_PeripheralInc = DMA_PeripheralInc_Disable,
+		.DMA_MemoryInc = DMA_MemoryInc_Enable,
+		.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
+		.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
+		.DMA_Mode = DMA_Mode_Circular,
+		.DMA_Priority = DMA_Priority_Low,
+		.DMA_M2M = DMA_M2M_Disable
+	};
 	DMA_Init(WIFI_DMA_CH_RX, &DMA_InitStructure);
     	
-	/* Разрешить DMA для USART */
+	// Разрешить DMA для USART.
 	USART_DMACmd(WIFI_USART, USART_DMAReq_Rx | USART_DMAReq_Tx, ENABLE);
         
-    /* Включаем UART */
+    // Включаем UART.
 	USART_Cmd(WIFI_USART, ENABLE);
     	
-	/* Старт приема через DMA */
+	// Старт приема через DMA.
 	DMA_Cmd(WIFI_DMA_CH_RX, ENABLE);
 }
     
@@ -393,7 +405,7 @@ WaitStatus UartStream::WaitLine(const char* str1, const char* str2, const char* 
 	TaskTimeout tim(timeoutMsec);
 	WaitStatus result = WaitStatus::TIMEOUT;
 		
-	while (1)
+	while (true)
 	{
 		if (CopyRingBuf())
 		{
@@ -406,9 +418,13 @@ WaitStatus UartStream::WaitLine(const char* str1, const char* str2, const char* 
 		}
 
 		if (tim.TimeIsUp())
+		{
 			return WaitStatus::TIMEOUT;
+		}
 		else
+		{
 			taskYIELD();
+		}
 	}
 }
 
@@ -477,7 +493,9 @@ uint8_t UartStream::GetRequest(uint8_t &connection_id)
 		{
 			uint8_t length = ReadIpd(connection_id);
 			if (length)
+			{
 				return length;
+			}
 		}
 		else
 		{
