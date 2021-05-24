@@ -594,20 +594,6 @@ float TempSensor::Decode(uint8_t* scratchPad)
 //	return temp;
 //}
 
-//float TempSensor::Decode_old(uint8_t* scratchPad)
-//{
-//	uint8_t COUNT_REMAIN = scratchPad[6];
-//	short rawTemperature =  (((short)scratchPad[1]) << 8) | scratchPad[0];
-//	return (rawTemperature >> 1) - 0.25 + (COUNT_PER_C - COUNT_REMAIN) / (float)COUNT_PER_C;
-//
-//	// Truncating the 0.5 bit - use a simple & mask: raw & 0xFFFE
-//	// Convert to 12 bit value(1 / 16 of °C) - shift left : (raw & 0xFFFE) << 3
-//	// Subtracting 0.25(1 / 4 °C of 1 / 16) or 0.25 / 0.0625 = 4 : ((raw & 0xFFFE) << 3) - 4
-//	// Add the count(count per c - count remain), count per c is constant of 16, and no need to dived by 16 since we are calculating to the 1 / 16 of °C : + 16 - COUNT_REMAIN
-//	//rawTemperature = ((rawTemperature & 0xFFFE) << 3) - 4 + 16 - scratchPad[COUNT_REMAIN];
-//	//TEMPERATURE = (float)rawTemperature * 0.0625;
-//}
-
 void TempSensor::Pause()
 {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -631,8 +617,8 @@ bool TempSensor::TryUpdateTemp()
 			_intTempSum -= _intTempBuf[_intTempHead];
 			_intTempSum += InternalTemp;
 			_intTempBuf[_intTempHead] = InternalTemp;
-			_intTempHead = (_intTempHead + 1) % Properties.Customs.TempSensor_InternalTemp_Buffer_Size;
-			AverageInternalTemp = _intTempSum / Properties.Customs.TempSensor_InternalTemp_Buffer_Size;
+			_intTempHead = (_intTempHead + 1) % Properties.Customs.InternalTemp_Avg_Size;
+			AverageInternalTemp = _intTempSum / Properties.Customs.InternalTemp_Avg_Size;
 		}
 		
 		float externalTemp;
@@ -643,8 +629,8 @@ bool TempSensor::TryUpdateTemp()
 			_extTempSum -= _extTempBuf[_extTempHead];
 			_extTempSum += ExternalTemp;
 			_extTempBuf[_extTempHead] = ExternalTemp;
-			_extTempHead = (_extTempHead + 1) % EXT_BUF_SZ;
-			AverageExternalTemp = _extTempSum / EXT_BUF_SZ;
+			_extTempHead = (_extTempHead + 1) % EXT_AVG_BUF_SZ;
+			AverageExternalTemp = _extTempSum / EXT_AVG_BUF_SZ;
 			return internalSuccess;
 		}
 	}
@@ -719,8 +705,8 @@ bool TempSensor::TryGetExternalTemp(float& externalTemp)
 
 void TempSensor::InitAverageInternalTemp(const float internalTemp)
 {
-	_intTempSum = internalTemp * Properties.Customs.TempSensor_InternalTemp_Buffer_Size;
-	for (size_t i = 0; i < Properties.Customs.TempSensor_InternalTemp_Buffer_Size; i++)
+	_intTempSum = internalTemp * Properties.Customs.InternalTemp_Avg_Size;
+	for (size_t i = 0; i < Properties.Customs.InternalTemp_Avg_Size; i++)
 	{
 		_intTempBuf[i] = internalTemp;
 	}
@@ -729,8 +715,8 @@ void TempSensor::InitAverageInternalTemp(const float internalTemp)
 
 void TempSensor::InitAverageExternalTemp(const float externalTemp)
 {
-	_extTempSum = externalTemp * EXT_BUF_SZ;
-	for (size_t i = 0; i < EXT_BUF_SZ; i++)
+	_extTempSum = externalTemp * EXT_AVG_BUF_SZ;
+	for (size_t i = 0; i < EXT_AVG_BUF_SZ; i++)
 	{
 		_extTempBuf[i] = externalTemp;
 	}

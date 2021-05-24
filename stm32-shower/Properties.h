@@ -2,6 +2,7 @@
 #include "stdint.h"
 #include "math.h"
 #include "MedianFilter.h"
+#include "TempSensor.h"
 
 #define WL_AVG_BUF_MAX_SIZE         (129) // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
 constexpr auto InternalTempLimit = (42); // максимальная температура воды в баке.
@@ -312,7 +313,7 @@ struct PropertyStruct
 		uint8_t WaterValve_Cut_Off_Percent;
 		
 		// Размер скользящего окна для температуры внутри бака.
-		uint8_t TempSensor_InternalTemp_Buffer_Size;
+		uint8_t InternalTemp_Avg_Size;
 		
 		// Поправка скорости звука на температуру воздуха.
 		uint16_t WaterLevel_Usec_Per_Deg;
@@ -342,9 +343,9 @@ struct PropertyStruct
 				WaterValve_Cut_Off_Percent = 95;
 			}
 			
-			if (TempSensor_InternalTemp_Buffer_Size == 0 || TempSensor_InternalTemp_Buffer_Size > 8)
+			if (InternalTemp_Avg_Size == 0 || InternalTemp_Avg_Size > INT_AVG_BUF_SZ)
 			{
-				TempSensor_InternalTemp_Buffer_Size = 1;
+				InternalTemp_Avg_Size = 1;
 			}
 			
 			if (WaterLevel_Usec_Per_Deg > 10000)

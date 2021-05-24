@@ -511,14 +511,14 @@ bool WiFi::DoEvents()
 		}
 	case GetTempSensorInternalTempBufferSize:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.TempSensor_InternalTemp_Buffer_Size);
+			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.InternalTemp_Avg_Size);
 			break;
 		}
 	case SetTempSensorInternalTempBufferSize:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.Customs.TempSensor_InternalTemp_Buffer_Size = *_data;
+				_writeOnlyPropertiesStruct.Customs.InternalTemp_Avg_Size = *_data;
 				_req.SendResponse(OK);
 			}
 			break;

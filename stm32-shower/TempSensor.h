@@ -120,7 +120,8 @@ typedef enum
 // Команды SKIP_ROM, CONVERT_T.
 constexpr uint8_t AllDevicessStartConvert[] = { SKIP_ROM, CONVERT_T };
 #define COUNT_PER_C     (16)
-
+#define INT_AVG_BUF_SZ  (8)
+#define EXT_AVG_BUF_SZ  (1)
 
 typedef enum
 {
@@ -134,18 +135,16 @@ class TempSensor : public iActiveTask
 {
 private:
 	
-    const static uint8_t EXT_BUF_SZ = 1;
     const uint16_t _minimumDelayMsec = 200;
 	
 	uint8_t InternalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
 	uint8_t ExternalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
 	
     // Буфер скользящее окно.
-    float _intTempBuf[255] = {};
+    float _intTempBuf[INT_AVG_BUF_SZ] = { };
     double _intTempSum = 0;
     uint16_t _intTempHead = 0;
-    //TickType_t _xLastWakeTime;
-    float _extTempBuf[EXT_BUF_SZ] = {};
+    float _extTempBuf[EXT_AVG_BUF_SZ] = {};
     double _extTempSum = 0;
     uint16_t _extTempHead = 0;
     
