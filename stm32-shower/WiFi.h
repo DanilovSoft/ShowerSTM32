@@ -15,7 +15,7 @@
 
 class WiFi : public iActiveTask
 {
-	Request req;
+	Request _req;
     uint8_t _data[256] = { };
     
     bool InitWiFi();

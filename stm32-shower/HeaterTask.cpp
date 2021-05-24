@@ -142,19 +142,19 @@ void HeaterTask::Run()
     	// Если есть 220в.
         if (HasMainPower())
         {
-        	// Если автомат был включён
+        	// Если автомат был включён.
             if (!_heaterHasPower)
             {
                 _heaterHasPower = true;
                 _heaterWatchdog.Reset();
-                _heaterWatchdog.ResetAbsolute();	// Сбросить абсолютный таймер
+                _heaterWatchdog.ResetAbsolute();	// Сбросить абсолютный таймер.
                 _tickCounter.Restart();
             }
 				
-            // Абсолютный таймаут можно сбросить только отключив автомат нагревателя
+            // Абсолютный таймаут можно сбросить только отключив автомат нагревателя.
             if (_heaterWatchdog.AbsoluteTimeout())
             {
-            	// Выключить если нагреватель включен
+            	// Выключить если нагреватель включен.
                 if (GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET)
                 {	
                     TurnOff();
@@ -164,17 +164,17 @@ void HeaterTask::Run()
             }
             else
             {
-            	// Если нагреватель включен
+            	// Если нагреватель включен.
                 if (GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET)
                 {
-                	// Сброс таймера если включился нагреватель
+                	// Сброс таймера если включился нагреватель.
                     if (!_heaterEnabled)
                     {
                         _heaterEnabled = true;
-                        _heaterWatchdog.Reset();		// Сброс таймера как только включился нагреватель
+                        _heaterWatchdog.Reset();		// Сброс таймера как только включился нагреватель.
                     }
 						
-                    // Таймаут нагрева
+                    // Таймаут нагрева.
                     if (_heaterWatchdog.TimeOut())
                     {
                         TurnOff();
@@ -190,7 +190,7 @@ void HeaterTask::Run()
                 {
                     _heaterEnabled = false;
 						
-                    // Сбросить таймаут можно только отключив автомат нагревателя
+                    // Сбросить таймаут можно только отключив автомат нагревателя.
                     if (_heaterWatchdog.TimeOutOccurred)
                     {
                         BeepTimeout();

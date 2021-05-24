@@ -3,10 +3,12 @@
 
 class HeaterWatchdog
 {
-	uint32_t interval;
-	uint32_t absoluteInterval;	
-	RTCInterval timeoutCounter;
-	RTCInterval absoluteTimeoutCounter;
+private:
+	
+	uint32_t _interval;
+	uint32_t _absoluteIntervalSec;	
+	RTCInterval _timeoutCounter;
+	RTCInterval _absoluteTimeoutCounter;
 	
 public:
 
