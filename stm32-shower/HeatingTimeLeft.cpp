@@ -15,7 +15,7 @@ void HeatingTimeLeft::Init(float tankVolumeLitre, float heaterPowerKWatt)
 	_heaterPowerKWatt = heaterPowerKWatt;
 }
 
-byte HeatingTimeLeft::CalcTimeLeft(float internalTemp, byte targetTemp, byte volumePercent)
+float HeatingTimeLeft::CalcTimeLeft(float internalTemp, byte targetTemp, byte tankPercent)
 {
 	if (internalTemp >= targetTemp)
 	{
@@ -29,16 +29,11 @@ byte HeatingTimeLeft::CalcTimeLeft(float internalTemp, byte targetTemp, byte vol
 	//  tн – начальная температура воды, °С
 	//  W – электрическая мощность нагревательного элемента — ТЭНа, кВТ
 
-	double timeH = Q * _tankVolumeLitre * (targetTemp - internalTemp) / _heaterPowerKWatt;
+	float timeH = Q * _tankVolumeLitre * (targetTemp - internalTemp) / _heaterPowerKWatt;
 
 	// В минутах.
-    byte minutes = round(timeH * 60.0);
-	
-	if (minutes == 0)
-	{
-		minutes = 1;  // Нет смысла отображать что осталось 0 минут.
-	}
-				
+    float minutes = timeH * 60;
+			
 	return minutes;
 }
 
@@ -47,7 +42,7 @@ void HeatingTimeLeft::OnStartHeating()
     //_rtcInterval.Reset();
 }
 
-byte HeatingTimeLeft::GetTimeLeft()
+float HeatingTimeLeft::GetTimeLeft()
 {
     float intTemp = _tempSensorTask.AverageInternalTemp;
     float extTemp = _tempSensorTask.AverageExternalTemp;
@@ -57,9 +52,9 @@ byte HeatingTimeLeft::GetTimeLeft()
 	_heaterTempLimit.TryGetTargetTemperature(limitTemp);
 
 	// Нужно учесть на сколько процентов заполнен бак.
-	byte volumePercent = _waterLevelTask.DisplayingPercent;
+	byte tankPercent = _waterLevelTask.DisplayingPercent;
 	
-	byte minutes = CalcTimeLeft(intTemp, limitTemp, volumePercent);
+	float minutes = CalcTimeLeft(intTemp, limitTemp, tankPercent);
     return minutes;
 }
 

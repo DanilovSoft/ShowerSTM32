@@ -103,12 +103,21 @@ void LcdTask::Run()
         _lc.setCursor(0, 1);	
         if (heaterEnabled)
         {
-            uint8_t timeLeft = _heatingTimeLeft.GetTimeLeft();
+	        float timeLeftMin = _heatingTimeLeft.GetTimeLeft();
+	        
+	        // Округляем до целых.
+	        byte timeLeft = roundf(timeLeftMin);
+	        
 	        if (timeLeft > 99)
 	        {
-		        timeLeft = 99;
+		        timeLeft = 99; // Дисплей не может отображать больше 2 разрядов.
 	        }
-				
+	        
+	        if (timeLeft == 0)
+	        {
+		        timeLeft = 1; // Нет смысла отображать 0 минут.
+	        }
+	        
             char tmp = itoa(timeLeft / 10);
             lineTimeLeft[9] = tmp == '0' ? ' ' : tmp;
             lineTimeLeft[10] = itoa(timeLeft % 10);

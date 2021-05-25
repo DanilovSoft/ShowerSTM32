@@ -46,8 +46,6 @@
     <ClCompile>
       <AdditionalIncludeDirectories>StdPeriph/Inc;FreeRTOS/Source/include;FreeRTOS/Source/portable/GCC/ARM_CM3;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG=1;STM32F10X_MD;STD=C++14;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CPPLanguageStandard>CPP14</CPPLanguageStandard>
-      <CLanguageStandard>C99</CLanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLinkerInputs>;%(Link.AdditionalLinkerInputs)</AdditionalLinkerInputs>

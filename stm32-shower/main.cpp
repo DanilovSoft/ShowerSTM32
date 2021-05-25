@@ -48,10 +48,10 @@ void Init()
 	
     // Наличие 230в для нагревателя.
     GPIO_InitTypeDef gpioInit =
-	{ 
-		.GPIO_Pin = GPIO_Pin_MainPower,
-		.GPIO_Speed = GPIO_Speed_2MHz,
-		.GPIO_Mode = GPIO_Mode_IPU
+	{
+		GPIO_Pin_MainPower,
+		GPIO_Speed_2MHz,
+		GPIO_Mode_IPU
 	};
     
     GPIO_Init(GPIO_MainPower, &gpioInit);

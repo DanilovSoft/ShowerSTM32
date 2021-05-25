@@ -10,8 +10,7 @@
 class HeatingTimeLeft
 {
 private:
-    //RTCInterval _rtcInterval;
-
+    
 	// Объём вобы полного бака в литрах.
 	float _tankVolumeLitre;
 
@@ -21,7 +20,7 @@ private:
 	// Время до окончания нагрева в минутах.
 	// "internalTemp" - Текущая температура воды в баке.
 	// "limitTemp" - Целевая темпаратура.
-    byte CalcTimeLeft(float internalTemp, byte targetTemp, byte volumePercent);
+    float CalcTimeLeft(float internalTemp, byte targetTemp, byte tankPercent);
 	
 public:
 	
@@ -31,8 +30,8 @@ public:
 	// Вызывается как событие когда включается нагрев.
     void OnStartHeating();
 	
-	// Возвращает время до окончания нагрева в минутах.
-    byte GetTimeLeft();
+	// Возвращает время до окончания нагрева в минутах (от 0 до x).
+    float GetTimeLeft();
 	
 	// Возвращает прогресс нагрева воды от 0 до 100%.
 	byte GetProgress();
