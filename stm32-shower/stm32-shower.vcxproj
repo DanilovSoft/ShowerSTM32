@@ -149,7 +149,6 @@
     <LinkerScript Include="STM32F103R8_flash.lds" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ButtonDebounce.h" />
     <ClInclude Include="ButtonsTask.h" />
     <ClInclude Include="Buzzer.h" />
     <ClInclude Include="Common.h" />

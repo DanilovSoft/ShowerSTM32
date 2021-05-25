@@ -20,9 +20,9 @@
 */
 
 // Адрес первого блока памяти на 256 байт из 8 (для 24—16).
-#define EE_HW_ADDRESS                   (0xA0)   /* b3 = b2 = b1 = 0 */
+#define EE_HW_ADDRESS                   (0xA0)   // b3 = b2 = b1 = 0
 #define LCD_HW_ADDRESS                  (0x7E)	
-#define EE_FLASH_PAGESIZE               (16)      /* 16-byte Page */
+#define EE_FLASH_PAGESIZE               (16)      // 16-byte Page.
 #define EE_BlockSize					(256)
 #define EE_DataAddr1					(0x0000 + 16)
 #define EE_DataAddr2					(0x0000 + 128)
@@ -31,12 +31,14 @@ static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of PropertyS
 
 class I2C
 {
-	StaticSemaphore_t xLockSemaphoreBuffer;
-	SemaphoreHandle_t xLockSemaphore;
+private:
+	
+	StaticSemaphore_t _xLockSemaphoreBuffer;
+	SemaphoreHandle_t _xLockSemaphore;
 	
     void LockI2c();
     void UnlockI2c();
-    bool I2C_EE_WaitEepromStandbyState(); /* ожидание окончания записи (Write Cycle Polling using ACK) */
+    bool I2C_EE_WaitEepromStandbyState(); // Ожидание окончания записи (Write Cycle Polling using ACK).
     void InitGPIO();
     bool WaitFlag(uint32_t I2C_FLAG, uint16_t timeoutMsec);
     bool WaitFlag(uint32_t I2C_FLAG);
@@ -50,8 +52,12 @@ class I2C
     bool EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t NumByteToWrite);
     bool EE_PageWrite(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t NumByteToWrite);
     bool EE_ByteWriteInternal(uint8_t WriteAddr, uint8_t data);
-    void ResetBus();    // ‘ормирует сигнал STOP на ногах i2c в ручном режиме
+	
+	// Формирует сигнал STOP на ногах i2c в ручном режиме.
+    void ResetBus();
+
 public:
+	
     void vTaskInit();
     void InitI2C();
     bool EE_BufferWrite(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t NumByteToWrite);
@@ -60,4 +66,4 @@ public:
     bool LCD_expanderWrite(uint8_t data);
 };
 
-extern I2C i2c;
+extern I2C _i2c;

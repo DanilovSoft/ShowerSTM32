@@ -63,6 +63,8 @@ typedef struct
 
 class LiquidCrystal
 {
+private:
+	
     uint8_t celsius[8] = {
         0b01100,
         0b10010,
@@ -176,4 +178,3 @@ public:
     void setCursor(uint8_t col, uint8_t row);
 	void write_String(const char* str);
 };
-

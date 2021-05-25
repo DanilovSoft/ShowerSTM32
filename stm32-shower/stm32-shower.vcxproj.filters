@@ -375,9 +375,6 @@
     <ClInclude Include="LcdTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="ButtonDebounce.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
     <ClInclude Include="ButtonsTask.h">
       <Filter>Header files</Filter>
     </ClInclude>

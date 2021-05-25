@@ -284,12 +284,12 @@ struct PropertyStruct
 			WiFiPower = 56;   // 56 = 14.0 dBm
 		}
     	
-		if (WaterTankVolumeLitre < 0 || WaterTankVolumeLitre > 100 || isnan(WaterTankVolumeLitre))
+		if (WaterTankVolumeLitre < 1 || WaterTankVolumeLitre > 100 || isnan(WaterTankVolumeLitre))
 		{
 			WaterTankVolumeLitre = 37.32212;
 		}
 		
-		if (WaterHeaterPowerKWatt < 0 || WaterHeaterPowerKWatt > 3 || isnan(WaterHeaterPowerKWatt))
+		if (WaterHeaterPowerKWatt < 0.1f || WaterHeaterPowerKWatt > 5 || isnan(WaterHeaterPowerKWatt))
 		{
 			WaterHeaterPowerKWatt = 1.38624; // Полтора-киловатный ТЭН с учётом КПД.
 		}

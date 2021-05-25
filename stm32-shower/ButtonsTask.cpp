@@ -1,6 +1,5 @@
 ﻿#include "ButtonsTask.h"
 #include "stm32f10x_gpio.h"
-#include "ButtonDebounce.h"
 #include "Buzzer.h"
 #include "HeaterTask.h"
 #include "Eeprom.h"
@@ -13,18 +12,17 @@
 
 ButtonsTask _buttonsTask;
 
-
-
 void ButtonsTask::Init()
 {
-    GPIO_InitTypeDef gpio_init;
-    gpio_init.GPIO_Pin = Button_Temp_Plus | Button_Temp_Minus | Button_Water | Button_SensorSwitch_OUT;
-    gpio_init.GPIO_Mode = GPIO_Mode_IPD;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_InitTypeDef gpio_init = 
+	{
+		.GPIO_Pin = Button_Temp_Plus | Button_Temp_Minus | Button_Water | Button_SensorSwitch_OUT,
+		.GPIO_Speed = GPIO_Speed_2MHz,
+		.GPIO_Mode = GPIO_Mode_IPD
+	};
     GPIO_Init(Button_GPIO, &gpio_init);
 }
 	
-
 void ButtonsTask::PressSound()
 {
     const BeepSound samples[]
@@ -38,7 +36,6 @@ void ButtonsTask::PressSound()
     buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
 }
 
-
 void ButtonsTask::Run()
 {
     FrontPanelButton buttonTempPlus(Button_GPIO, Button_Temp_Plus);
@@ -46,7 +43,7 @@ void ButtonsTask::Run()
     FrontPanelButton buttonTempValve(Button_GPIO, Button_Water);
     SensorSwitch sensorSwitch(Button_GPIO, Button_SensorSwitch_OUT);
    
-    while (1)
+    while (true)
     {
         if (buttonTempPlus.IsPressed())
         {
@@ -79,7 +76,6 @@ void ButtonsTask::Run()
     }
 }
 	
-
 void ButtonsTask::TempPlus()
 {
 	uint8_t externalTemp;
@@ -93,7 +89,6 @@ void ButtonsTask::TempPlus()
     }
 }
 	
-
 void ButtonsTask::TempMinus()
 {
 	uint8_t externalTemp;
@@ -107,7 +102,6 @@ void ButtonsTask::TempMinus()
     }
 }
 	
-
 void ButtonsTask::WaterPushButton()
 {
     _valveTask.PushButton();

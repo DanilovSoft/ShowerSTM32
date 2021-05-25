@@ -136,9 +136,11 @@ class TempSensor : public iActiveTask
 private:
 	
     const uint16_t _minimumDelayMsec = 200;
+	// Пауза между измерениями температуры.
+	const uint16_t _pauseMsec = 2000;
 	
-	uint8_t InternalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
-	uint8_t ExternalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
+	uint8_t _internalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
+	uint8_t _externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
 	
     // Буфер скользящее окно.
     float _intTempBuf[INT_AVG_BUF_SZ] = { };

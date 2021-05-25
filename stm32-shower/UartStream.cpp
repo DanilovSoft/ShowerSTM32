@@ -14,13 +14,13 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-UartStream uartStream;
+UartStream _uartStream;
 volatile uint8_t RX_FIFO_BUF[RX_FIFO_SZ];
 
 bool UartStream::CopyRingBuf()
 {
-	/* Возвращает кол. байт сколько осталось до 0 */
-	/* После 0 сбрасывается на RX_FIFO_SZ */
+	// Возвращает кол. байт сколько осталось до 0.
+	// После 0 сбрасывается на RX_FIFO_SZ.
 	uint16_t dma_left = DMA_GetCurrDataCounter(WIFI_DMA_CH_RX);	
 	while (_head2 != dma_left)
 	{
@@ -28,11 +28,15 @@ bool UartStream::CopyRingBuf()
 		_tail = (_tail + 1) % RX_FIFO_SZ;
 				
 		if (_count < RX_FIFO_SZ)
+		{
 			_count++;
+		}
     			
 		--_head2;
 		if (_head2 == 0)
+		{
 			_head2 = RX_FIFO_SZ;		
+		}
 	}
 	return _count;
 }

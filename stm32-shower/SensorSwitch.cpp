@@ -10,9 +10,8 @@ SensorSwitch::SensorSwitch(GPIO_TypeDef* grio, uint16_t gpio_pin)
     _isOn = false;
     _pendingOn = false;
     _pendingOff = false;
-    _counter.Restart();
+    _counter.Reset();
 }
-
 
 SensorSwitch::~SensorSwitch()
 {
@@ -27,11 +26,11 @@ bool SensorSwitch::IsOn()
             if (!_pendingOn)
             {
                 _pendingOn = true;
-                _counter.Restart();
+                _counter.Reset();
             }
             else
             {
-                if (_counter.GetElapsedMs() >= Properties.ButtonPressTimeMs)
+                if (_counter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
                 {
                     _isOn = true;
                     _pendingOn = false;
@@ -50,11 +49,11 @@ bool SensorSwitch::IsOn()
             if (!_pendingOff)
             {
                 _pendingOff = true;
-                _counter.Restart();
+                _counter.Reset();
             }
             else
             {
-                if (_counter.GetElapsedMs() >= Properties.ButtonPressTimeMs)
+                if (_counter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
                 {
                     _isOn = false;
                     _pendingOff = false;
@@ -66,6 +65,5 @@ bool SensorSwitch::IsOn()
             _pendingOn = false;
         }
     }
-    
     return _isOn;
 }

@@ -102,13 +102,13 @@ void Init()
 	
     _waterLevelTask.InitGPIO_ClearDisplay();
     buzzer.Init();
-    uartStream.Init();
+    _uartStream.Init();
 }
 
 
 static void EEPROM_Task(void* parm)
 {
-	i2c.vTaskInit(); // Инициализируем шину I2C.
+	_i2c.vTaskInit(); // Инициализируем шину I2C.
 
 	// Нельзя запускать другие потоки не считав параметры из EEPROM.
 	_eeprom.InitBeforeRTOS();  // Использует шину I2C.

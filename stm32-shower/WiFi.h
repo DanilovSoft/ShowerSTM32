@@ -8,13 +8,15 @@
 #define GPIO_WPS_Pin            (GPIO_Pin_12)
 #define  WIFI_INIT_TRY_COUNT    (3)
 
-/*  AT+UART_DEF=57600,8,1,0,0
-	AT+CWMODE_DEF=1
-	AT+CWDHCP_DEF=1,1		// ¬ключить DHCP
-	AT+CWJAP_DEF="Miles","KLEZM00D",\"d4:ca:6d:11:38:af\" // RB433 */
+//  AT+UART_DEF=57600,8,1,0,0
+//	AT+CWMODE_DEF=1
+//	AT+CWDHCP_DEF=1,1		// Включить DHCP
+//	AT+CWJAP_DEF="AcessPoint","Pa$$w0rd",\"d1:cb:5d:12:37:bb\"
 
 class WiFi : public iActiveTask
 {
+private:
+	
 	Request _req;
     uint8_t _data[256] = { };
     

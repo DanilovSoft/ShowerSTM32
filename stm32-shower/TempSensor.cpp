@@ -63,8 +63,8 @@ void TempSensor::Run()
 	TryRegisterNewSensors();
 	
 	// Готовим команду - чтение памяти устройства.
-	memcpy(InternalDeviceReadScratchCommand + 1, Properties.InternalTempSensorId, 8);
-	memcpy(ExternalDeviceReadScratchCommand + 1, Properties.ExternalTempSensorId, 8);
+	memcpy(_internalDeviceReadScratchCommand + 1, Properties.InternalTempSensorId, 8);
+	memcpy(_externalDeviceReadScratchCommand + 1, Properties.ExternalTempSensorId, 8);
 	
 	SetResolution(DS18B20_Resolution_9_bit, Properties.InternalTempSensorId); // Для 9 бит время измерения = 750 msec / 16 = 93.75 msec.
 	SetResolution(DS18B20_Resolution_9_bit, Properties.ExternalTempSensorId);
@@ -596,7 +596,7 @@ float TempSensor::Decode(uint8_t* scratchPad)
 
 void TempSensor::Pause()
 {
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+	vTaskDelay(_pauseMsec / portTICK_PERIOD_MS);
 }
 
 bool TempSensor::TryUpdateTemp()
@@ -674,7 +674,7 @@ bool TempSensor::TryGetInternalTemp(float& internalTemp)
 	uint8_t scratchpad[9];
 		
 	// Читаем блокнот конкретного устройства.
-	if(OneWire_Send(InternalDeviceReadScratchCommand, 10, scratchpad, 9, true))
+	if(OneWire_Send(_internalDeviceReadScratchCommand, 10, scratchpad, 9, true))
 	{
 		// Значение COUNT_PER_°C должно равняться заданной разрядности.
 		uint8_t count_per_c = scratchpad[7];
@@ -691,7 +691,7 @@ bool TempSensor::TryGetExternalTemp(float& externalTemp)
 {
 	uint8_t scratchpad[9];
 	
-	if (OneWire_Send(ExternalDeviceReadScratchCommand, 10, scratchpad, 9, true))
+	if (OneWire_Send(_externalDeviceReadScratchCommand, 10, scratchpad, 9, true))
 	{
 		uint8_t count_per_c = scratchpad[7];
 		if (count_per_c == COUNT_PER_C)

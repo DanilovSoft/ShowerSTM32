@@ -44,7 +44,7 @@ bool WiFi::InitWiFi()
 
 bool WiFi::TryInitWiFi()
 {
-	if (!uartStream.WaitLine("ready", 1000))     // ожидание инициализации wi-fi
+	if (!_uartStream.WaitLine("ready", 1000))     // ожидание инициализации wi-fi
 	{
 		return false;
 	}
@@ -53,17 +53,17 @@ bool WiFi::TryInitWiFi()
 	//		if (!uartStream.WaitLine("OK", 200))
 	//			return false;
 		
-	/* Выключить эхо */
-	uartStream.WriteLine("ATE0\r\n");
+	// Выключить эхо.
+	_uartStream.WriteLine("ATE0\r\n");
 	
-	if (!uartStream.WaitLine("OK", 300))
+	if (!_uartStream.WaitLine("OK", 300))
 	{
 		return false;
 	}
 		
-	uartStream.WriteLine("AT+CWMODE_CUR=1\r\n");
+	_uartStream.WriteLine("AT+CWMODE_CUR=1\r\n");
 	
-	if (!uartStream.WaitLine("OK", 300))
+	if (!_uartStream.WaitLine("OK", 300))
 	{
 		return false;
 	}
@@ -72,23 +72,23 @@ bool WiFi::TryInitWiFi()
 	itoa(Properties.WiFiPower, rfpower + 11);
 	strcat(rfpower, "\r\n");
 	
-	uartStream.WriteLine(rfpower);		// 40..82, unit:0.25dBm
+	_uartStream.WriteLine(rfpower);		// 40..82, unit:0.25dBm
 	
-	if(!uartStream.WaitLine("OK", 300))
+	if(!_uartStream.WaitLine("OK", 300))
 	{
 		return false;
 	}
 
-	uartStream.WriteLine("AT+CIPMUX=1\r\n");     // разрешить множественные подключения.
+	_uartStream.WriteLine("AT+CIPMUX=1\r\n");     // разрешить множественные подключения.
 	
-	if(!uartStream.WaitLine("OK", 300))
+	if(!_uartStream.WaitLine("OK", 300))
 	{
 		return false;
 	}
 
-	uartStream.WriteLine("AT+CIPSERVER=1,333\r\n");     // запустить TCP сервер, порт 333.
+	_uartStream.WriteLine("AT+CIPSERVER=1,333\r\n");     // запустить TCP сервер, порт 333.
 	
-	if (!uartStream.WaitLine("OK", 300))
+	if (!_uartStream.WaitLine("OK", 300))
 	{
 		return false;
 	}
@@ -118,8 +118,8 @@ bool WiFi::WPS()
 			//			if (!uartStream.WaitLine("OK", 100))
 			//				return false;
 
-	uartStream.WriteLine("AT+WPS=1\r\n");
-	if (!uartStream.WaitLine("OK", 500))
+	_uartStream.WriteLine("AT+WPS=1\r\n");
+	if (!_uartStream.WaitLine("OK", 500))
 	{
 		return false;
 	}
@@ -166,7 +166,7 @@ void WiFi::SetAP(const char* pref, uint8_t prefSize, uint8_t* data, uint8_t leng
 	str[prefSize + length + 1] = '\n';
 	str[prefSize + length + 2] = 0;
     	
-	uartStream.WriteLine(str);
+	_uartStream.WriteLine(str);
 }
 	
 

@@ -9,7 +9,7 @@ class UartStream
 {
 private:
     
-    /* Буффер в который копируем данные из RX_FIFO_BUF */
+    // Буффер в который копируем данные из RX_FIFO_BUF.
 	uint8_t _buf[RX_FIFO_SZ] = { };
     char _str_buf[UART_MAX_STR_LEN] = { };  // Буфер для записи строк из кольцевого буффера _buf
 	ConnectionsBuffer _connectionBuffer;
@@ -32,7 +32,9 @@ private:
 	WaitStatus ReadLine(const char* str1, const char* str2, const char* str3);
 	uint8_t ReadIpd(uint8_t &connection_id);
 	void DMAWriteData(const char* data, const uint16_t count);
+	
 public:
+	
 	void Init();
 	WaitStatus WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeoutMsec);
 	WaitStatus WaitLine(const char* str1, const char* str2, uint16_t timeoutMsec);
@@ -45,4 +47,4 @@ public:
 	uint8_t GetRequest(uint8_t &connection_id);
 };
 
-extern UartStream uartStream;
+extern UartStream _uartStream;

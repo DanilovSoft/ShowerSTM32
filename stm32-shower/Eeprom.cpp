@@ -12,7 +12,7 @@ bool Eeprom::EE_SafeBufferRead(uint8_t* pBuffer, uint8_t ReadAddr, uint8_t NumBy
 {
     while (NumByteToRead--)
     {
-	    if (!i2c.EE_ByteRead(ReadAddr, *pBuffer))
+	    if (!_i2c.EE_ByteRead(ReadAddr, *pBuffer))
 	    {
 		    return false;
 	    }
@@ -28,7 +28,7 @@ bool Eeprom::InitProps()
 {
     uint8_t dataIndex;
 	
-	if (!i2c.EE_ByteRead(0, dataIndex))
+	if (!_i2c.EE_ByteRead(0, dataIndex))
 	{
 		return false;
 	}
@@ -53,7 +53,7 @@ bool Eeprom::EE_SafeBufferCRC32(uint8_t ReadAddr, uint8_t NumByteToRead, uint32_
         uint8_t bufIndex = i % 4;
         uint8_t& bufAddr = buf[bufIndex];
 			
-        if (!i2c.EE_ByteRead(ReadAddr, bufAddr))
+        if (!_i2c.EE_ByteRead(ReadAddr, bufAddr))
             return false;
 			
         ReadAddr++;
@@ -73,7 +73,7 @@ bool Eeprom::InnerSave()
 	// Используем соседнюю половину памяти.
     uint16_t pageAddress = (_curPageAddr == EE_DataAddr1 ? EE_DataAddr2 : EE_DataAddr1);
 
-	if (!i2c.EE_BufferWrite((uint8_t*)&_writeOnlyPropertiesStruct, pageAddress, sizeof(_writeOnlyPropertiesStruct)))
+	if (!_i2c.EE_BufferWrite((uint8_t*)&_writeOnlyPropertiesStruct, pageAddress, sizeof(_writeOnlyPropertiesStruct)))
 	{
 		return false;
 	}
@@ -94,14 +94,14 @@ bool Eeprom::InnerSave()
 		
     uint8_t newIndex = _curPageAddr == EE_DataAddr1 ? 1 : 0;
 
-	if (!i2c.EE_ByteWrite(0, newIndex))
+	if (!_i2c.EE_ByteWrite(0, newIndex))
 	{
 		return false;
 	}
 						
     uint8_t indexTest;
 	
-	if (!i2c.EE_ByteRead(0, indexTest))
+	if (!_i2c.EE_ByteRead(0, indexTest))
 	{
 		return false;
 	}

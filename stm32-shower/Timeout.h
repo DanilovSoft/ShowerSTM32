@@ -4,14 +4,17 @@
 
 class TaskTimeout
 {
-	uint16_t _timeout;
+private:
+	
+	uint16_t _timeoutMsec;
 	TickCounter _counter;
 
 public:
-	TaskTimeout(uint16_t timeout)
+	
+	TaskTimeout(uint16_t timeoutMsec)
 	{
-		this->_timeout = timeout;
-		_counter.Restart();
+		_timeoutMsec = timeoutMsec;
+		_counter.Reset();
 	}
 
     uint32_t GetElapsedTicks()
@@ -21,6 +24,6 @@ public:
     
 	bool TimeIsUp()
 	{
-		return _counter.TimeOut(_timeout);
+		return _counter.TimedOut(_timeoutMsec);
 	}
 };

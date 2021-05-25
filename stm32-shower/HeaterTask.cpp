@@ -24,11 +24,11 @@ void HeaterTask::BeepHeating()
         BeepSound(30),
     }
     ;
-		
-    if (_tickCounter.TimeOut(7000))
+	
+    if (_tickCounter.TimedOut(7000))
     {
         buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-        _tickCounter.Restart();
+        _tickCounter.Reset();
     }
 }
 
@@ -44,7 +44,7 @@ void HeaterTask::BeepTurnOff()
     ;
 		
     buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-    _tickCounter.Restart();
+    _tickCounter.Reset();
 }
 
 void HeaterTask::BeepTurnOn()
@@ -59,7 +59,7 @@ void HeaterTask::BeepTurnOn()
     ;
 		
     buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-    _tickCounter.Restart();
+    _tickCounter.Reset();
 }
 
 void HeaterTask::BeepReady()
@@ -73,12 +73,12 @@ void HeaterTask::BeepReady()
     }
     ;
 		
-    if (_tickCounter.TimeOut(4000))
+    if (_tickCounter.TimedOut(4000))
     {
         if (WaterHeated())
         {
             buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-            _tickCounter.Restart();
+            _tickCounter.Reset();
         }
     }
 }
@@ -96,10 +96,10 @@ void HeaterTask::BeepTimeout()
     }
     ;
 		
-    if (_tickCounter.TimeOut(7000))
+    if (_tickCounter.TimedOut(7000))
     {
         buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-        _tickCounter.Restart();
+        _tickCounter.Reset();
     }
 }
     
@@ -133,7 +133,7 @@ void HeaterTask::Init()
 void HeaterTask::Run()
 {
     _heaterWatchdog.Init();
-    _tickCounter.Restart();
+    _tickCounter.Reset();
     _tempSensorTask.WaitFirstConversion();
     _waterLevelTask.WaitInitialization();
 		
@@ -148,7 +148,7 @@ void HeaterTask::Run()
                 _heaterHasPower = true;
                 _heaterWatchdog.Reset();
                 _heaterWatchdog.ResetAbsolute();	// Сбросить абсолютный таймер.
-                _tickCounter.Restart();
+                _tickCounter.Reset();
             }
 				
             // Абсолютный таймаут можно сбросить только отключив автомат нагревателя.
@@ -301,5 +301,5 @@ bool HeaterTask::GetAbsoluteTimeoutOccured()
 	
 void HeaterTask::ResetBeepTime()
 {
-    _tickCounter.Restart();
+    _tickCounter.Reset();
 }

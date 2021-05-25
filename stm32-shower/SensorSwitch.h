@@ -4,6 +4,8 @@
 
 class SensorSwitch
 {
+private:
+	
     bool _isOn = false;
     bool _pendingOn = false;
     bool _pendingOff = false;
@@ -12,6 +14,7 @@ class SensorSwitch
     uint16_t _gpio_pin = 0;
     
 public:
+	
     SensorSwitch(GPIO_TypeDef* grio, uint16_t gpio_pin);
     ~SensorSwitch();
     bool IsOn();
