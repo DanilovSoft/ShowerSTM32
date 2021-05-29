@@ -32,14 +32,16 @@ struct BeepSound
 
 class Buzzer
 {
-	SemaphoreHandle_t xSemaphore;
-	StaticSemaphore_t xSemaphoreBuffer;
+private:
+
+	SemaphoreHandle_t _xSemaphore;
+	StaticSemaphore_t _xSemaphoreBuffer;
 	
-	SemaphoreHandle_t xSemaphoreHighPrio;
-	StaticSemaphore_t xSemaphoreHighPrioBuffer;
+	SemaphoreHandle_t _xSemaphoreHighPrio;
+	StaticSemaphore_t _xSemaphoreHighPrioBuffer;
 	
-	SemaphoreHandle_t xSemaphorePause;
-	StaticSemaphore_t xSemaphorePauseBuffer;
+	SemaphoreHandle_t _xSemaphorePause;
+	StaticSemaphore_t _xSemaphorePauseBuffer;
 	
 	void Freq(uint16_t freq)
 	{
@@ -82,7 +84,7 @@ class Buzzer
 			Freq(samples->Frequency);
 			
 			//vTaskDelay(samples->Duration / portTICK_PERIOD_MS);
-			bool interrupted = (xSemaphoreTake(xSemaphorePause, samples->Duration / portTICK_PERIOD_MS) == pdTRUE);
+			bool interrupted = (xSemaphoreTake(_xSemaphorePause, samples->Duration / portTICK_PERIOD_MS) == pdTRUE);
 			if (interrupted)
 			{
 				break;
@@ -129,36 +131,36 @@ public:
 		
 		TIM_Cmd(Buzzer_TIM, ENABLE);
 		
-		xSemaphore = xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer);
-		xSemaphoreGive(xSemaphore);
+		_xSemaphore = xSemaphoreCreateBinaryStatic(&_xSemaphoreBuffer);
+		xSemaphoreGive(_xSemaphore);
 
-		xSemaphoreHighPrio = xSemaphoreCreateBinaryStatic(&xSemaphoreHighPrioBuffer);
-		xSemaphoreGive(xSemaphoreHighPrio);
+		_xSemaphoreHighPrio = xSemaphoreCreateBinaryStatic(&_xSemaphoreHighPrioBuffer);
+		xSemaphoreGive(_xSemaphoreHighPrio);
 		
-		xSemaphorePause = xSemaphoreCreateBinaryStatic(&xSemaphorePauseBuffer);
+		_xSemaphorePause = xSemaphoreCreateBinaryStatic(&_xSemaphorePauseBuffer);
 	}
 	
 	void BeepHighPrio(const BeepSound* samples, uint8_t length)
 	{
-		xSemaphoreTake(xSemaphoreHighPrio, portMAX_DELAY);
+		xSemaphoreTake(_xSemaphoreHighPrio, portMAX_DELAY);
 		{
-			bool busy = uxSemaphoreGetCount(xSemaphore) == 0;
+			bool busy = uxSemaphoreGetCount(_xSemaphore) == 0;
 
 			// Пищалка занята
 			if (busy)
 			{
 				// Прервать
-				xSemaphoreGive(xSemaphorePause);
+				xSemaphoreGive(_xSemaphorePause);
 			}
 			
-			xSemaphoreTake(xSemaphore, portMAX_DELAY);
+			xSemaphoreTake(_xSemaphore, portMAX_DELAY);
 			
 			if (busy)
 			{
 				// Другой поток не успел захватить мьютекс
-				if (uxSemaphoreGetCount(xSemaphorePause))
+				if (uxSemaphoreGetCount(_xSemaphorePause))
 				{
-					xSemaphoreTake(xSemaphorePause, portMAX_DELAY);
+					xSemaphoreTake(_xSemaphorePause, portMAX_DELAY);
 				}
 			}
 			
@@ -166,9 +168,9 @@ public:
 				vTaskDelay(70);
 				
 			BeepInternal(samples, length);
-			xSemaphoreGive(xSemaphore);
+			xSemaphoreGive(_xSemaphore);
 			
-			xSemaphoreGive(xSemaphoreHighPrio);
+			xSemaphoreGive(_xSemaphoreHighPrio);
 		}
 		
 		// если был прерван чей-то звук, сделать дополнительную паузу в начале
@@ -176,13 +178,13 @@ public:
 	
 	void Beep(const BeepSound* samples, uint8_t length)
 	{
-		xSemaphoreTake(xSemaphore, portMAX_DELAY);
+		xSemaphoreTake(_xSemaphore, portMAX_DELAY);
 		{
-			if (uxSemaphoreGetCount(xSemaphoreHighPrio))
+			if (uxSemaphoreGetCount(_xSemaphoreHighPrio))
 			{
 				BeepInternal(samples, length);
 			}
-			xSemaphoreGive(xSemaphore);
+			xSemaphoreGive(_xSemaphore);
 		}
 	}
 };

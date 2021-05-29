@@ -1,7 +1,7 @@
 #pragma once
 #include "IpdBuffer.h"
 
-#define IPD_BUF_SZ      (5)
+constexpr auto IPD_BUF_SZ = 5;
 
 class ConnectionsBuffer
 {

@@ -5,6 +5,8 @@
 
 class LcdTask : public iActiveTask
 {
+private:
+
     LiquidCrystal _lc;
 	void Init();
 	void DisplayTemp(char* buf, int16_t temp);

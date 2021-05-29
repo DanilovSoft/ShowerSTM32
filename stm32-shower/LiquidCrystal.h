@@ -2,50 +2,50 @@
 #include "stdint.h"
 
 // commands
-#define LCD_CLEARDISPLAY 0x01
-#define LCD_RETURNHOME 0x02
-#define LCD_ENTRYMODESET 0x04
-#define LCD_DISPLAYCONTROL 0x08
-#define LCD_CURSORSHIFT 0x10
-#define LCD_FUNCTIONSET 0x20
-#define LCD_SETCGRAMADDR 0x40
-#define LCD_SETDDRAMADDR 0x80
+constexpr auto LCD_CLEARDISPLAY = 0x01;
+constexpr auto LCD_RETURNHOME = 0x02;
+constexpr auto LCD_ENTRYMODESET = 0x04;
+constexpr auto LCD_DISPLAYCONTROL = 0x08;
+constexpr auto LCD_CURSORSHIFT = 0x10;
+constexpr auto LCD_FUNCTIONSET = 0x20;
+constexpr auto LCD_SETCGRAMADDR = 0x40;
+constexpr auto LCD_SETDDRAMADDR = 0x80;
 
 // flags for display entry mode
-#define LCD_ENTRYRIGHT 0x00
-#define LCD_ENTRYLEFT 0x02
-#define LCD_ENTRYSHIFTINCREMENT 0x01
-#define LCD_ENTRYSHIFTDECREMENT 0x00
+constexpr auto LCD_ENTRYRIGHT = 0x00;
+constexpr auto LCD_ENTRYLEFT = 0x02;
+constexpr auto LCD_ENTRYSHIFTINCREMENT = 0x01;
+constexpr auto LCD_ENTRYSHIFTDECREMENT = 0x00;
 
 // flags for display on/off control
-#define LCD_DISPLAYON 0x04
-#define LCD_DISPLAYOFF 0x00
-#define LCD_CURSORON 0x02
-#define LCD_CURSOROFF 0x00
-#define LCD_BLINKON 0x01
-#define LCD_BLINKOFF 0x00
+constexpr auto LCD_DISPLAYON = 0x04;
+constexpr auto LCD_DISPLAYOFF = 0x00;
+constexpr auto LCD_CURSORON = 0x02;
+constexpr auto LCD_CURSOROFF = 0x00;
+constexpr auto LCD_BLINKON = 0x01;
+constexpr auto LCD_BLINKOFF = 0x00;
 
 // flags for display/cursor shift
-#define LCD_DISPLAYMOVE 0x08
-#define LCD_CURSORMOVE 0x00
-#define LCD_MOVERIGHT 0x04
-#define LCD_MOVELEFT 0x00
+constexpr auto LCD_DISPLAYMOVE = 0x08;
+constexpr auto LCD_CURSORMOVE = 0x00;
+constexpr auto LCD_MOVERIGHT = 0x04;
+constexpr auto LCD_MOVELEFT = 0x00;
 
 // flags for function set
-#define LCD_8BITMODE 0x10
-#define LCD_4BITMODE 0x00
-#define LCD_2LINE 0x08
-#define LCD_1LINE 0x00
-#define LCD_5x10DOTS 0x04
-#define LCD_5x8DOTS 0x00
+constexpr auto LCD_8BITMODE = 0x10;
+constexpr auto LCD_4BITMODE = 0x00;
+constexpr auto LCD_2LINE = 0x08;
+constexpr auto LCD_1LINE = 0x00;
+constexpr auto LCD_5x10DOTS = 0x04;
+constexpr auto LCD_5x8DOTS = 0x00;
 
 // flags for backlight control
-#define LCD_BACKLIGHT 0x08
-#define LCD_NOBACKLIGHT 0x00
+constexpr auto LCD_BACKLIGHT = 0x08;
+constexpr auto LCD_NOBACKLIGHT = 0x00;
 
-#define En		0x04		// Enable bit
-#define Rw		0x02		// Read/Write bit
-#define Rs		0x01		// Register select bit
+constexpr auto En = 0x04;		// Enable bit;
+constexpr auto Rw = 0x02;		// Read/Write bit;
+constexpr auto Rs = 0x01;		// Register select bit;
 
 
 
@@ -63,6 +63,33 @@ typedef struct
 
 class LiquidCrystal
 {
+public:
+
+    /* When the display powers up, it is configured as follows:
+
+         1. Display clear
+         2. Function set:
+            DL = 1; 8-bit interface data
+            N = 0; 1-line display
+            F = 0; 5x8 dot character font
+         3. Display on/off control:
+            D = 0; Display off
+            C = 0; Cursor off
+            B = 0; Blinking off
+         4. Entry mode set:
+            I/D = 1; Increment by 1
+            S = 0; No shift
+
+    Note, however, that resetting the Arduino doesn't reset the LCD, so we
+    can't assume that its in that state when a sketch starts (and the
+    LiquidCrystal constructor is called).*/
+    bool setup(uint8_t lcd_cols, uint8_t lcd_rows);
+
+    /********** high level commands, for the user! */
+    bool clear();
+    void setCursor(uint8_t col, uint8_t row);
+    void write_String(const char* str);
+
 private:
 	
     uint8_t celsius[8] = {
@@ -150,31 +177,4 @@ private:
     bool expanderWrite(uint8_t data);
     bool pulseEnable(uint8_t data);
     void load_custom_character(uint8_t char_num, uint8_t *rows);
-	
-public:
-
-    /* When the display powers up, it is configured as follows:
-
-		 1. Display clear
-		 2. Function set:
-			DL = 1; 8-bit interface data
-			N = 0; 1-line display
-			F = 0; 5x8 dot character font
-		 3. Display on/off control:
-			D = 0; Display off
-			C = 0; Cursor off
-			B = 0; Blinking off
-		 4. Entry mode set:
-			I/D = 1; Increment by 1
-			S = 0; No shift
-
-	Note, however, that resetting the Arduino doesn't reset the LCD, so we
-	can't assume that its in that state when a sketch starts (and the
-	LiquidCrystal constructor is called).*/
-    bool setup(uint8_t lcd_cols, uint8_t lcd_rows);
-
-    /********** high level commands, for the user! */
-    bool clear();
-    void setCursor(uint8_t col, uint8_t row);
-	void write_String(const char* str);
 };

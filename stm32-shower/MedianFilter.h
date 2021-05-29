@@ -2,11 +2,18 @@
 #include "stdint.h"
 #include <cstdlib>
 
-#define		STOPPER 0   // Smaller than any datum.
-#define WL_MEDIAN_BUF_MAX_SIZE      (255) // Максимально допустимый размер медианного фильтра для уровня воды.
+constexpr auto STOPPER = 0;   // Smaller than any datum.
+constexpr auto WL_MEDIAN_BUF_MAX_SIZE = 255; // Максимально допустимый размер медианного фильтра для уровня воды.
 
 class MedianFilter
 {
+public:
+
+	void Init(const uint8_t medianFilterSize);
+	uint16_t AddValue(uint16_t datum);
+
+private:
+
     struct Pair
     {
 	    // Pointers forming list linked in sorted order.
@@ -29,10 +36,5 @@ class MedianFilter
 	struct Pair _big = { &_small, 0 };
     
 	uint8_t _medianFilterSize;
-	
-public:
-	
-	void Init(const uint8_t medianFilterSize);
-	uint16_t AddValue(uint16_t datum);
 };
 

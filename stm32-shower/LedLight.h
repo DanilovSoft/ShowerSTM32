@@ -7,7 +7,7 @@
 #include "iActiveTask.h"
 #include "stm32f10x_iwdg.h"
 
-#define GPIO_LED			(GPIOB)
+#define GPIO_LED		(GPIOB)
 #define GPIO_Pin_LED	(GPIO_Pin_7)
 #define LED_TIM			(TIM4)
 
@@ -44,7 +44,7 @@ class LedLight : public iActiveTask
     
 	void Run()
 	{
-		while (1)
+		while (true)
 		{	
 			if (HasMainPower())
 			{

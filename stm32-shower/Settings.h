@@ -14,9 +14,38 @@ extern PropertyStruct _writeOnlyPropertiesStruct;
 
 class Settings
 {
-	uint32_t curPageAddr;     // Начальный адрес страницы где хранятся настройки
-	
+public:
+
+	void Init()
+	{
+		RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
+
+		_curPageAddr = PAGE_62;
+		if (!ReadData(PAGE_62))		// Контрольная сумма страницы не валидна
+		{
+			_curPageAddr = PAGE_63;
+			ReadData(PAGE_63);
+		}
+
+		_writeOnlyPropertiesStruct.SelfFix();
+		Properties = _writeOnlyPropertiesStruct;
+	}
+
+	void Save()
+	{
+		uint32_t pageAddress = (_curPageAddr == PAGE_62 ? PAGE_63 : PAGE_62);		// Используем соседнюю страницу
+
+		FLASH_Unlock();
+		FLASH_ErasePage(pageAddress);													// Оцищаем соседнюю страницу
+		WriteData(pageAddress);																// Записываем данные
+		FLASH_ErasePage(_curPageAddr);																// Очищаем старую страницу
+		FLASH_Lock();
+		_curPageAddr = pageAddress;																	// Обновляем указатель на страницу
+	}
+
 private:
+
+	uint32_t _curPageAddr;     // Начальный адрес страницы где хранятся настройки
 
 	// Восстановить данные при инициализации
 	static bool ReadData(uint32_t pageAddress)
@@ -66,35 +95,4 @@ private:
 	{
 		return (*(__IO uint32_t*) address);
 	}
-	
-public:
-
-	void Init()
-	{
-		RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
-		
-		curPageAddr = PAGE_62;
-		if (!ReadData(PAGE_62))		// Контрольная сумма страницы не валидна
-		{
-			curPageAddr = PAGE_63;
-			ReadData(PAGE_63);
-		}
-		
-		_writeOnlyPropertiesStruct.SelfFix();
-		Properties = _writeOnlyPropertiesStruct;
-	}
-
-	void Save()
-	{
-		uint32_t pageAddress = (curPageAddr == PAGE_62 ? PAGE_63 : PAGE_62);		// Используем соседнюю страницу
-
-		FLASH_Unlock();
-		FLASH_ErasePage(pageAddress);													// Оцищаем соседнюю страницу
-		WriteData(pageAddress);																// Записываем данные
-		FLASH_ErasePage(curPageAddr);																// Очищаем старую страницу
-		FLASH_Lock();
-		curPageAddr = pageAddress;																	// Обновляем указатель на страницу
-	}
 };
-
-//extern Settings settings;
