@@ -7,7 +7,7 @@
 #include "TempSensor.h"
 #include "HeaterTempLimit.h"
 #include "ValveTask.h"
-#include "FrontPanelButton.h"
+#include "ButtonDebounce.h"
 #include "SensorSwitch.h"
 
 ButtonsTask _buttonsTask;
@@ -33,14 +33,14 @@ void ButtonsTask::PressSound()
     ;
 		
     _heaterTask.ResetBeepTime();
-    buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
+    _buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
 }
 
 void ButtonsTask::Run()
 {
-    FrontPanelButton buttonTempPlus(Button_GPIO, Button_Temp_Plus);
-    FrontPanelButton buttonTempMinus(Button_GPIO, Button_Temp_Minus);
-    FrontPanelButton buttonTempValve(Button_GPIO, Button_Water);
+    ButtonDebounce buttonTempPlus(Button_GPIO, Button_Temp_Plus);
+    ButtonDebounce buttonTempMinus(Button_GPIO, Button_Temp_Minus);
+    ButtonDebounce buttonTempValve(Button_GPIO, Button_Water);
     SensorSwitch sensorSwitch(Button_GPIO, Button_SensorSwitch_OUT);
    
     while (true)
@@ -81,7 +81,7 @@ void ButtonsTask::TempPlus()
 	uint8_t externalTemp;
 	if (_heaterTempLimit.TryGetLastExternalTemp(externalTemp))
     {
-        if (_writeOnlyPropertiesStruct.Chart.TempPlus(externalTemp))
+        if (WriteProperties.Chart.TempPlus(externalTemp))
         {
             _eeprom.Save();
             Properties.Chart.TempPlus(externalTemp);
@@ -94,7 +94,7 @@ void ButtonsTask::TempMinus()
 	uint8_t externalTemp;
 	if (_heaterTempLimit.TryGetLastExternalTemp(externalTemp))
     {
-        if (_writeOnlyPropertiesStruct.Chart.TempMinus(externalTemp))
+        if (WriteProperties.Chart.TempMinus(externalTemp))
         {
             _eeprom.Save();
             Properties.Chart.TempMinus(externalTemp);

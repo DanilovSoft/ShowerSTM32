@@ -82,7 +82,7 @@
     <ClCompile Include="FreeRTOS\Source\stream_buffer.c" />
     <ClCompile Include="FreeRTOS\Source\tasks.c" />
     <ClCompile Include="FreeRTOS\Source\timers.c" />
-    <ClCompile Include="FrontPanelButton.cpp" />
+    <ClCompile Include="ButtonDebounce.cpp" />
     <ClCompile Include="HeaterTask.cpp" />
     <ClCompile Include="HeaterTempLimit.cpp" />
     <ClCompile Include="HeaterWatchdog.cpp" />
@@ -157,7 +157,7 @@
     <ClInclude Include="FreeRTOSConfig.h" />
     <ClInclude Include="FreeRTOS\Source\include\task.h" />
     <ClInclude Include="FreeRTOS\Source\portable\GCC\ARM_CM3\portmacro.h" />
-    <ClInclude Include="FrontPanelButton.h" />
+    <ClInclude Include="ButtonDebounce.h" />
     <ClInclude Include="HeaterTask.h" />
     <ClInclude Include="HeaterTempLimit.h" />
     <ClInclude Include="HeaterWatchdog.h" />
@@ -167,7 +167,6 @@
     <ClInclude Include="Interlocked.h" />
     <ClInclude Include="IpdBuffer.h" />
     <ClInclude Include="LcdTask.h" />
-    <ClInclude Include="LedLight.h" />
     <ClInclude Include="LedLightTask.h" />
     <ClInclude Include="LiquidCrystal.h" />
     <ClInclude Include="MedianFilter.h" />

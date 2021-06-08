@@ -10,51 +10,50 @@ ValveTask _valveTask;
 
 void ValveTask::Init()
 {
-    GPIO_InitTypeDef gpio_init;
-		
-    /* Клапан */
-    gpio_init.GPIO_Pin = Valve_Pin;	
-    gpio_init.GPIO_Mode = GPIO_Mode_Out_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
+    // Клапан.
+	GPIO_InitTypeDef gpio_init = 
+	{
+		.GPIO_Pin = Valve_Pin,
+		.GPIO_Speed = GPIO_Speed_2MHz,
+		.GPIO_Mode = GPIO_Mode_Out_PP
+	};
     GPIO_Init(Valve_GPIO, &gpio_init);
 		
-    /* Закрыть клапан */
+    // Закрыть клапан.
     GPIO_ResetBits(Valve_GPIO, Valve_Pin);
 		
-    /* Питающий вывод сенсора */
-    gpio_init.GPIO_Pin = SensorSwitch_Power_Pin;	
-    gpio_init.GPIO_Mode = GPIO_Mode_Out_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
+	// Питающий вывод сенсора.
+	gpio_init = 
+	{
+		.GPIO_Pin = SensorSwitch_Power_Pin,
+        .GPIO_Speed = GPIO_Speed_2MHz,
+        .GPIO_Mode = GPIO_Mode_Out_PP
+	};
     GPIO_Init(SensorSwitch_Power_GPIO, &gpio_init);
-		
-    /* Выключить питание сенсора до окончания инициали датчика уровня воды*/
+
+    // Выключить питание сенсора до окончания инициали датчика уровня воды.
     GpioTurnOffSensorSwitch();
-		
+
     xValveSemaphore = xSemaphoreCreateBinaryStatic(&xValveSemaphoreBuffer);	
 }
 	
-
 void ValveTask::GpioTurnOnSensorSwitch()
 {
-	/* Включить сенсор */
     GPIO_SetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
 }
 	
-
 void ValveTask::GpioTurnOffSensorSwitch()
 {
-	/* Выключить сенсор */
+	// Выключить сенсор.
     GPIO_ResetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
 }
 	
-
 void ValveTask::GPIOOpenValve()
 {
-	/* Включить воду */
+	// Включить воду.
     GPIO_SetBits(Valve_GPIO, Valve_Pin);
 }
 	
-
 void ValveTask::GPIOCloseValve()
 {
 	/* Закрыть клапан */
@@ -70,7 +69,6 @@ void ValveTask::GPIOCloseValve()
     GpioTurnOnSensorSwitch();
 }
 	
-
 void ValveTask::Run()
 {
 	/* Ожидание инициализации датчика уровня воды */
@@ -81,7 +79,7 @@ void ValveTask::Run()
     /* Включить сенсор */
     GpioTurnOnSensorSwitch();
 		
-    while (1)
+    while (true)
     {
         xSemaphoreTake(xValveSemaphore, portMAX_DELAY);
         {
@@ -93,13 +91,13 @@ void ValveTask::Run()
 	            uint8_t waterPercent = _waterLevelTask.DisplayingPercent;
 				
             	/* Если уровень воды меньше уровень автоматического отключения */
-                if (waterPercent < Properties.Customs.WaterValve_Cut_Off_Percent)
+                if (waterPercent < Properties.WaterValve_Cut_Off_Percent)
                 {					
                 	/* Включить воду */
                     GPIOOpenValve();	
     					
                     /* Ожидать ручной остановки или достижение порогового уровня воды */
-	                while (!StopRequired && _waterLevelTask.DisplayingPercent < Properties.Customs.WaterValve_Cut_Off_Percent)
+	                while (!StopRequired && _waterLevelTask.DisplayingPercent < Properties.WaterValve_Cut_Off_Percent)
                     {
                         taskYIELD();
                     }
@@ -115,7 +113,6 @@ void ValveTask::Run()
     }
 }
 	
-
 void ValveTask::OpenValveIfAllowed()
 {
     if (OpenValveAllowed)
@@ -125,8 +122,6 @@ void ValveTask::OpenValveIfAllowed()
     }
 }
 	
-	
-	/* Вызывается только если кнопка была нажата */
 void ValveTask::PushButton()
 {
     if (ValveOpened())
@@ -140,9 +135,7 @@ void ValveTask::PushButton()
         OpenValveIfAllowed();
     }
 }
-	
 
-/* Вызывается каждый раз, после PushButton() */
 void ValveTask::SensorOn()
 {
     if (SensorSwitchLastState != ValveTask::StateOn)
@@ -153,9 +146,7 @@ void ValveTask::SensorOn()
         OpenValveIfAllowed();
     }
 }
-	
 
-/* Вызывается каждый раз, после PushButton() */
 void ValveTask::SensorOff()
 {
     if (SensorSwitchLastState != ValveTask::StateOff)

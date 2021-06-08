@@ -84,6 +84,7 @@
 
 #include "iActiveTask.h"
 #include "stdint.h"
+#include "Properties.h"
 
 typedef enum 
 {
@@ -120,8 +121,6 @@ typedef enum
 // Команды SKIP_ROM, CONVERT_T.
 constexpr uint8_t AllDevicessStartConvert[] = { SKIP_ROM, CONVERT_T };
 #define COUNT_PER_C     (16)
-#define INT_AVG_BUF_SZ  (8)
-#define EXT_AVG_BUF_SZ  (1)
 
 typedef enum
 {
@@ -143,10 +142,10 @@ private:
 	uint8_t _externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
 	
     // Буфер скользящее окно.
-    float _intTempBuf[INT_AVG_BUF_SZ] = { };
+    float _intTempBuf[INT_TEMP_AVG_BUF_SZ] = { };
     double _intTempSum = 0;
     uint16_t _intTempHead = 0;
-    float _extTempBuf[EXT_AVG_BUF_SZ] = {};
+    float _extTempBuf[EXT_TEMP_AVG_BUF_SZ] = {};
     double _extTempSum = 0;
     uint16_t _extTempHead = 0;
     
@@ -186,6 +185,7 @@ private:
 	
 	// Заполняет весь скользящий буфер одним значением.
 	void InitAverageInternalTemp(const float internalTemp);
+	// Заполняет весь скользящий буфер одним значением.
 	void InitAverageExternalTemp(const float externalTemp);
     void Setup();
     void Pause();

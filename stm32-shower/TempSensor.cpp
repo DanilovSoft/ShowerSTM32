@@ -274,11 +274,11 @@ repeat:
 						return;
 					}
 					
-					memcpy(_writeOnlyPropertiesStruct.InternalTempSensorId, newInternalDevice, 8);
+					memcpy(WriteProperties.InternalTempSensorId, newInternalDevice, 8);
 				
-					if (ArrayEquals(_writeOnlyPropertiesStruct.InternalTempSensorId, 8, _writeOnlyPropertiesStruct.ExternalTempSensorId, 8))
+					if (ArrayEquals(WriteProperties.InternalTempSensorId, 8, WriteProperties.ExternalTempSensorId, 8))
 					{
-						memset(_writeOnlyPropertiesStruct.ExternalTempSensorId, 0, 8);
+						memset(WriteProperties.ExternalTempSensorId, 0, 8);
 					}
 					
 					// Перезаписываем идентификатор датчика.
@@ -337,7 +337,7 @@ repeat:
 						return;
 					}
 					
-					memcpy(_writeOnlyPropertiesStruct.ExternalTempSensorId, newExternalDevice, 8);
+					memcpy(WriteProperties.ExternalTempSensorId, newExternalDevice, 8);
 				
 					// Перезаписываем идентификатор датчика.
 					_eeprom.Save();
@@ -617,8 +617,8 @@ bool TempSensor::TryUpdateTemp()
 			_intTempSum -= _intTempBuf[_intTempHead];
 			_intTempSum += InternalTemp;
 			_intTempBuf[_intTempHead] = InternalTemp;
-			_intTempHead = (_intTempHead + 1) % Properties.Customs.InternalTemp_Avg_Size;
-			AverageInternalTemp = _intTempSum / Properties.Customs.InternalTemp_Avg_Size;
+			_intTempHead = (_intTempHead + 1) % Properties.InternalTemp_Avg_Size;
+			AverageInternalTemp = _intTempSum / Properties.InternalTemp_Avg_Size;
 		}
 		
 		float externalTemp;
@@ -629,8 +629,8 @@ bool TempSensor::TryUpdateTemp()
 			_extTempSum -= _extTempBuf[_extTempHead];
 			_extTempSum += ExternalTemp;
 			_extTempBuf[_extTempHead] = ExternalTemp;
-			_extTempHead = (_extTempHead + 1) % EXT_AVG_BUF_SZ;
-			AverageExternalTemp = _extTempSum / EXT_AVG_BUF_SZ;
+			_extTempHead = (_extTempHead + 1) % EXT_TEMP_AVG_BUF_SZ;
+			AverageExternalTemp = _extTempSum / EXT_TEMP_AVG_BUF_SZ;
 			return internalSuccess;
 		}
 	}
@@ -705,8 +705,8 @@ bool TempSensor::TryGetExternalTemp(float& externalTemp)
 
 void TempSensor::InitAverageInternalTemp(const float internalTemp)
 {
-	_intTempSum = internalTemp * Properties.Customs.InternalTemp_Avg_Size;
-	for (size_t i = 0; i < Properties.Customs.InternalTemp_Avg_Size; i++)
+	_intTempSum = internalTemp * Properties.InternalTemp_Avg_Size;
+	for (size_t i = 0; i < Properties.InternalTemp_Avg_Size; i++)
 	{
 		_intTempBuf[i] = internalTemp;
 	}
@@ -715,8 +715,8 @@ void TempSensor::InitAverageInternalTemp(const float internalTemp)
 
 void TempSensor::InitAverageExternalTemp(const float externalTemp)
 {
-	_extTempSum = externalTemp * EXT_AVG_BUF_SZ;
-	for (size_t i = 0; i < EXT_AVG_BUF_SZ; i++)
+	_extTempSum = externalTemp * EXT_TEMP_AVG_BUF_SZ;
+	for (size_t i = 0; i < EXT_TEMP_AVG_BUF_SZ; i++)
 	{
 		_extTempBuf[i] = externalTemp;
 	}

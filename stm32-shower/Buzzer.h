@@ -61,19 +61,23 @@ private:
 	
 	void EnableGPIO()
 	{
-		GPIO_InitTypeDef GPIO_InitStructure;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Buzzer_Pin;
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+		GPIO_InitTypeDef GPIO_InitStructure = 
+		{
+			.GPIO_Pin = GPIO_Buzzer_Pin,
+			.GPIO_Speed = GPIO_Speed_2MHz,
+			.GPIO_Mode = GPIO_Mode_AF_PP
+		};
 		GPIO_Init(GPIO_Buzzer, &GPIO_InitStructure);
 	}
 	
 	void DisableGPIO()
 	{
-		GPIO_InitTypeDef GPIO_InitStructure;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Buzzer_Pin;
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+		GPIO_InitTypeDef GPIO_InitStructure = 
+		{
+			.GPIO_Pin = GPIO_Buzzer_Pin,
+			.GPIO_Speed = GPIO_Speed_2MHz,
+			.GPIO_Mode = GPIO_Mode_IN_FLOATING
+		};
 		GPIO_Init(GPIO_Buzzer, &GPIO_InitStructure);
 	}
 	
@@ -165,7 +169,9 @@ public:
 			}
 			
 			if (busy)
+			{
 				vTaskDelay(70);
+			}
 				
 			BeepInternal(samples, length);
 			xSemaphoreGive(_xSemaphore);
@@ -189,5 +195,5 @@ public:
 	}
 };
 
-extern Buzzer buzzer;
+extern Buzzer _buzzer;
 

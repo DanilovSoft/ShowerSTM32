@@ -7,6 +7,8 @@
 
 class LedLightTask : public iActiveTask
 {
+private:
+	
 	bool _turnedOn;
 	void Init();
 	void Run();

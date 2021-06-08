@@ -14,7 +14,7 @@ WaterLevelTask _waterLevelTask;
 
 void WaterLevelTask::Init()
 {
-	_medianFilter.Init(Properties.Customs.WaterLevel_Median_Buffer_Size);
+	_medianFilter.Init(Properties.WaterLevel_Median_Buffer_Size);
 	
 	_usecRange = (Properties.WaterLevelEmpty - Properties.WaterLevelFull);
 	float usec_per_percent = (Properties.WaterLevelEmpty - Properties.WaterLevelFull) / 99.0;
@@ -94,7 +94,7 @@ void WaterLevelTask::Init()
 void WaterLevelTask::Run()
 {
     TickType_t xLastWakeTime;
-    _intervalPauseMsec = Properties.Customs.WaterLevel_Measure_IntervalMsec / portTICK_PERIOD_MS;
+    _intervalPauseMsec = Properties.WaterLevel_Measure_IntervalMsec / portTICK_PERIOD_MS;
     
     // Initialise the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
@@ -157,7 +157,7 @@ void WaterLevelTask::Run()
             UsecRaw = -1;
         }
 
-        // 12. Пауза.
+        // Пауза для затухания эха.
         vTaskDelayUntil(&xLastWakeTime, _intervalPauseMsec);
     }
 }
@@ -194,8 +194,8 @@ uint8_t WaterLevelTask::InitDisplay()
     GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
     vTaskDelayUntil(&xLastWakeTime, _intervalPauseMsec);
         
-    // Размер буфера скользящее среднее + размер медианного фильтра.
-    uint16_t warmupCount = Properties.Customs.WaterLevel_Avg_Buffer_Size + Properties.Customs.WaterLevel_Median_Buffer_Size;
+	// Размер медианного фильтра + буфера скользящее среднее.
+    uint16_t warmupCount = Properties.WaterLevel_Median_Buffer_Size + Properties.WaterLevel_Avg_Buffer_Size;
     
     uint8_t lastPoint;
     for (uint16_t i = 0; i < warmupCount;)
@@ -211,9 +211,9 @@ uint8_t WaterLevelTask::InitDisplay()
             // Добавить значение в буффер скользящего среднего.
             uint16_t avg = _movingAverageFilter.AddValue(median);
             
-            if (i < Properties.Customs.WaterLevel_Avg_Buffer_Size)
+            if (i < Properties.WaterLevel_Avg_Buffer_Size)
             {
-                // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполнения.
+                // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполненности.
                 avg = _movingAverageFilter.GetAverage() / (i + 1);  // Точность с кажной итерацией будет увеличиваться.
             }
             
@@ -242,7 +242,8 @@ uint8_t WaterLevelTask::InitDisplay()
             TaskDisplayPercent(DisplayingPercent);
 
             Preinitialized = true;
-            i++;
+
+            i++; // Считаем только успешные измерения.
         }
         else
         {

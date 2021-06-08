@@ -35,7 +35,7 @@ bool Eeprom::InitProps()
 		
     _curPageAddr = dataIndex == 0 ? EE_DataAddr1 : EE_DataAddr2;
 		
-	if (!EE_SafeBufferRead((uint8_t*)&_writeOnlyPropertiesStruct, _curPageAddr, sizeof(_writeOnlyPropertiesStruct)))
+	if (!EE_SafeBufferRead((uint8_t*)&WriteProperties, _curPageAddr, sizeof(WriteProperties)))
 	{
 		return false;
 	}
@@ -73,21 +73,21 @@ bool Eeprom::InnerSave()
 	// Используем соседнюю половину памяти.
     uint16_t pageAddress = (_curPageAddr == EE_DataAddr1 ? EE_DataAddr2 : EE_DataAddr1);
 
-	if (!_i2c.EE_BufferWrite((uint8_t*)&_writeOnlyPropertiesStruct, pageAddress, sizeof(_writeOnlyPropertiesStruct)))
+	if (!_i2c.EE_BufferWrite((uint8_t*)&WriteProperties, pageAddress, sizeof(WriteProperties)))
 	{
 		return false;
 	}
 		
     uint32_t eeprom_crc32;
 	
-	if (!EE_SafeBufferCRC32(pageAddress, sizeof(_writeOnlyPropertiesStruct), eeprom_crc32))
+	if (!EE_SafeBufferCRC32(pageAddress, sizeof(WriteProperties), eeprom_crc32))
 	{
 		return false;
 	}
 		
     CRC_ResetDR();
 
-	if (eeprom_crc32 != CRC_CalcBlockCRC((uint32_t*)&_writeOnlyPropertiesStruct, sizeof(_writeOnlyPropertiesStruct) / 4))
+	if (eeprom_crc32 != CRC_CalcBlockCRC((uint32_t*)&WriteProperties, sizeof(WriteProperties) / 4))
 	{
 		return false;
 	}
@@ -122,8 +122,8 @@ void Eeprom::InitBeforeRTOS()
 		// тут недоступен taskYIELD.
 	}
 		
-    _writeOnlyPropertiesStruct.SelfFix();
-    Properties = _writeOnlyPropertiesStruct;
+    WriteProperties.SelfFix();
+    Properties = WriteProperties;
 }
 
 void Eeprom::Save()

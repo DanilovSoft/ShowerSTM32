@@ -1,9 +1,7 @@
 #pragma once
-#include "stdint.h"
-#include <cstdlib>
+#include "Properties.h"
 
 constexpr auto STOPPER = 0;   // Smaller than any datum.
-constexpr auto WL_MEDIAN_BUF_MAX_SIZE = 255; // Максимально допустимый размер медианного фильтра для уровня воды.
 
 class MedianFilter
 {

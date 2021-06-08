@@ -205,7 +205,7 @@
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
       <Filter>Source files\Device-specific files</Filter>
     </ClCompile>
-    <ClCompile Include="FrontPanelButton.cpp">
+    <ClCompile Include="ButtonDebounce.cpp">
       <Filter>Source files\Source</Filter>
     </ClCompile>
     <ClCompile Include="SensorSwitch.cpp">
@@ -417,9 +417,6 @@
     <ClInclude Include="IpdBuffer.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="LedLight.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
     <ClInclude Include="LiquidCrystal.h">
       <Filter>Header files</Filter>
     </ClInclude>
@@ -486,7 +483,7 @@
     <ClInclude Include="FreeRTOS\Source\include\task.h">
       <Filter>Header files\FreeRTOS</Filter>
     </ClInclude>
-    <ClInclude Include="FrontPanelButton.h">
+    <ClInclude Include="ButtonDebounce.h">
       <Filter>Header files\Source</Filter>
     </ClInclude>
     <ClInclude Include="SensorSwitch.h">

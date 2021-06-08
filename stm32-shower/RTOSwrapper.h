@@ -8,4 +8,4 @@ public:
 	static void Run(void* parm);
 };
 
-extern RTOSwrapperClass RTOSwrapper;
+extern RTOSwrapperClass _rtosHelper;

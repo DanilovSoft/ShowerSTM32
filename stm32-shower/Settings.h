@@ -10,7 +10,7 @@
 #define PAGE_63              (FLASH_BASE + 63 * 1024)
 ///////////////////////////////////////////////////////
 
-extern PropertyStruct _writeOnlyPropertiesStruct;
+extern PropertyStruct WriteProperties;
 
 class Settings
 {
@@ -27,8 +27,8 @@ public:
 			ReadData(PAGE_63);
 		}
 
-		_writeOnlyPropertiesStruct.SelfFix();
-		Properties = _writeOnlyPropertiesStruct;
+		WriteProperties.SelfFix();
+		Properties = WriteProperties;
 	}
 
 	void Save()
@@ -51,8 +51,8 @@ private:
 	static bool ReadData(uint32_t pageAddress)
 	{
 		uint32_t data;
-		uint32_t propsAddr = (uint32_t) & _writeOnlyPropertiesStruct;
-		uint16_t dataSizeLeft = sizeof(_writeOnlyPropertiesStruct);
+		uint32_t propsAddr = (uint32_t) & WriteProperties;
+		uint16_t dataSizeLeft = sizeof(WriteProperties);
 		
 		CRC_ResetDR();
 		do
@@ -74,8 +74,8 @@ private:
 	static void WriteData(uint32_t address)
 	{	
 		uint32_t data;
-		uint32_t propsAddr = (uint32_t) & _writeOnlyPropertiesStruct;
-		uint16_t dataSizeLeft = sizeof(_writeOnlyPropertiesStruct);
+		uint32_t propsAddr = (uint32_t) & WriteProperties;
+		uint16_t dataSizeLeft = sizeof(WriteProperties);
 		
 		CRC_ResetDR();
 		do

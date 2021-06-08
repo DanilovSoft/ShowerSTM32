@@ -1,19 +1,19 @@
-#include "FrontPanelButton.h"
+#include "ButtonDebounce.h"
 
 // ctor
-FrontPanelButton::FrontPanelButton(GPIO_TypeDef* gpio, uint16_t gpio_pin)
+ButtonDebounce::ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin)
 {
     _gpio = gpio;
-    _gpio_pin = gpio_pin;
+    _gpioPin = gpio_pin;
     _timeCounter.Reset();
 }
 
-bool FrontPanelButton::IsPressed()
+bool ButtonDebounce::IsPressed()
 {
-    if (GPIO_ReadInputDataBit(_gpio, _gpio_pin))
-    // Кнопка нажата.
+    if (GPIO_ReadInputDataBit(_gpio, _gpioPin))
+    // Кнопка физически зажата.
     {
-        if (_canPress)
+        if (_canPressAgain)
         // Нажатие на кнопку разрешено.
         {
             if (!_pressed)
@@ -31,7 +31,7 @@ bool FrontPanelButton::IsPressed()
                 if (_timeCounter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
                 {
                     // Запретить нажатие на кнопку.
-                    _canPress = false;
+                    _canPressAgain = false;
                         
                     // Разрешено выполнить действие кнопки.
                     return true;
@@ -60,15 +60,15 @@ bool FrontPanelButton::IsPressed()
         else
         // Кнопка все еще отпущена.
         {
-            if (!_canPress)
-            // Нажатие на кнопку запрещено/
+            if (!_canPressAgain)
+            // Нажатие на кнопку запрещено.
             {
-                // Кнопка должна быть отпущена некоторое время/
+                // Кнопка должна быть отпущена некоторое время.
                 if (_timeCounter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
-                // Кнопка отпущена достаточно времени что-бы разрешить повторное нажатие/
+                // Кнопка отпущена достаточно времени что-бы разрешить повторное нажатие.
                 {   
                     // Разрешить повторное нажатие на кнопку.
-                    _canPress = true;
+                    _canPressAgain = true;
                 }
             }
         }
@@ -78,7 +78,7 @@ bool FrontPanelButton::IsPressed()
     return false;
 }
 
-bool FrontPanelButton::IsLongPressed()
+bool ButtonDebounce::IsLongPressed()
 {
 	return false;
 }

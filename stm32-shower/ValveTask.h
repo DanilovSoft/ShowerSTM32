@@ -2,16 +2,17 @@
 #include "iActiveTask.h"
 #include "semphr.h"
 
-
 #define Valve_GPIO                  (GPIOA)
 #define Valve_Pin                   (GPIO_Pin_11)
 #define SensorSwitch_Power_GPIO     (GPIOA)
 #define SensorSwitch_Power_Pin      (GPIO_Pin_6)
-#define Valve_Delay                 (200)
 #define ValveOpened()               (GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin))
+constexpr auto Valve_Delay = 200;
 
 class ValveTask : public iActiveTask
 {
+private:
+	
 	enum SensorSwitchState { StateOn, StateOff };
     SensorSwitchState SensorSwitchLastState = SensorSwitchState::StateOff;
 	volatile bool StopRequired = false;
@@ -21,8 +22,10 @@ class ValveTask : public iActiveTask
 	
 	void Init();
 	
+	// Включает питание сенсора.
 	void GpioTurnOnSensorSwitch();
 	
+	// Выключает питание сенсора.
 	void GpioTurnOffSensorSwitch();
 	
 	void GPIOOpenValve();
@@ -35,13 +38,13 @@ class ValveTask : public iActiveTask
 	
 public:
 	
-	/* Вызывается только если кнопка была нажата */
+	// Вызывается только если кнопка была нажата.
 	void PushButton();
 	
-	/* Вызывается каждый раз, после PushButton() */
+	// Вызывается каждый раз, после PushButton().
 	void SensorOn();
 	
-	/* Вызывается каждый раз, после PushButton() */
+	// Вызывается каждый раз, после PushButton().
 	void SensorOff();
 	
 	volatile bool ValveIsOpen();

@@ -112,7 +112,7 @@ bool WiFi::WPS()
 		BeepSound(4000, 120),
 		BeepSound(30),
 	};
-	buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
+	_buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
 
 			//			uartStream.WriteLine("AT+CWQAP");     // забыть сохраненную точку доступа
 			//			if (!uartStream.WaitLine("OK", 100))
@@ -218,19 +218,19 @@ bool WiFi::DoEvents()
 		}
 	case GetWaterLevelEmpty:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.WaterLevelEmpty);
+			_req.SendResponse(WriteProperties.WaterLevelEmpty);
 			break;
 		}
 	case GetWaterLevelFull:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.WaterLevelFull);
+			_req.SendResponse(WriteProperties.WaterLevelFull);
 			break;
 		}
 	case SetWaterLevelFull:
 		{
 			if (length == 2)
 			{
-				_writeOnlyPropertiesStruct.WaterLevelFull = *(uint16_t*)_data;
+				WriteProperties.WaterLevelFull = *(uint16_t*)_data;
 				_req.SendResponse(OK);
 			}
 			break;
@@ -239,7 +239,7 @@ bool WiFi::DoEvents()
 		{
 			if (length == 2)
 			{
-				_writeOnlyPropertiesStruct.WaterLevelEmpty = *(uint16_t*)_data;
+				WriteProperties.WaterLevelEmpty = *(uint16_t*)_data;
 				_req.SendResponse(OK);
 			}
 			break;
@@ -256,14 +256,14 @@ bool WiFi::DoEvents()
     	}
 	case GetTempChart:
 		{
-			_req.SendResponse(&_writeOnlyPropertiesStruct.Chart, sizeof(_writeOnlyPropertiesStruct.Chart));
+			_req.SendResponse(&WriteProperties.Chart, sizeof(WriteProperties.Chart));
 			break;
 		}
 	case SetTempChart:
 		{
-			if (length == sizeof(_writeOnlyPropertiesStruct.Chart))
+			if (length == sizeof(WriteProperties.Chart))
 			{
-    			_writeOnlyPropertiesStruct.Chart.Parse(_data);
+    			WriteProperties.Chart.Parse(_data);
     			Properties.Chart.Parse(_data); // установить значения в ОЗУ
 				_req.SendResponse(OK);
 			}
@@ -310,42 +310,42 @@ bool WiFi::DoEvents()
 		}
 	case GetMinimumWaterHeatingLevel:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.MinimumWaterHeatingPercent);
+			_req.SendResponse(WriteProperties.MinimumWaterHeatingPercent);
 			break;
 		}
 	case SetMinimumWaterHeatingLevel:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.MinimumWaterHeatingPercent = *_data;
+				WriteProperties.MinimumWaterHeatingPercent = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetHeatingTimeLimit:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.HeatingTimeLimitMin);
+			_req.SendResponse(WriteProperties.HeatingTimeLimitMin);
 			break;
 		}
 	case SetHeatingTimeLimit:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.HeatingTimeLimitMin = *_data;
+				WriteProperties.HeatingTimeLimitMin = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetLightBrightness:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.LightBrightness);
+			_req.SendResponse(WriteProperties.LightBrightness);
 			break;
 		}
 	case SetLightBrightness:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.LightBrightness = *_data;
+				WriteProperties.LightBrightness = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
@@ -376,28 +376,28 @@ bool WiFi::DoEvents()
 		}
 	case GetAbsoluteHeatingTimeLimit:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.AbsoluteHeatingTimeLimitHours);
+			_req.SendResponse(WriteProperties.AbsoluteHeatingTimeLimitHours);
 			break;
 		}
 	case SetAbsoluteHeatingTimeLimit:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.AbsoluteHeatingTimeLimitHours = *_data;
+				WriteProperties.AbsoluteHeatingTimeLimitHours = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetWiFiPower:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.WiFiPower);
+			_req.SendResponse(WriteProperties.WiFiPower);
 			break;
 		}
 	case SetWiFiPower:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.WiFiPower = *_data;
+				WriteProperties.WiFiPower = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
@@ -456,32 +456,32 @@ bool WiFi::DoEvents()
 		}
 	case GetWaterLevelMeasureInterval:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterLevel_Measure_IntervalMsec);
+			_req.SendResponse(WriteProperties.WaterLevel_Measure_IntervalMsec);
 			break;
 		}
 	case SetWaterLevelMeasureInterval:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.Customs.WaterLevel_Measure_IntervalMsec = *_data;
+				WriteProperties.WaterLevel_Measure_IntervalMsec = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetWaterValveCutOffPercent:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterValve_Cut_Off_Percent);
+			_req.SendResponse(WriteProperties.WaterValve_Cut_Off_Percent);
 			break;
 		}
 	case SetWaterValveCutOffPercent:
 		{
-			_writeOnlyPropertiesStruct.Customs.WaterValve_Cut_Off_Percent = *_data;
+			WriteProperties.WaterValve_Cut_Off_Percent = *_data;
 			_req.SendResponse(OK);
 			break;
 		}
 	case GetWaterLevelMedianBufferSize:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterLevel_Median_Buffer_Size);
+			_req.SendResponse(WriteProperties.WaterLevel_Median_Buffer_Size);
 			break;
 		}
 	case SetWaterLevelMedianBufferSize:
@@ -489,14 +489,14 @@ bool WiFi::DoEvents()
 			if (length == 1)
 			{
 				auto value = *_data;
-				_writeOnlyPropertiesStruct.Customs.WaterLevel_Median_Buffer_Size = value;
+				WriteProperties.WaterLevel_Median_Buffer_Size = value;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetWaterLevelAverageBufferSize:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterLevel_Avg_Buffer_Size);
+			_req.SendResponse(WriteProperties.WaterLevel_Avg_Buffer_Size);
 			break;
 		}
 	case SetWaterLevelAverageBufferSize:
@@ -504,63 +504,63 @@ bool WiFi::DoEvents()
 			if (length == 1)
 			{
     			auto value = *_data;
-				_writeOnlyPropertiesStruct.Customs.WaterLevel_Avg_Buffer_Size = value;
+				WriteProperties.WaterLevel_Avg_Buffer_Size = value;
     			_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetTempSensorInternalTempAverageSize:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.InternalTemp_Avg_Size);
+			_req.SendResponse(WriteProperties.InternalTemp_Avg_Size);
 			break;
 		}
 	case SetTempSensorInternalTempAverageSize:
 		{
 			if (length == 1)
 			{
-				_writeOnlyPropertiesStruct.Customs.InternalTemp_Avg_Size = *_data;
+				WriteProperties.InternalTemp_Avg_Size = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetWaterLevelUsecPerDeg:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterLevel_Usec_Per_Deg);
+			_req.SendResponse((uint16_t)0);
 			break;
 		}
 	case SetWaterLevelUsecPerDeg:
 		{
 			if (length == 2)
 			{
-				_writeOnlyPropertiesStruct.Customs.WaterLevel_Usec_Per_Deg = *(uint16_t*)_data;
+				//_writeOnlyPropertiesStruct.WaterLevel_Usec_Per_Deg = *(uint16_t*)_data;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetWaterValveTimeoutSec:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.Customs.WaterValve_TimeoutSec);	
+			_req.SendResponse(WriteProperties.WaterValve_TimeoutSec);	
 			break;
 		}
 	case SetWaterValveTimeoutSec:
 		{
-			if (length == sizeof(_writeOnlyPropertiesStruct.Customs.WaterValve_TimeoutSec))
+			if (length == sizeof(WriteProperties.WaterValve_TimeoutSec))
 			{
-				_writeOnlyPropertiesStruct.Customs.WaterValve_TimeoutSec = *_data;
+				WriteProperties.WaterValve_TimeoutSec = *_data;
 				_req.SendResponse(OK);
 			}
 			break;
 		}
 	case GetButtonTimeMsec:
     	{
-        	_req.SendResponse(_writeOnlyPropertiesStruct.ButtonPressTimeMs);	
+        	_req.SendResponse(WriteProperties.ButtonPressTimeMs);	
         	break;
     	}
 	case SetButtonTimeMsec:
     	{
-        	if (length == sizeof(_writeOnlyPropertiesStruct.ButtonPressTimeMs))
+        	if (length == sizeof(WriteProperties.ButtonPressTimeMs))
         	{
-            	_writeOnlyPropertiesStruct.ButtonPressTimeMs = *_data;
+            	WriteProperties.ButtonPressTimeMs = *_data;
             	_req.SendResponse(OK);
         	}
         	break;
@@ -577,28 +577,28 @@ bool WiFi::DoEvents()
     	}
 	case GetWaterTankVolumeLitre:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.WaterTankVolumeLitre);
+			_req.SendResponse(WriteProperties.WaterTankVolumeLitre);
 			break;	
 		}
 	case SetWaterTankVolumeLitre:
 		{
-			if (length == sizeof(_writeOnlyPropertiesStruct.WaterTankVolumeLitre))
+			if (length == sizeof(WriteProperties.WaterTankVolumeLitre))
 			{
-				_writeOnlyPropertiesStruct.WaterTankVolumeLitre = *(float*)_data;
+				WriteProperties.WaterTankVolumeLitre = *(float*)_data;
 				_req.SendResponse(OK);
 			}
 			break;	
 		}
 	case GetWaterHeaterPowerKWatt:
 		{
-			_req.SendResponse(_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt);
+			_req.SendResponse(WriteProperties.WaterHeaterPowerKWatt);
 			break;	
 		}
 	case SetWaterHeaterPowerKWatt:
 		{
-			if (length == sizeof(_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt))
+			if (length == sizeof(WriteProperties.WaterHeaterPowerKWatt))
 			{
-				_writeOnlyPropertiesStruct.WaterHeaterPowerKWatt = *(float*)_data;
+				WriteProperties.WaterHeaterPowerKWatt = *(float*)_data;
 				_req.SendResponse(OK);
 			}
 			break;	

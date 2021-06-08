@@ -43,7 +43,7 @@ bool UartStream::CopyRingBuf()
     
 void UartStream::LineReceived(const char* str, const uint8_t strLength)
 {
-	if (strLength > 1) // Нет смысла рассматривать строки короче 2 символов
+	if (strLength > 1) // Нет смысла рассматривать строки короче 2 символов.
 	{
     	if (streql(str + 1, ",CONNECT"))
     	{
@@ -97,8 +97,11 @@ bool UartStream::HandleLine()
 uint16_t UartStream::GetAbsoluteOffset(uint16_t offset)
 {
 	uint16_t head = _head;  // Копируем
-	while (offset--)
+
+	while(offset--)
+	{
 		head = (head + 1) % RX_FIFO_SZ;
+	}
     
 	return head;
 }
@@ -132,7 +135,8 @@ uint8_t UartStream::CopyLine(char* str, const uint16_t count)
 	{
 		tmp_count = (UART_MAX_STR_LEN - 1);
 		uint16_t overflowCount = (count - (UART_MAX_STR_LEN - 1)); // -1 для учета нуль-терминатора
-		/* Пропустить начало строки которое не вмещается в буффер str */
+
+		// Пропустить начало строки которое не вмещается в буффер str.
 		_head = GetAbsoluteOffset(overflowCount);
 	}
     
@@ -153,8 +157,10 @@ bool UartStream::Find(const char ch, const uint16_t offset, uint16_t &position)
 {
 	uint16_t absOffset = GetAbsoluteOffset(offset);
 
-    if (offset >= _count)
-        return false;
+	if (offset >= _count)
+	{
+		return false;
+	}
     
 	// сколько байт доступно
     for (uint16_t i = 0; i < (_count - offset); i++)
@@ -183,7 +189,9 @@ bool UartStream::IsIpd()
 		for (uint8_t i = 0; i < 4; i++)
 		{
 			if (_buf[head] != ipdHeader[i])
+			{
 				return false;
+			}
 
 			head = (head + 1) % RX_FIFO_SZ;
 		}
@@ -201,7 +209,9 @@ bool UartStream::StartWith(const char* data, const uint16_t count)
 		for (uint16_t i = 0; i < count; i++)
 		{
 			if (_buf[head] != data[i])
+			{
 				return false;
+			}
 
 			head = (head + 1) % RX_FIFO_SZ;
 		}
@@ -213,7 +223,7 @@ bool UartStream::StartWith(const char* data, const uint16_t count)
 bool UartStream::WaitSpecific(const char* data, const uint16_t count, const uint16_t timeoutMsec)
 {
 	TaskTimeout tim(timeoutMsec);
-	while (1)
+	while (true)
 	{
 		if (CopyRingBuf())
 		{
@@ -232,9 +242,13 @@ bool UartStream::WaitSpecific(const char* data, const uint16_t count, const uint
 		}
 
 		if (tim.TimeIsUp())
+		{
 			return false;
+		}
 		else
+		{
 			taskYIELD();
+		}
 	}
 }
     
@@ -256,14 +270,14 @@ WaitStatus UartStream::ReadLine(const char* str1, const char* str2, const char* 
 
 uint8_t UartStream::ReadIpd(uint8_t &connection_id)
 {
-	// минимум должно быть 9 символов
+	// Минимум должно быть 9 символов.
 	if (_count >= 9)
 	{
 		connection_id = ctoi(_buf[GetAbsoluteOffset(5)]);
 		uint16_t pos;
-		if (Find(':', 8, pos)) // Находим символ ':' начиная со смещения 8
+		if (Find(':', 8, pos)) // Находим символ ':' начиная со смещения 8.
 		{
-			uint16_t dataStrLen = pos + 1; // Позиция начинается от 0 -> нужно прибавить 1
+			uint16_t dataStrLen = pos + 1; // Позиция начинается от 0 -> нужно прибавить 1.
     			
 			//////////////////////////////////////////////
 			// Преобразуем строковое число в uint8_t
@@ -276,7 +290,7 @@ uint8_t UartStream::ReadIpd(uint8_t &connection_id)
 			}
 			//////////////////////////////////////////////
 
-			// сколько есть уже считанных данных?
+			// Сколько есть уже считанных данных?
 			uint16_t count = _count - 8 - dataStrLen;
 			if (count >= length)
 			{	
@@ -314,25 +328,25 @@ void UartStream::DMAWriteData(const char* data, const uint16_t count)
 		.DMA_MemoryInc = DMA_MemoryInc_Enable,
 		.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
 		.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
-		.DMA_Mode = DMA_Mode_Normal,   // Отправить буффер однократно
+		.DMA_Mode = DMA_Mode_Normal,   // Отправить буфер однократно.
 		.DMA_Priority = DMA_Priority_Low,
 		.DMA_M2M = DMA_M2M_Disable
 	};
 	
 	DMA_Init(WIFI_DMA_CH_TX, &DMA_InitStructure);
 		
-	DMA_Cmd(WIFI_DMA_CH_TX, ENABLE);	// Старт отправки
+	DMA_Cmd(WIFI_DMA_CH_TX, ENABLE);	// Старт отправки.
 		
-	// Ждем, пока отправляются данные
+	// Ждем, пока отправляются данные.
 	while (DMA_GetFlagStatus(WIFI_DMA_FLAG) == RESET) 
 	{
 		taskYIELD();
 	}
     	
-	/* Необходимо выключить DMA */
+	// Необходимо выключить DMA.
 	DMA_Cmd(WIFI_DMA_CH_TX, DISABLE);
 		
-	/* Необходимо снять флаг завершения операции */
+	// Необходимо снять флаг завершения операции.
 	DMA_ClearFlag(WIFI_DMA_FLAG);
 }
 
@@ -358,9 +372,10 @@ void UartStream::Init()
 	};
 	GPIO_Init(GPIO_WIFI_USART, &gpio_init);
 		
-    //Заполняем структуру настройками UARTa.
+    // Заполняем структуру настройками UARTa.
 	USART_InitTypeDef uart_struct;
 	USART_StructInit(&uart_struct);
+	
 	uart_struct = 
 	{
 		.USART_BaudRate = WIFI_UART_Speed,
@@ -416,8 +431,11 @@ WaitStatus UartStream::WaitLine(const char* str1, const char* str2, const char* 
 			if (!HandleIpd())
 			{
 				result = ReadLine(str1, str2, str3);
+
 				if (result != WaitStatus::NOTHING)
+				{
 					return result;
+				}
 			}
 		}
 
@@ -460,7 +478,7 @@ WaitStatus UartStream::SendResponse(const uint8_t connectionId, const char* data
 	
 	cipsend[11] = itoa(connectionId);     // Converts an integer value to a null-terminated string
 	cipsend[12] = ',';
-	itoa(count, cipsend + 13);		// будет добавлен null-терминатор
+	itoa(count, cipsend + 13);		// Будет добавлен null-терминатор.
 
 	cipsend[13 + dataStrLen] = '\r';
 	cipsend[14 + dataStrLen] = '\n';
@@ -492,7 +510,7 @@ uint8_t UartStream::GetRequest(uint8_t &connection_id)
 {
 	if (CopyRingBuf())
 	{
-		// сначала попытаться считать как структуру IPD
+		// Сначала попытаться считать как структуру IPD.
 		if (IsIpd())
 		{
 			uint8_t length = ReadIpd(connection_id);

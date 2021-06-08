@@ -27,7 +27,7 @@ void HeaterTask::BeepHeating()
 	
     if (_tickCounter.TimedOut(7000))
     {
-        buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
+        _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
         _tickCounter.Reset();
     }
 }
@@ -43,7 +43,7 @@ void HeaterTask::BeepTurnOff()
     }
     ;
 		
-    buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
+    _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
     _tickCounter.Reset();
 }
 
@@ -58,7 +58,7 @@ void HeaterTask::BeepTurnOn()
     }
     ;
 		
-    buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
+    _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
     _tickCounter.Reset();
 }
 
@@ -77,7 +77,7 @@ void HeaterTask::BeepReady()
     {
         if (WaterHeated())
         {
-            buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
+            _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
             _tickCounter.Reset();
         }
     }
@@ -98,7 +98,7 @@ void HeaterTask::BeepTimeout()
 		
     if (_tickCounter.TimedOut(7000))
     {
-        buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
+        _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
         _tickCounter.Reset();
     }
 }
