@@ -106,7 +106,7 @@ void LcdTask::Run()
 	        float timeLeftMin = _heatingTimeLeft.GetTimeLeft();
 	        
 	        // Округляем до целых.
-	        byte timeLeft = roundf(timeLeftMin);
+	        uint8_t timeLeft = roundf(timeLeftMin);
 	        
 	        if (timeLeft > 99)
 	        {

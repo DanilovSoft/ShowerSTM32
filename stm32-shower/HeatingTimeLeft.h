@@ -4,8 +4,7 @@
 #include "math.h"
 #include "Common.h"
 
-#define M_PI			3.14159265358979323846  /* pi */
-#define Q				(0.00117)
+static const auto Q = 0.00117;
 
 class HeatingTimeLeft
 {
@@ -20,7 +19,7 @@ private:
 	// Время до окончания нагрева в минутах.
 	// "internalTemp" - Текущая температура воды в баке.
 	// "limitTemp" - Целевая темпаратура.
-    float CalcTimeLeft(float internalTemp, byte targetTemp, byte tankPercent);
+    float CalcTimeLeft(float internalTemp, uint8_t targetTemp, uint8_t tankPercent);
 	
 public:
 	
@@ -34,7 +33,7 @@ public:
     float GetTimeLeft();
 	
 	// Возвращает прогресс нагрева воды от 0 до 100%.
-	byte GetProgress();
+	uint8_t GetProgress();
 };
 
 extern HeatingTimeLeft _heatingTimeLeft;

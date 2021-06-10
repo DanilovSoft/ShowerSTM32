@@ -36,11 +36,25 @@ void ButtonsTask::PressSound()
     _buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
 }
 
+void ButtonsTask::LongPressSound()
+{
+	const BeepSound samples[]
+	{
+		BeepSound(2000, 500),
+		BeepSound(50)
+	}
+	;
+		
+	_heaterTask.ResetBeepTime();
+	_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
+}
+
 void ButtonsTask::Run()
 {
-    ButtonDebounce buttonTempPlus(Button_GPIO, Button_Temp_Plus);
-    ButtonDebounce buttonTempMinus(Button_GPIO, Button_Temp_Minus);
-    ButtonDebounce buttonTempValve(Button_GPIO, Button_Water);
+	ButtonDebounce buttonTempPlus(Button_GPIO, Button_Temp_Plus, Properties.ButtonPressTimeMs);
+	ButtonDebounce buttonTempMinus(Button_GPIO, Button_Temp_Minus, Properties.ButtonPressTimeMs);
+	ButtonDebounce buttonValve(Button_GPIO, Button_Water, Properties.ButtonPressTimeMs);
+	ButtonDebounce longPressButtonValve(Button_GPIO, Button_Water, Properties.ButtonLongPressTimeMs);
     SensorSwitch sensorSwitch(Button_GPIO, Button_SensorSwitch_OUT);
    
     while (true)
@@ -57,12 +71,17 @@ void ButtonsTask::Run()
             TempMinus();
         }
         
-        if (buttonTempValve.IsPressed())
+        if (buttonValve.IsPressed())
         {
             PressSound();
             _valveTask.PushButton();
         }
 
+	    if (longPressButtonValve.IsPressed())
+	    {
+		    LongPressSound();
+	    }
+	    
         if (sensorSwitch.IsOn())
         {
             _valveTask.SensorOn();

@@ -1,11 +1,12 @@
 #include "ButtonDebounce.h"
 
 // ctor
-ButtonDebounce::ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin)
+ButtonDebounce::ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin, uint8_t pressTimeMs)
 {
     _gpio = gpio;
     _gpioPin = gpio_pin;
-    _timeCounter.Reset();
+	_pressTimeMs = pressTimeMs;
+    _stopwatch.Reset();
 }
 
 bool ButtonDebounce::IsPressed()
@@ -23,12 +24,12 @@ bool ButtonDebounce::IsPressed()
                 _pressed = true;
                     
                 // Начать отсчет времени зажатой кнопки.
-                _timeCounter.Reset();
+                _stopwatch.Reset();
             }
             else
             {
                 // Кнопка должна быть зажата некоторое время.
-                if (_timeCounter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
+                if(_stopwatch.GetElapsedMsec() >= _pressTimeMs)
                 {
                     // Запретить нажатие на кнопку.
                     _canPressAgain = false;
@@ -42,7 +43,7 @@ bool ButtonDebounce::IsPressed()
         // Произошло нажатие но оно еще запрещено.
         {
             // Начать отсчет времени отпущенной кнопки заново.
-            _timeCounter.Reset();
+            _stopwatch.Reset();
         }
     }
     else
@@ -55,7 +56,7 @@ bool ButtonDebounce::IsPressed()
             _pressed = false;
             
             // Начать отсчет времени отпущенной кнопки.
-            _timeCounter.Reset();
+            _stopwatch.Reset();
         }
         else
         // Кнопка все еще отпущена.
@@ -64,7 +65,7 @@ bool ButtonDebounce::IsPressed()
             // Нажатие на кнопку запрещено.
             {
                 // Кнопка должна быть отпущена некоторое время.
-                if (_timeCounter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
+                if(_stopwatch.GetElapsedMsec() >= _pressTimeMs)
                 // Кнопка отпущена достаточно времени что-бы разрешить повторное нажатие.
                 {   
                     // Разрешить повторное нажатие на кнопку.
@@ -76,9 +77,4 @@ bool ButtonDebounce::IsPressed()
     
     // Действие кнопки выполнять запрещено.
     return false;
-}
-
-bool ButtonDebounce::IsLongPressed()
-{
-	return false;
 }

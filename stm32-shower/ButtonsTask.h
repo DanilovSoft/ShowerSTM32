@@ -10,8 +10,10 @@
 
 class ButtonsTask : public iActiveTask
 {
+private:
 	void Init();
 	void PressSound();
+	void LongPressSound();
 	void Run();
 	void TempPlus();
 	void TempMinus();

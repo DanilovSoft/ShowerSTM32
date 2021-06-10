@@ -34,7 +34,7 @@ void ValveTask::Init()
     // Выключить питание сенсора до окончания инициали датчика уровня воды.
     GpioTurnOffSensorSwitch();
 
-    xValveSemaphore = xSemaphoreCreateBinaryStatic(&xValveSemaphoreBuffer);	
+    _xValveSemaphore = xSemaphoreCreateBinaryStatic(&_xValveSemaphoreBuffer);	
 }
 	
 void ValveTask::GpioTurnOnSensorSwitch()
@@ -56,69 +56,69 @@ void ValveTask::GPIOOpenValve()
 	
 void ValveTask::GPIOCloseValve()
 {
-	/* Закрыть клапан */
+	// Закрыть клапан.
     GPIO_ResetBits(Valve_GPIO, Valve_Pin);
 		
-    /* Выключить сенсор */
+    // Выключить сенсор.
     GpioTurnOffSensorSwitch();
 		
-    /* Выдержать паузу ради антидребезга */
-    vTaskDelay(Valve_Delay / portTICK_PERIOD_MS);
+    // Выдержать паузу ради антидребезга.
+    vTaskDelay(ValveDebounceMsec / portTICK_PERIOD_MS);
 
-    /* Включить питание сенсора */
+    // Включить питание сенсора.
     GpioTurnOnSensorSwitch();
 }
 	
 void ValveTask::Run()
 {
-	/* Ожидание инициализации датчика уровня воды */
+	// Ожидание инициализации датчика уровня воды.
     _waterLevelTask.WaitInitialization();
 		
-    OpenValveAllowed = true;
+    _openValveAllowed = true;
 		
-    /* Включить сенсор */
+    // Включить сенсор.
     GpioTurnOnSensorSwitch();
 		
     while (true)
     {
-        xSemaphoreTake(xValveSemaphore, portMAX_DELAY);
+        xSemaphoreTake(_xValveSemaphore, portMAX_DELAY);
         {
-            StopRequired = false;
+            _stopRequired = false;
 				
-            /* Нельзя набирать воду если включен нагрев из-за вероятности ложного срабатывания */
+            // Нельзя набирать воду если включен нагрев из-за вероятности ложного срабатывания.
             if (!_heaterTask.GetIsHeaterEnabled())
             {
 	            uint8_t waterPercent = _waterLevelTask.DisplayingPercent;
 				
-            	/* Если уровень воды меньше уровень автоматического отключения */
+            	// Если уровень воды меньше уровень автоматического отключения.
                 if (waterPercent < Properties.WaterValve_Cut_Off_Percent)
                 {					
-                	/* Включить воду */
+                	// Включить воду.
                     GPIOOpenValve();	
     					
-                    /* Ожидать ручной остановки или достижение порогового уровня воды */
-	                while (!StopRequired && _waterLevelTask.DisplayingPercent < Properties.WaterValve_Cut_Off_Percent)
+                    // Ожидать ручной остановки или достижение порогового уровня воды.
+	                while (!_stopRequired && _waterLevelTask.DisplayingPercent < Properties.WaterValve_Cut_Off_Percent)
                     {
                         taskYIELD();
                     }
                 }
             }
 				
-            /* Выключить воду и сенсор с небольшой паузой */
+            // Выключить воду и сенсор с небольшой паузой.
             GPIOCloseValve();
 				
-            /* Разрешить повторный набор воды */
-            OpenValveAllowed = true;
+            // Разрешить повторный набор воды.
+            _openValveAllowed = true;
         }
     }
 }
 	
 void ValveTask::OpenValveIfAllowed()
 {
-    if (OpenValveAllowed)
+    if (_openValveAllowed)
     {
-        OpenValveAllowed = false;
-        xSemaphoreGive(xValveSemaphore);
+        _openValveAllowed = false;
+        xSemaphoreGive(_xValveSemaphore);
     }
 }
 	
@@ -126,35 +126,35 @@ void ValveTask::PushButton()
 {
     if (ValveOpened())
     {
-    	/* Нужно остановить воду */
-        StopRequired = true;
+    	// Нужно остановить воду.
+        _stopRequired = true;
     }
     else
     {
-    	/* Попытка включить воду */
+    	// Попытка включить воду.
         OpenValveIfAllowed();
     }
 }
 
 void ValveTask::SensorOn()
 {
-    if (SensorSwitchLastState != ValveTask::StateOn)
+    if (_sensorSwitchLastState != ValveTask::StateOn)
     {
-        SensorSwitchLastState = ValveTask::StateOn;
+        _sensorSwitchLastState = ValveTask::StateOn;
 			
-        /* Попытка включить воду */
+        // Попытка включить воду.
         OpenValveIfAllowed();
     }
 }
 
 void ValveTask::SensorOff()
 {
-    if (SensorSwitchLastState != ValveTask::StateOff)
+    if (_sensorSwitchLastState != ValveTask::StateOff)
     {
-        SensorSwitchLastState = ValveTask::StateOff;
+        _sensorSwitchLastState = ValveTask::StateOff;
 			
-        /* Нужно остановить воду */
-        StopRequired = true;
+        // Нужно остановить воду.
+        _stopRequired = true;
     }
 }
     

@@ -4,8 +4,6 @@
 
 #define GPIO_MainPower			(GPIOA)
 #define GPIO_Pin_MainPower		(GPIO_Pin_1)
-#define RX_FIFO_SZ              (1024)
-#define UART_MAX_STR_LEN        (200)
 #define WIFI_GPIO				(GPIOB)
 #define WIFI_GPIO_CH_PD_Pin		(GPIO_Pin_1)
 #define WIFI_USART				(USART3)
@@ -17,12 +15,27 @@
 #define WIFI_DMA_FLAG		    (DMA1_FLAG_TC2)  // Transmit Complete
 #define GPIO_WPS				(GPIOB)
 #define GPIO_WPS_Pin			(GPIO_Pin_12)
-#define WIFI_UART_Speed         (115200)
-//#define WIFI_UART_Speed         (57600)
 
-typedef uint32_t uint;
-typedef uint8_t byte;
-typedef uint16_t ushort;
+// Управление питанием тэна.
+#define GPIO_Heater					(GPIOA)
+#define GPIO_Pin_Heater				(GPIO_Pin_10)
+#define GPIO_Heater_Led				(GPIOC)
+#define GPIO_Heater_Led_Pin			(GPIO_Pin_13)
+
+#define Valve_GPIO                  (GPIOA)
+#define Valve_Pin                   (GPIO_Pin_11)
+#define SensorSwitch_Power_GPIO     (GPIOA)
+#define SensorSwitch_Power_Pin      (GPIO_Pin_6)
+#define ValveOpened()               (GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin))
+
+#define Buzzer_TIM					(TIM2)
+#define GPIO_Buzzer					(GPIOA)
+#define GPIO_Buzzer_Pin				(GPIO_Pin_0)
+
+
+static const auto RX_FIFO_SZ = 1024;
+static const auto UART_MAX_STR_LEN = 200;
+static const auto WIFI_UART_Speed = 115200;
 
 inline void _delay_loops(unsigned int loops)
 {
@@ -58,7 +71,9 @@ These are the best solution to obtain 1µs delay with the STM32 platform.
 
 #define Delay_us( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
 //#define Delay( MS ) _delay_loops( (unsigned int)((double)MS * (SystemCoreClock / 3000.0)) )
-#define HasMainPower() (GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET) // Включен ли автомат нагревателя
+
+// Включен ли автомат нагревателя.
+#define HasMainPower() (GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET)
 
 
 bool streql(const char* str1, const char* str2);

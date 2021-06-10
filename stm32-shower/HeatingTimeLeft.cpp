@@ -15,14 +15,14 @@ void HeatingTimeLeft::Init(float tankVolumeLitre, float heaterPowerKWatt)
 	_heaterPowerKWatt = heaterPowerKWatt;
 }
 
-float HeatingTimeLeft::CalcTimeLeft(float internalTemp, byte targetTemp, byte tankPercent)
+float HeatingTimeLeft::CalcTimeLeft(float internalTemp, uint8_t targetTemp, uint8_t tankPercent)
 {
 	if (internalTemp >= targetTemp)
 	{
 		return 0;
 	}
 	
-	//  Формула расчета времени нагрева T = 0,00117 * V * (tк - tн) / W
+	//  Формула расчета времени нагрева T = 0.00117 * V * (tк - tн) / W
 	//  Т – время нагрева воды, час
 	//  V – объем водонагревательного бака(л)
 	//  tк – конечная температура воды, °С(обычно 60°C)
@@ -48,22 +48,22 @@ float HeatingTimeLeft::GetTimeLeft()
     float extTemp = _tempSensorTask.AverageExternalTemp;
 	
 	// Узнаём желаемую температуру воды в баке.
-	byte limitTemp;
+	uint8_t limitTemp;
 	_heaterTempLimit.TryGetTargetTemperature(limitTemp);
 
 	// Нужно учесть на сколько процентов заполнен бак.
-	byte tankPercent = _waterLevelTask.DisplayingPercent;
+	uint8_t tankPercent = _waterLevelTask.DisplayingPercent;
 	
 	float minutes = CalcTimeLeft(intTemp, limitTemp, tankPercent);
     return minutes;
 }
 
-byte HeatingTimeLeft::GetProgress()
+uint8_t HeatingTimeLeft::GetProgress()
 {
     float internalTemp = _tempSensorTask.AverageInternalTemp;
     
 	// Узнаём желаемую температуру воды в баке.
-	byte limitTemp;
+	uint8_t limitTemp;
 	_heaterTempLimit.TryGetTargetTemperature(limitTemp);
 		
 	if (internalTemp > limitTemp)
