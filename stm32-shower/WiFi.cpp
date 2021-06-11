@@ -409,7 +409,7 @@ bool WiFi::DoEvents()
 		}
 	case GetHasMainPower:
 		{
-			bool hasMainPower = HasMainPower();
+			bool hasMainPower = CircuitBreakerIsOn();
 			_req.SendResponse(hasMainPower);
 			break;
 		}

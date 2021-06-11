@@ -196,7 +196,7 @@
     <ClCompile Include="RTOSwrapper.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="Stopwatch.cpp">
+    <ClCompile Include="TicksStopwatch.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="UartStream.cpp">
@@ -208,7 +208,7 @@
     <ClCompile Include="ButtonDebounce.cpp">
       <Filter>Source files\Source</Filter>
     </ClCompile>
-    <ClCompile Include="SensorSwitch.cpp">
+    <ClCompile Include="WaterSensorButton.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="ButtonsTask.cpp">
@@ -444,7 +444,7 @@
     <ClInclude Include="ShowerCode.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="Stopwatch.h">
+    <ClInclude Include="TicksStopwatch.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="TaskSemaphoreSlim.h">
@@ -453,10 +453,10 @@
     <ClInclude Include="TempSensor.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="TickCounter.h">
+    <ClInclude Include="Stopwatch.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="Timeout.h">
+    <ClInclude Include="TaskTimeout.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="UartBuffer.h">
@@ -486,7 +486,7 @@
     <ClInclude Include="ButtonDebounce.h">
       <Filter>Header files\Source</Filter>
     </ClInclude>
-    <ClInclude Include="SensorSwitch.h">
+    <ClInclude Include="WaterSensorButton.h">
       <Filter>Header files</Filter>
     </ClInclude>
   </ItemGroup>

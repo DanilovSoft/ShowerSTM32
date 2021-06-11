@@ -7,7 +7,6 @@
 #include "Common.h"
 #include "misc.h"
 #include "Properties.h"
-#include "TickCounter.h"
 #include "TempSensor.h"
 
 WaterLevelTask _waterLevelTask;

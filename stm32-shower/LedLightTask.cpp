@@ -57,7 +57,7 @@ void LedLightTask::Run()
 {
     while (true)
     {	
-	    if (HasMainPower())
+	    if (CircuitBreakerIsOn())
 	    {
 		    if (_turnedOn)
 		    {

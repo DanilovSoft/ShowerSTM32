@@ -1,7 +1,7 @@
 #pragma once
 #include "stdint.h"
 #include "iActiveTask.h"
-#include "TickCounter.h"
+#include "Stopwatch.h"
 #include "HeaterWatchdog.h"
 
 class HeaterTask : public iActiveTask
@@ -14,12 +14,16 @@ public:
 	bool GetTimeoutOccured();
 	bool GetAbsoluteTimeoutOccured();
 	void ResetBeepTime();
+	// Разрешает включить нагрев воды для текущей сессии (сессия — пока не выключат автомат).
+	void IgnoreWaterLevelOnce();
 	
 private:
 	
 	bool _heaterHasPower;
 	bool _heaterEnabled;
-	TickCounter _tickCounter;
+	Stopwatch _tickCounter;
+	
+	// Для защиты от слишком долгого нагрева.
 	HeaterWatchdog _heaterWatchdog;
 	
 	void BeepHeating();

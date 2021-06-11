@@ -3,17 +3,7 @@
 #include "MedianFilter.h"
 #include "MovingAverageFilter.h"
 
-#define WL_SPI                      (SPI2)
-#define WL_TIM                      (TIM1)
-#define WL_GPIO_Trig                (GPIOA)
-#define WL_GPIO_Trig_Pin            (GPIO_Pin_9)
-#define WL_GPIO_LATCH               (GPIOB)
-#define WL_GPIO_LATCH_Pin           (GPIO_Pin_14)
-#define WL_GPIO_SPI                 (GPIOB)
-#define WL_GPIO_SPI_SCK_Pin         (GPIO_Pin_13)
-#define WL_GPIO_SPI_MOSI_Pin        (GPIO_Pin_15)
-#define WL_GPIO_TIM                 (GPIOA)
-#define WL_GPIO_TIM_Pin             (GPIO_Pin_8)
+
 #define WL_SUCCESS                  (0b10000000)
 #define WL_RISING_EDGE              (0b01000000)
 #define WL_OVERFLOW                 (0b00100000)

@@ -1,36 +1,49 @@
 #pragma once
-#include "stdint.h"
 #include "stm32f10x_gpio.h"
 
-#define GPIO_MainPower			(GPIOA)
-#define GPIO_Pin_MainPower		(GPIO_Pin_1)
-#define WIFI_GPIO				(GPIOB)
-#define WIFI_GPIO_CH_PD_Pin		(GPIO_Pin_1)
-#define WIFI_USART				(USART3)
-#define GPIO_WIFI_USART		    (GPIOB)
-#define GPIO_WIFI_Pin_Rx		(GPIO_Pin_11)
-#define GPIO_WIFI_Pin_Tx		(GPIO_Pin_10)
-#define WIFI_DMA_CH_RX		    (DMA1_Channel3)
-#define WIFI_DMA_CH_TX		    (DMA1_Channel2)
-#define WIFI_DMA_FLAG		    (DMA1_FLAG_TC2)  // Transmit Complete
-#define GPIO_WPS				(GPIOB)
-#define GPIO_WPS_Pin			(GPIO_Pin_12)
-
-// Управление питанием тэна.
+#define GPIO_MainPower				(GPIOA)
+#define GPIO_Pin_MainPower			(GPIO_Pin_1)
+#define WIFI_GPIO					(GPIOB)
+#define WIFI_GPIO_CH_PD_Pin			(GPIO_Pin_1)
+#define WIFI_USART					(USART3)
+#define GPIO_WIFI_USART				(GPIOB)
+#define GPIO_WIFI_Pin_Rx			(GPIO_Pin_11)
+#define GPIO_WIFI_Pin_Tx			(GPIO_Pin_10)
+#define WIFI_DMA_CH_RX				(DMA1_Channel3)
+#define WIFI_DMA_CH_TX				(DMA1_Channel2)
+#define WIFI_DMA_FLAG				(DMA1_FLAG_TC2)  // Transmit Complete
+#define GPIO_WPS					(GPIOB)
+#define GPIO_WPS_Pin				(GPIO_Pin_12)
 #define GPIO_Heater					(GPIOA)
 #define GPIO_Pin_Heater				(GPIO_Pin_10)
 #define GPIO_Heater_Led				(GPIOC)
 #define GPIO_Heater_Led_Pin			(GPIO_Pin_13)
-
 #define Valve_GPIO                  (GPIOA)
 #define Valve_Pin                   (GPIO_Pin_11)
 #define SensorSwitch_Power_GPIO     (GPIOA)
 #define SensorSwitch_Power_Pin      (GPIO_Pin_6)
-#define ValveOpened()               (GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin))
-
 #define Buzzer_TIM					(TIM2)
 #define GPIO_Buzzer					(GPIOA)
 #define GPIO_Buzzer_Pin				(GPIO_Pin_0)
+#define WL_SPI                      (SPI2)
+#define WL_TIM                      (TIM1)
+#define WL_GPIO_Trig                (GPIOA)
+#define WL_GPIO_Trig_Pin            (GPIO_Pin_9)
+#define WL_GPIO_LATCH               (GPIOB)
+#define WL_GPIO_LATCH_Pin           (GPIO_Pin_14)
+#define WL_GPIO_SPI                 (GPIOB)
+#define WL_GPIO_SPI_SCK_Pin         (GPIO_Pin_13)
+#define WL_GPIO_SPI_MOSI_Pin        (GPIO_Pin_15)
+#define WL_GPIO_TIM                 (GPIOA)
+#define WL_GPIO_TIM_Pin             (GPIO_Pin_8)
+#define I2C_EE_LCD					(I2C1)
+#define GPIO_I2C_SCL_Pin			(GPIO_Pin_8)
+#define GPIO_I2C_SDA_Pin			(GPIO_Pin_9)
+
+
+#define CircuitBreakerIsOn()		(GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET) // Включен ли автомат нагревателя.
+#define HeaterIsOn()				(GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET) // Включен ли нагреватель.
+#define ValveOpened()               (GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin)) // Включен ли клапан воды.
 
 
 static const auto RX_FIFO_SZ = 1024;
@@ -46,20 +59,19 @@ inline void _delay_loops(unsigned int loops)
 			 : [loops] "+r"(loops)
 	 );
 }
-//#pragma GCC pop_options
 
-/*
-http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/
-If you want full control among compiler optimizations, the best 1µs delay can be reached using this macro fully written in assembler.
-Doing tests with the scope, I found that 1µs delay can be obtained when the MCU execute this loop 16 times at 84MHZ. 
-However, this macro has to be rearranged if you processor speed is lower, and keep in mind 
-that being a macro, it is "expanded" every time you use it, causing the increase of firmware size.
-These are the best solution to obtain 1µs delay with the STM32 platform.
+#define Delay_us( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
 
-(10*us) // Установлено экспериментальным путем с помощью осцилографа где SystemCoreClock = 72мгц
-(8*us) // Может быть более точным значением но меандр выглядит не пропорциональным
+// http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/
+// If you want full control among compiler optimizations, the best 1µs delay can be reached using this macro fully written in assembler.
+// Doing tests with the scope, I found that 1µs delay can be obtained when the MCU execute this loop 16 times at 84MHZ. 
+// However, this macro has to be rearranged if you processor speed is lower, and keep in mind 
+// that being a macro, it is "expanded" every time you use it, causing the increase of firmware size.
+// These are the best solution to obtain 1µs delay with the STM32 platform.
+//
+// (10*us) // Установлено экспериментальным путем с помощью осцилографа где SystemCoreClock = 72мгц
+// (8*us) // Может быть более точным значением но меандр выглядит не пропорциональным
 
-*/
 //#define Delay_us(us) do {\
 //	asm volatile (	"MOV R0,%[loops]\n\t"\
 //			"1: \n\t"\
@@ -68,13 +80,6 @@ These are the best solution to obtain 1µs delay with the STM32 platform.
 //			"BNE 1b \n\t" : : [loops] "r" (10*us) : "memory"\
 //		      );\
 //} while(0)
-
-#define Delay_us( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
-//#define Delay( MS ) _delay_loops( (unsigned int)((double)MS * (SystemCoreClock / 3000.0)) )
-
-// Включен ли автомат нагревателя.
-#define HasMainPower() (GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET)
-
 
 bool streql(const char* str1, const char* str2);
 uint16_t abs(uint8_t a, uint8_t b);

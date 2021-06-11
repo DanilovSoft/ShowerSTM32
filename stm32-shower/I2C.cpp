@@ -2,11 +2,12 @@
 #include "stm32f10x_i2c.h"
 #include "stm32f10x_gpio.h"
 #include "Properties.h"
-#include "Timeout.h"
+#include "TaskTimeout.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "task.h"
 #include "Common.h"
+#include "stm32f10x_rcc.h"
 
 I2C _i2c;
 
@@ -22,13 +23,13 @@ void I2C::UnlockI2c()
 
 bool I2C::I2C_EE_WaitEepromStandbyState()
 {
-	TaskTimeout timeout(I2C_TimeOutMs);
+	TaskTimeout taskTimeout(I2C_TimeOutMs);
 		
 	__IO uint16_t SR1_Tmp = 0;
 
 	do
 	{
-		if (timeout.TimeIsUp())
+		if (taskTimeout.TimeIsUp())
 			return false;
 			
         // Send START condition.

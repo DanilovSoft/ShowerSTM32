@@ -3,9 +3,7 @@
 #include "semphr.h"
 #include "Properties.h"
 
-#define I2C_EE_LCD              (I2C1)
-#define GPIO_I2C_SCL_Pin        (GPIO_Pin_8)
-#define GPIO_I2C_SDA_Pin        (GPIO_Pin_9)
+
 constexpr auto I2C_TimeOutMs = 2000;
 
 // Всего 8 блоков памяти по 256 байт (по 16 страниц).

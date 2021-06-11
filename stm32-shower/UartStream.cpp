@@ -7,7 +7,7 @@
 #include "string.h"
 #include "UartBuffer.h"
 #include "Common.h"
-#include "Timeout.h"
+#include "TaskTimeout.h"
 #include "ShowerCode.h"
 #include "stm32f10x_usart.h"
 #include "stm32f10x_dma.h"
@@ -15,7 +15,7 @@
 #include "task.h"
 
 UartStream _uartStream;
-volatile uint8_t RX_FIFO_BUF[RX_FIFO_SZ];
+volatile uint8_t _rxFifoBuf[RX_FIFO_SZ];
 
 bool UartStream::CopyRingBuf()
 {
@@ -24,7 +24,7 @@ bool UartStream::CopyRingBuf()
 	uint16_t dma_left = DMA_GetCurrDataCounter(WIFI_DMA_CH_RX);	
 	while (_head2 != dma_left)
 	{
-		_buf[_tail] = RX_FIFO_BUF[_tail];
+		_buf[_tail] = _rxFifoBuf[_tail];
 		_tail = (_tail + 1) % RX_FIFO_SZ;
 				
 		if (_count < RX_FIFO_SZ)
@@ -396,7 +396,7 @@ void UartStream::Init()
 	DMA_InitTypeDef DMA_InitStructure = 
 	{
 		.DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR),
-		.DMA_MemoryBaseAddr = (uint32_t) RX_FIFO_BUF,
+		.DMA_MemoryBaseAddr = (uint32_t) _rxFifoBuf,
 		.DMA_DIR = DMA_DIR_PeripheralSRC,
 		.DMA_BufferSize = RX_FIFO_SZ,
 		.DMA_PeripheralInc = DMA_PeripheralInc_Disable,

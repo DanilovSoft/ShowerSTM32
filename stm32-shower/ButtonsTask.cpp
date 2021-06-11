@@ -8,7 +8,7 @@
 #include "HeaterTempLimit.h"
 #include "ValveTask.h"
 #include "ButtonDebounce.h"
-#include "SensorSwitch.h"
+#include "WaterSensorButton.h"
 
 ButtonsTask _buttonsTask;
 
@@ -51,11 +51,11 @@ void ButtonsTask::LongPressSound()
 
 void ButtonsTask::Run()
 {
-	ButtonDebounce buttonTempPlus(Button_GPIO, Button_Temp_Plus, Properties.ButtonPressTimeMs);
-	ButtonDebounce buttonTempMinus(Button_GPIO, Button_Temp_Minus, Properties.ButtonPressTimeMs);
-	ButtonDebounce buttonValve(Button_GPIO, Button_Water, Properties.ButtonPressTimeMs);
-	ButtonDebounce longPressButtonValve(Button_GPIO, Button_Water, Properties.ButtonLongPressTimeMs);
-    SensorSwitch sensorSwitch(Button_GPIO, Button_SensorSwitch_OUT);
+	ButtonDebounce buttonTempPlus(Button_GPIO, Button_Temp_Plus, Properties.ButtonPressTimeMs, Properties.ButtonPressTimeMs * 2);
+	ButtonDebounce buttonTempMinus(Button_GPIO, Button_Temp_Minus, Properties.ButtonPressTimeMs, Properties.ButtonPressTimeMs * 2);
+	ButtonDebounce buttonValve(Button_GPIO, Button_Water, Properties.ButtonPressTimeMs, Properties.ButtonPressTimeMs * 2);
+	ButtonDebounce longPressButtonValve(Button_GPIO, Button_Water, Properties.ButtonLongPressTimeMs, Properties.ButtonPressTimeMs * 2);
+    WaterSensorButton sensorSwitch(Button_GPIO, Button_SensorSwitch_OUT);
    
     while (true)
     {
@@ -80,6 +80,16 @@ void ButtonsTask::Run()
 	    if (longPressButtonValve.IsPressed())
 	    {
 		    LongPressSound();
+
+		    if (CircuitBreakerIsOn())
+		    {
+                // Пытаемся принудительно включить нагрев воды.
+			    _heaterTask.IgnoreWaterLevelOnce();
+		    }
+		    else
+		    {
+			     // Пытаемся принудительно включить набор воды.
+		    }		    
 	    }
 	    
         if (sensorSwitch.IsOn())

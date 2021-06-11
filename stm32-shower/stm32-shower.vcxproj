@@ -99,7 +99,7 @@
     <ClCompile Include="Properties.cpp" />
     <ClCompile Include="RTCInterval.cpp" />
     <ClCompile Include="RTOSwrapper.cpp" />
-    <ClCompile Include="SensorSwitch.cpp" />
+    <ClCompile Include="WaterSensorButton.cpp" />
     <ClCompile Include="StdPeriph\Src\misc.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_adc.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_bkp.c" />
@@ -123,7 +123,7 @@
     <ClCompile Include="StdPeriph\Src\stm32f10x_tim.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_usart.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_wwdg.c" />
-    <ClCompile Include="Stopwatch.cpp" />
+    <ClCompile Include="TicksStopwatch.cpp" />
     <ClCompile Include="system_stm32f10x.c" />
     <ClCompile Include="TaskHelper.cpp" />
     <ClCompile Include="TempSensor.cpp" />
@@ -175,7 +175,7 @@
     <ClInclude Include="Request.h" />
     <ClInclude Include="RTCInterval.h" />
     <ClInclude Include="RTOSwrapper.h" />
-    <ClInclude Include="SensorSwitch.h" />
+    <ClInclude Include="WaterSensorButton.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="ShowerCode.h" />
     <ClInclude Include="StdPeriph\Inc\core_cm3.h" />
@@ -207,12 +207,12 @@
     <ClInclude Include="StdPeriph\Inc\stm32f10x_usart.h" />
     <ClInclude Include="StdPeriph\Inc\stm32f10x_wwdg.h" />
     <ClInclude Include="StdPeriph\Inc\system_stm32f10x.h" />
-    <ClInclude Include="Stopwatch.h" />
+    <ClInclude Include="TicksStopwatch.h" />
     <ClInclude Include="TaskHelper.h" />
     <ClInclude Include="TaskSemaphoreSlim.h" />
     <ClInclude Include="TempSensor.h" />
-    <ClInclude Include="TickCounter.h" />
-    <ClInclude Include="Timeout.h" />
+    <ClInclude Include="Stopwatch.h" />
+    <ClInclude Include="TaskTimeout.h" />
     <ClInclude Include="UartBuffer.h" />
     <ClInclude Include="UartStream.h" />
     <ClInclude Include="ValveTask.h" />

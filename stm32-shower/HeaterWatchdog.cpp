@@ -10,7 +10,7 @@
 
 void HeaterWatchdog::Init()
 {	
-    _interval = Properties.HeatingTimeLimitMin * 60;
+    _intervalSec = Properties.HeatingTimeLimitMin * 60;
 	
 	// Переводим в секунды.
     _absoluteIntervalSec = Properties.AbsoluteHeatingTimeLimitHours * 60 * 60;
@@ -22,42 +22,41 @@ void HeaterWatchdog::Init()
 void HeaterWatchdog::Reset()
 {
     _timeoutCounter.Reset();
-    TimeOutOccurred = false;
+    TimeoutOccurred = false;
 }
 	
 void HeaterWatchdog::ResetAbsolute()
 {
     _absoluteTimeoutCounter.Reset();
-    AbsoluteTimeOutOccured = false;
+    AbsoluteTimeoutOccured = false;
 }
 	
 bool HeaterWatchdog::TimeOut()
 {
-	if (TimeOutOccurred)
+	if (TimeoutOccurred)
 	{
 		return true;
 	}
 		
-    if (_timeoutCounter.Timeout(_interval))
+    if (_timeoutCounter.Timeout(_intervalSec))
     {
-        TimeOutOccurred = true;
+        TimeoutOccurred = true;
         return true;
     }
 		
     return false;
 }
 	
-// Абсолютный таймаут отсчитывает время когда включен рубильник автомата.
 bool HeaterWatchdog::AbsoluteTimeout()
 {
-	if (AbsoluteTimeOutOccured)
+	if (AbsoluteTimeoutOccured)
 	{
 		return true;
 	}
 		
     if (_absoluteTimeoutCounter.Timeout(_absoluteIntervalSec))
     {
-        AbsoluteTimeOutOccured = true;
+        AbsoluteTimeoutOccured = true;
         return true;
     }
 		

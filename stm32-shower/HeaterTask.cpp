@@ -8,7 +8,7 @@
 #include "Settings.h"
 #include "WaterLevelTask.h"
 #include "Buzzer.h"
-#include "TickCounter.h"
+#include "Stopwatch.h"
 #include "HeaterWatchdog.h"
 #include "TempSensor.h"
 #include "HeatingTimeLeft.h"
@@ -140,7 +140,7 @@ void HeaterTask::Run()
     while (true)
     {
     	// Если есть 220в.
-        if (HasMainPower())
+        if (CircuitBreakerIsOn())
         {
         	// Если автомат был включён.
             if (!_heaterHasPower)
@@ -155,7 +155,7 @@ void HeaterTask::Run()
             if (_heaterWatchdog.AbsoluteTimeout())
             {
             	// Выключить если нагреватель включен.
-                if (GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET)
+                if(HeaterIsOn())
                 {	
                     TurnOff();
                 }
@@ -165,7 +165,7 @@ void HeaterTask::Run()
             else
             {
             	// Если нагреватель включен.
-                if (GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET)
+                if(HeaterIsOn())
                 {
                 	// Сброс таймера если включился нагреватель.
                     if (!_heaterEnabled)
@@ -191,7 +191,7 @@ void HeaterTask::Run()
                     _heaterEnabled = false;
 						
                     // Сбросить таймаут можно только отключив автомат нагревателя.
-                    if (_heaterWatchdog.TimeOutOccurred)
+                    if (_heaterWatchdog.TimeoutOccurred)
                     {
                         BeepTimeout();
                     }
@@ -207,8 +207,8 @@ void HeaterTask::Run()
         {
             _heaterHasPower = false;
 				
-            // Выключить реле нагревателя (Отсутствует 220в)
-            if (GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET)
+            // Выключить реле нагревателя (Отсутствует 220в).
+            if(HeaterIsOn())
             {
                 TurnOff();
             }
@@ -291,15 +291,20 @@ uint8_t HeaterTask::GetHeatingLimit()
 	
 bool HeaterTask::GetTimeoutOccured()
 {
-    return _heaterWatchdog.TimeOutOccurred;
+    return _heaterWatchdog.TimeoutOccurred;
 }
 	
 bool HeaterTask::GetAbsoluteTimeoutOccured()
 {
-    return _heaterWatchdog.AbsoluteTimeOutOccured;
+    return _heaterWatchdog.AbsoluteTimeoutOccured;
 }
 	
 void HeaterTask::ResetBeepTime()
 {
     _tickCounter.Reset();
+}
+
+void HeaterTask::IgnoreWaterLevelOnce()
+{
+	
 }

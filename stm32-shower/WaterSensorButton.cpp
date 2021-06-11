@@ -1,36 +1,35 @@
-#include "SensorSwitch.h"
+#include "WaterSensorButton.h"
 #include "Properties.h"
 
 
-SensorSwitch::SensorSwitch(GPIO_TypeDef* grio, uint16_t gpio_pin)
+WaterSensorButton::WaterSensorButton(GPIO_TypeDef* gpio, uint16_t gpio_pin)
+	: _gpio(gpio)
+	, _gpio_pin(gpio_pin)
 {
-    _grio = grio;
-    _gpio_pin = gpio_pin;
-
-    _isOn = false;
-    _pendingOn = false;
-    _pendingOff = false;
-    _counter.Reset();
+	_isOn = false;
+	_pendingOn = false;
+	_pendingOff = false;
+	_debounce.Reset();
 }
 
-SensorSwitch::~SensorSwitch()
+WaterSensorButton::~WaterSensorButton()
 {
 }
 
-bool SensorSwitch::IsOn()
+bool WaterSensorButton::IsOn()
 {
-    if (GPIO_ReadInputDataBit(_grio, _gpio_pin))
+	if (GPIO_ReadInputDataBit(_gpio, _gpio_pin))
     {
         if (!_isOn)
         {
             if (!_pendingOn)
             {
                 _pendingOn = true;
-                _counter.Reset();
+                _debounce.Reset();
             }
             else
             {
-                if (_counter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
+                if (_debounce.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
                 {
                     _isOn = true;
                     _pendingOn = false;
@@ -49,11 +48,11 @@ bool SensorSwitch::IsOn()
             if (!_pendingOff)
             {
                 _pendingOff = true;
-                _counter.Reset();
+                _debounce.Reset();
             }
             else
             {
-                if (_counter.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
+                if (_debounce.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
                 {
                     _isOn = false;
                     _pendingOff = false;

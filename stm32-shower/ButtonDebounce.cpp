@@ -1,12 +1,13 @@
 #include "ButtonDebounce.h"
 
 // ctor
-ButtonDebounce::ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin, uint8_t pressTimeMs)
+ButtonDebounce::ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin, uint8_t pressTimeMs, uint16_t releaseTimeMs)
+	: _gpio(gpio)
+	, _gpioPin(gpio_pin)
+	, _pressTimeMs(pressTimeMs)
+	, _releaseTimeMs(releaseTimeMs)
 {
-    _gpio = gpio;
-    _gpioPin = gpio_pin;
-	_pressTimeMs = pressTimeMs;
-    _stopwatch.Reset();
+	_stopwatch.Reset();
 }
 
 bool ButtonDebounce::IsPressed()
@@ -65,8 +66,8 @@ bool ButtonDebounce::IsPressed()
             // Нажатие на кнопку запрещено.
             {
                 // Кнопка должна быть отпущена некоторое время.
-                if(_stopwatch.GetElapsedMsec() >= _pressTimeMs)
-                // Кнопка отпущена достаточно времени что-бы разрешить повторное нажатие.
+                if(_stopwatch.GetElapsedMsec() >= _releaseTimeMs)
+                // Кнопка отпущена достаточно долго что-бы разрешить повторное нажатие.
                 {   
                     // Разрешить повторное нажатие на кнопку.
                     _canPressAgain = true;
