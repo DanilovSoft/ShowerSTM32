@@ -1,10 +1,6 @@
 #include "HeatingTimeLeft.h"
-#include "stm32f10x_rtc.h"
-#include "RTCInterval.h"
-#include "HeaterTask.h"
 #include "HeaterTempLimit.h"
 #include "TempSensor.h"
-#include "RTCInterval.h"
 #include "WaterLevelTask.h"
 
 HeatingTimeLeft _heatingTimeLeft;
@@ -39,7 +35,7 @@ float HeatingTimeLeft::CalcTimeLeft(float internalTemp, uint8_t targetTemp, uint
 
 void HeatingTimeLeft::OnStartHeating()
 {
-    //_rtcInterval.Reset();
+    
 }
 
 float HeatingTimeLeft::GetTimeLeft()

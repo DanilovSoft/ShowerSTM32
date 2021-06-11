@@ -1,12 +1,9 @@
 #pragma once
-#include "RTCInterval.h"
+#include "RealTimeClockStopwatch.h"
 
 class HeaterWatchdog
 {
 public:
-
-	volatile bool TimeoutOccurred;
-	volatile bool AbsoluteTimeoutOccured;
 
 	void Init();
 	void Reset();
@@ -14,11 +11,15 @@ public:
 	bool TimeOut();
 	// Абсолютный таймаут отсчитывает время когда включен рубильник автомата.
     bool AbsoluteTimeout();
+	bool IsTimeoutOccurred();
+	bool IsAbsoluteTimeoutOccured();
 	
 private:
 	
+	volatile bool _timeoutOccurred;
+	volatile bool _absoluteTimeoutOccured;
 	uint32_t _intervalSec;
 	uint32_t _absoluteIntervalSec;	
-	RTCInterval _timeoutCounter;
-	RTCInterval _absoluteTimeoutCounter;
+	RealTimeClockStopwatch _timeoutStopwatch;
+	RealTimeClockStopwatch _absoluteTimeoutStopwatch;
 };

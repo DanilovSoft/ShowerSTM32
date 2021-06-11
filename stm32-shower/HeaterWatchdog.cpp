@@ -15,32 +15,32 @@ void HeaterWatchdog::Init()
 	// Переводим в секунды.
     _absoluteIntervalSec = Properties.AbsoluteHeatingTimeLimitHours * 60 * 60;
 		
-    _timeoutCounter.Reset();
-    _absoluteTimeoutCounter.Reset();
+    _timeoutStopwatch.Reset();
+    _absoluteTimeoutStopwatch.Reset();
 }
 
 void HeaterWatchdog::Reset()
 {
-    _timeoutCounter.Reset();
-    TimeoutOccurred = false;
+    _timeoutStopwatch.Reset();
+    _timeoutOccurred = false;
 }
 	
 void HeaterWatchdog::ResetAbsolute()
 {
-    _absoluteTimeoutCounter.Reset();
-    AbsoluteTimeoutOccured = false;
+    _absoluteTimeoutStopwatch.Reset();
+    _absoluteTimeoutOccured = false;
 }
 	
 bool HeaterWatchdog::TimeOut()
 {
-	if (TimeoutOccurred)
+	if (_timeoutOccurred)
 	{
 		return true;
 	}
 		
-    if (_timeoutCounter.Timeout(_intervalSec))
+    if (_timeoutStopwatch.Timeout(_intervalSec))
     {
-        TimeoutOccurred = true;
+        _timeoutOccurred = true;
         return true;
     }
 		
@@ -49,16 +49,26 @@ bool HeaterWatchdog::TimeOut()
 	
 bool HeaterWatchdog::AbsoluteTimeout()
 {
-	if (AbsoluteTimeoutOccured)
+	if (_absoluteTimeoutOccured)
 	{
 		return true;
 	}
 		
-    if (_absoluteTimeoutCounter.Timeout(_absoluteIntervalSec))
+    if (_absoluteTimeoutStopwatch.Timeout(_absoluteIntervalSec))
     {
-        AbsoluteTimeoutOccured = true;
+        _absoluteTimeoutOccured = true;
         return true;
     }
 		
     return false;
+}
+
+bool HeaterWatchdog::IsTimeoutOccurred()
+{
+	return _timeoutOccurred;
+}
+
+bool HeaterWatchdog::IsAbsoluteTimeoutOccured()
+{
+	return _absoluteTimeoutOccured;
 }

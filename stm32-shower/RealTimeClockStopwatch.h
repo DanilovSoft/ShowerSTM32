@@ -2,15 +2,16 @@
 #include "stdint.h"
 
 // Замеряет время на основе часов реального времени (RTC).
-class RTCInterval
+class RealTimeClockStopwatch
 {
+public:
+	
+	void Reset();
+	uint32_t ElapsedSeconds();
+	bool Timeout(uint16_t seconds);
+	
 private:
 	
 	volatile uint32_t _lastTime;
-	
-public:
-	void Reset();
-	uint32_t Elapsed();
-	bool Timeout(uint16_t seconds);
 };
 

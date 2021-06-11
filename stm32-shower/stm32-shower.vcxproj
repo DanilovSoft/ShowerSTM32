@@ -97,7 +97,7 @@
     <ClCompile Include="MedianFilter.cpp" />
     <ClCompile Include="MovingAverageFilter.cpp" />
     <ClCompile Include="Properties.cpp" />
-    <ClCompile Include="RTCInterval.cpp" />
+    <ClCompile Include="RealTimeClockStopwatch.cpp" />
     <ClCompile Include="RTOSwrapper.cpp" />
     <ClCompile Include="WaterSensorButton.cpp" />
     <ClCompile Include="StdPeriph\Src\misc.c" />
@@ -173,7 +173,7 @@
     <ClInclude Include="MovingAverageFilter.h" />
     <ClInclude Include="Properties.h" />
     <ClInclude Include="Request.h" />
-    <ClInclude Include="RTCInterval.h" />
+    <ClInclude Include="RealTimeClockStopwatch.h" />
     <ClInclude Include="RTOSwrapper.h" />
     <ClInclude Include="WaterSensorButton.h" />
     <ClInclude Include="Settings.h" />

@@ -25,10 +25,10 @@ void HeaterTask::BeepHeating()
     }
     ;
 	
-    if (_tickCounter.TimedOut(7000))
+    if (_beepStopwatch.TimedOut(7000))
     {
         _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-        _tickCounter.Reset();
+        _beepStopwatch.Reset();
     }
 }
 
@@ -44,7 +44,7 @@ void HeaterTask::BeepTurnOff()
     ;
 		
     _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-    _tickCounter.Reset();
+    _beepStopwatch.Reset();
 }
 
 void HeaterTask::BeepTurnOn()
@@ -59,7 +59,7 @@ void HeaterTask::BeepTurnOn()
     ;
 		
     _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-    _tickCounter.Reset();
+    _beepStopwatch.Reset();
 }
 
 void HeaterTask::BeepReady()
@@ -73,12 +73,12 @@ void HeaterTask::BeepReady()
     }
     ;
 		
-    if (_tickCounter.TimedOut(4000))
+    if (_beepStopwatch.TimedOut(4000))
     {
         if (WaterHeated())
         {
             _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-            _tickCounter.Reset();
+            _beepStopwatch.Reset();
         }
     }
 }
@@ -96,10 +96,10 @@ void HeaterTask::BeepTimeout()
     }
     ;
 		
-    if (_tickCounter.TimedOut(7000))
+    if (_beepStopwatch.TimedOut(7000))
     {
         _buzzer.Beep(samples, sizeof(samples) / sizeof(*samples));
-        _tickCounter.Reset();
+        _beepStopwatch.Reset();
     }
 }
     
@@ -127,15 +127,19 @@ void HeaterTask::Init()
     GPIO_Init(GPIO_Heater_Led, &gpio_init);
     GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
 		
-    TurnOffNoSound();
+    TurnOffWithNoSound();
 }
 
 void HeaterTask::Run()
 {
     _heaterWatchdog.Init();
-    _tickCounter.Reset();
+    _beepStopwatch.Reset();
     _tempSensorTask.WaitFirstConversion();
-    _waterLevelTask.WaitInitialization();
+	
+	while (!_waterLevelTask.Initialized && !_forcedSessionRequired)
+	{
+		taskYIELD();
+	}
 		
     while (true)
     {
@@ -148,7 +152,7 @@ void HeaterTask::Run()
                 _heaterHasPower = true;
                 _heaterWatchdog.Reset();
                 _heaterWatchdog.ResetAbsolute();	// Сбросить абсолютный таймер.
-                _tickCounter.Reset();
+                _beepStopwatch.Reset();
             }
 				
             // Абсолютный таймаут можно сбросить только отключив автомат нагревателя.
@@ -191,7 +195,7 @@ void HeaterTask::Run()
                     _heaterEnabled = false;
 						
                     // Сбросить таймаут можно только отключив автомат нагревателя.
-                    if (_heaterWatchdog.TimeoutOccurred)
+                    if (_heaterWatchdog.IsTimeoutOccurred())
                     {
                         BeepTimeout();
                     }
@@ -247,17 +251,17 @@ void HeaterTask::ControlTurnOff()
 
 void HeaterTask::TurnOff()
 {
-    TurnOffNoSound();
+    TurnOffWithNoSound();
     BeepTurnOff();	
 }
 	
-void HeaterTask::TurnOffNoSound()
+void HeaterTask::TurnOffWithNoSound()
 {
     GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
     GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
 }
 
-void HeaterTask::TurnOnNoSound()
+void HeaterTask::TurnOnWithNoSound()
 {
     GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
     GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
@@ -267,7 +271,7 @@ void HeaterTask::TurnOn()
 {
     BeepTurnOn();
     _heatingTimeLeft.OnStartHeating();
-    TurnOnNoSound();
+    TurnOnWithNoSound();
 }
 
 bool HeaterTask::GetIsHeaterEnabled()
@@ -291,20 +295,21 @@ uint8_t HeaterTask::GetHeatingLimit()
 	
 bool HeaterTask::GetTimeoutOccured()
 {
-    return _heaterWatchdog.TimeoutOccurred;
+    return _heaterWatchdog.IsTimeoutOccurred();
 }
 	
 bool HeaterTask::GetAbsoluteTimeoutOccured()
 {
-    return _heaterWatchdog.AbsoluteTimeoutOccured;
+    return _heaterWatchdog.IsAbsoluteTimeoutOccured();
 }
 	
 void HeaterTask::ResetBeepTime()
 {
-    _tickCounter.Reset();
+    _beepStopwatch.Reset();
 }
 
 void HeaterTask::IgnoreWaterLevelOnce()
 {
-	
+	// Просим другой поток выполнить принудительное включение нагрева.
+	_forcedSessionRequired = true;
 }

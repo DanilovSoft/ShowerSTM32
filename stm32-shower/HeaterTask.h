@@ -21,23 +21,22 @@ private:
 	
 	bool _heaterHasPower;
 	bool _heaterEnabled;
-	Stopwatch _tickCounter;
+	Stopwatch _beepStopwatch; // Для периодического звукового сигнала.
+	HeaterWatchdog _heaterWatchdog; // Для защиты от слишком долгого нагрева.
+	volatile bool _forcedSessionRequired; // Для принудительного включения нагрева игнорируя датчик уровня воды.
 	
-	// Для защиты от слишком долгого нагрева.
-	HeaterWatchdog _heaterWatchdog;
-	
+	void Init();
+	void Run();
 	void BeepHeating();
 	void BeepTurnOff();
 	void BeepTurnOn();
 	void BeepReady();
 	void BeepTimeout();
-	void Init();
-	void Run();
 	void ControlTurnOn();
 	void ControlTurnOff();
 	void TurnOff();
-	void TurnOffNoSound();
-	void TurnOnNoSound();
+	void TurnOffWithNoSound();
+	void TurnOnWithNoSound();
 	void TurnOn();
 };
 

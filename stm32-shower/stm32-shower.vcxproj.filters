@@ -190,7 +190,7 @@
     <ClCompile Include="Properties.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="RTCInterval.cpp">
+    <ClCompile Include="RealTimeClockStopwatch.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="RTOSwrapper.cpp">
@@ -432,7 +432,7 @@
     <ClInclude Include="Request.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="RTCInterval.h">
+    <ClInclude Include="RealTimeClockStopwatch.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="RTOSwrapper.h">
