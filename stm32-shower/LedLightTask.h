@@ -1,13 +1,110 @@
 #pragma once
 #include "iActiveTask.h"
+#include "stm32f10x_gpio.h"
+#include "stm32f10x_tim.h"
+#include "stm32f10x_rcc.h"
+#include "Common.h"
+#include "Properties.h"
+#include "HeaterTask.h"
 
 class LedLightTask final : public iActiveTask
 {
 private:
 	
-	bool m_turnedOn;
-	void Init();
-	void Run();
+	bool m_lightIsOn;
+	
+	void Init()
+	{
+		// Тактуем таймер от шины APB1.
+		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+	
+		GPIO_InitTypeDef gpio_init_struct = 
+		{
+			.GPIO_Pin = GPIO_Pin_LED,
+			.GPIO_Speed = GPIO_Speed_2MHz,
+			.GPIO_Mode = GPIO_Mode_IN_FLOATING
+		};
+		GPIO_Init(GPIO_LED, &gpio_init_struct);
+
+		// Частота таймера - 1 мегагерц.
+		uint16_t prescaler = SystemCoreClock / 1000000 - 1;
+	
+		TIM_TimeBaseInitTypeDef tim_time_base_init_struct = 
+		{
+			.TIM_Prescaler = prescaler,
+			.TIM_CounterMode = TIM_CounterMode_Up,
+			.TIM_Period = 100 - 1,
+			.TIM_ClockDivision = TIM_CKD_DIV1, 
+			  // без  делителя.
+			.TIM_RepetitionCounter = 0,
+		};
+		TIM_TimeBaseInit(LED_TIM, &tim_time_base_init_struct);
+    
+		// Скважность от 0 до 100%.
+		uint16_t pulse = (tim_time_base_init_struct.TIM_Period + 1) / 100 * g_properties.LightBrightness;
+	
+		TIM_OCInitTypeDef tim_oc_init_struct = 
+		{
+			.TIM_OCMode = TIM_OCMode_PWM1,
+			.TIM_OutputState = TIM_OutputState_Enable,
+			.TIM_OutputNState = TIM_OutputNState_Disable,
+			.TIM_Pulse = pulse,
+			.TIM_OCPolarity = TIM_OCPolarity_High,
+			.TIM_OCNPolarity = TIM_OCPolarity_High,
+			.TIM_OCIdleState = TIM_OCIdleState_Reset,
+			.TIM_OCNIdleState = TIM_OCNIdleState_Reset
+		};
+		TIM_OC2Init(LED_TIM, &tim_oc_init_struct);
+
+		// Включаем таймер.
+		TIM_Cmd(LED_TIM, ENABLE);
+	}
+
+	void Run()
+	{
+		while (true)
+		{	
+			if (Common::CircuitBreakerIsOn())
+			{
+				if (m_lightIsOn)
+				{
+					m_lightIsOn = false;
+					TurnOffLight();
+				}
+			}
+			else if (!m_lightIsOn)
+			{
+				m_lightIsOn = true;
+				TurnOnLight();
+			}
+	    
+			taskYIELD();
+		}
+	}
+	
+	// Отключает GPIO от таймера.
+	void TurnOffLight()
+	{
+		GPIO_InitTypeDef gpio_init_struct = 
+		{
+			.GPIO_Pin = GPIO_Pin_LED,
+			.GPIO_Speed = GPIO_Speed_2MHz,
+			.GPIO_Mode = GPIO_Mode_IN_FLOATING
+		};
+		GPIO_Init(GPIO_LED, &gpio_init_struct);
+	}
+	
+	// Подключает GPIO к таймеру.
+	void TurnOnLight()
+	{
+		GPIO_InitTypeDef gpio_init_struct = 
+		{
+			.GPIO_Pin = GPIO_Pin_LED,
+			.GPIO_Speed = GPIO_Speed_2MHz,
+			.GPIO_Mode = GPIO_Mode_AF_PP
+		};
+		GPIO_Init(GPIO_LED, &gpio_init_struct);
+	}
 };
 
 extern LedLightTask g_ledLightTask;

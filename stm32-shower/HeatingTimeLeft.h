@@ -12,7 +12,7 @@ public:
     void OnStartHeating();
 	
 	// Возвращает время до окончания нагрева в минутах (от 0 до x).
-    float GetTimeLeft();
+    float GetTimeLeftMin();
 	
 	// Возвращает прогресс нагрева воды от 0 до 100%.
 	uint8_t GetProgress();

@@ -1,8 +1,6 @@
 #pragma once
 #include "IpdBuffer.h"
 
-constexpr auto IPD_BUF_SZ = 5;
-
 class ConnectionsBuffer final
 {
 public:
@@ -13,8 +11,8 @@ public:
 	uint8_t GetRequestSize(uint8_t &connection_id);
 	
 private:
-	
-    IpdBuffer m_buf[IPD_BUF_SZ];
+	static constexpr auto kIpdBufSize = 5;
+    IpdBuffer m_buf[kIpdBufSize];
     uint8_t m_nextConnectionId = 0;
     void MoveNext();
 };

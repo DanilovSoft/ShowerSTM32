@@ -12,10 +12,10 @@ void HeaterWatchdog::Init()
     m_absoluteTimeoutStopwatch.Reset();
 }
 
-void HeaterWatchdog::Reset()
+void HeaterWatchdog::ResetSession()
 {
     m_timeoutStopwatch.Reset();
-    m_timeoutOccurred = false;
+    m_sessionTimeoutOccurred = false;
 }
 	
 void HeaterWatchdog::ResetAbsolute()
@@ -26,14 +26,14 @@ void HeaterWatchdog::ResetAbsolute()
 	
 bool HeaterWatchdog::TimeOut()
 {
-	if (m_timeoutOccurred)
+	if (m_sessionTimeoutOccurred)
 	{
 		return true;
 	}
 		
     if (m_timeoutStopwatch.Timeout(m_intervalSec))
     {
-        m_timeoutOccurred = true;
+        m_sessionTimeoutOccurred = true;
         return true;
     }
 		
@@ -56,9 +56,9 @@ bool HeaterWatchdog::AbsoluteTimeout()
     return false;
 }
 
-bool HeaterWatchdog::IsTimeoutOccurred()
+bool HeaterWatchdog::IsSessionTimeoutOccurred()
 {
-	return m_timeoutOccurred;
+	return m_sessionTimeoutOccurred;
 }
 
 bool HeaterWatchdog::IsAbsoluteTimeoutOccured()

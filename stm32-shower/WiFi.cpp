@@ -12,20 +12,18 @@
 #include "HeatingTimeLeft.h"
 #include "TempSensor.h"
 
-WiFi g_wifiTask;
-
 bool WiFi::InitWiFi()
 {
-	bool wpsButtonPressed = GPIO_ReadInputDataBit(GPIO_WPS, GPIO_WPS_Pin) == RESET;
+	bool wps_button_pressed = GPIO_ReadInputDataBit(GPIO_WPS, GPIO_WPS_Pin) == RESET;
 		
-	for (int8_t i = 0; i <= WIFI_INIT_TRY_COUNT; i++)
+	for (int8_t i = 0; i <= kWiFiInitTryCount; i++)
 	{
 		vTaskDelay(100 / portTICK_PERIOD_MS);
 		GPIO_SetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
     	
 		if (TryInitWiFi())
 		{
-			if (wpsButtonPressed)
+			if (wps_button_pressed)
 			{
 				if (!WPS())
 				{
@@ -41,10 +39,9 @@ bool WiFi::InitWiFi()
 	return false;
 }
 	
-
 bool WiFi::TryInitWiFi()
 {
-	if (!g_uartStream.WaitLine("ready", 1000))     // ожидание инициализации wi-fi
+	if (!g_uartStream.WaitLine("ready", 1000))     // Ожидание инициализации WiFi.
 	{
 		return false;
 	}
@@ -68,11 +65,11 @@ bool WiFi::TryInitWiFi()
 		return false;
 	}
 		
-	char rfpower[] = "AT+RFPOWER=\0\0\0\0";
-	itoa(g_properties.WiFiPower, rfpower + 11);
-	strcat(rfpower, "\r\n");
+	char rf_power[] = "AT+RFPOWER=\0\0\0\0";
+	Common::itoa(g_properties.WiFiPower, rf_power + 11);
+	strcat(rf_power, "\r\n");
 	
-	g_uartStream.WriteLine(rfpower);		// 40..82, unit:0.25dBm
+	g_uartStream.WriteLine(rf_power);		// 40..82, unit:0.25dBm
 	
 	if(!g_uartStream.WaitLine("OK", 300))
 	{
@@ -100,10 +97,9 @@ bool WiFi::TryInitWiFi()
 	return true;
 }
 	
-
 bool WiFi::WPS()
 {
-	const BeepSound samples[] = 
+	static const BeepSound samples[] = 
 	{ 
 		BeepSound(3300, 140),
 		BeepSound(30),
@@ -114,9 +110,9 @@ bool WiFi::WPS()
 	};
 	g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
 
-			//			uartStream.WriteLine("AT+CWQAP");     // забыть сохраненную точку доступа
-			//			if (!uartStream.WaitLine("OK", 100))
-			//				return false;
+	//			uartStream.WriteLine("AT+CWQAP");     // забыть сохраненную точку доступа
+	//			if (!uartStream.WaitLine("OK", 100))
+	//				return false;
 
 	g_uartStream.WriteLine("AT+WPS=1\r\n");
 	if (!g_uartStream.WaitLine("OK", 500))
@@ -127,10 +123,9 @@ bool WiFi::WPS()
 	return true;
 }
 	
-
 void WiFi::Init()
 {
-	// Кнопка WPS
+	// Кнопка WPS.
 	GPIO_InitTypeDef gpio_init = 
 	{
 		.GPIO_Pin = GPIO_WPS_Pin,
@@ -153,56 +148,51 @@ void WiFi::Init()
 	GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
 }
 	
-
-void WiFi::SetAP(const char* pref, uint8_t prefSize, uint8_t* data, uint8_t length)
+void WiFi::SetAP(const char* pref, uint8_t pref_size, uint8_t* data, uint8_t length)
 {
-	prefSize -= 1;  // Не учитываем нуль-терминатор.
+	pref_size -= 1;  // Не учитываем нуль-терминатор.
 		
-	char str[prefSize + length + 2 + 1];
-	memcpy(str, pref, prefSize);
-	memcpy(str + prefSize, data, length);
+	char str[pref_size + length + 2 + 1];
+	memcpy(str, pref, pref_size);
+	memcpy(str + pref_size, data, length);
 		
-	str[prefSize + length] = '\r';
-	str[prefSize + length + 1] = '\n';
-	str[prefSize + length + 2] = 0;
+	str[pref_size + length] = '\r';
+	str[pref_size + length + 1] = '\n';
+	str[pref_size + length + 2] = 0;
     	
 	g_uartStream.WriteLine(str);
 }
 	
-
-void WiFi::_SetCurAP(uint8_t* data, uint8_t length)
+void WiFi::InnerSetCurAP(uint8_t* data, uint8_t length)
 {
 	const char pref[] = "AT+CWJAP_CUR=";
 	SetAP(pref, sizeof(pref), data, length);
 }
 	
-
-void WiFi::_SetDefAP(uint8_t* data, uint8_t length)
+void WiFi::InnerSetDefAP(uint8_t* data, uint8_t length)
 {
 	const char pref[] = "AT+CWJAP_DEF=";
 	SetAP(pref, sizeof(pref), data, length);
 }
 	
-
 void WiFi::Run()
 {
 	if (InitWiFi())
 	{
 		while (true)
 		{
-			if (!DoEvents())
+			if (!DoWiFiEvents())
 			{
-				taskYIELD();  // Нет запросов, можно отдать квант времени
+				taskYIELD();  // Нет запросов, можно отдать квант времени.
 			}
 		}
 	}
 }
 
-
-bool WiFi::DoEvents()
+bool WiFi::DoWiFiEvents()
 {
-	uint8_t length;
-	if (!m_request.GetRequestSize(length))
+	uint8_t request_length;
+	if (!m_request.GetRequestSize(request_length))
 	{
 		return false;
 	}
@@ -210,402 +200,416 @@ bool WiFi::DoEvents()
 	ShowerCode code = m_request.GetRequestData(m_rxData);
 	switch (code)
 	{
-	case None:
-	case UnknownCode:
-	case OK:
+	case ShowerCode::kNone:
+	case ShowerCode::kUnknownCode:
+	case ShowerCode::kOK:
 		{
 			break;
 		}
-	case GetWaterLevelEmpty:
+	case ShowerCode::kGetWaterLevelEmpty:
 		{
 			m_request.SendResponse(g_writeProperties.WaterLevelEmpty);
 			break;
 		}
-	case GetWaterLevelFull:
+	case ShowerCode::kGetWaterLevelFull:
 		{
 			m_request.SendResponse(g_writeProperties.WaterLevelFull);
 			break;
 		}
-	case SetWaterLevelFull:
+	case ShowerCode::kSetWaterLevelFull:
 		{
-			if (length == 2)
+			if (request_length == 2)
 			{
 				g_writeProperties.WaterLevelFull = *(uint16_t*)m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case SetWaterLevelEmpty:
+	case ShowerCode::kSetWaterLevelEmpty:
 		{
-			if (length == 2)
+			if (request_length == 2)
 			{
 				g_writeProperties.WaterLevelEmpty = *(uint16_t*)m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetWaterLevel:
+	case ShowerCode::kGetWaterLevel:
 		{
 			m_request.SendResponse(g_waterLevelTask.AvgUsec);
 			break;
 		}
-	case GetWaterLevelRaw:
+	case ShowerCode::kGetWaterLevelRaw:
     	{
         	m_request.SendResponse(g_waterLevelTask.UsecRaw);
         	break;
     	}
-	case GetTempChart:
+	case ShowerCode::kGetTempChart:
 		{
 			m_request.SendResponse(&g_writeProperties.Chart, sizeof(g_writeProperties.Chart));
 			break;
 		}
-	case SetTempChart:
+	case ShowerCode::kSetTempChart:
 		{
-			if (length == sizeof(g_writeProperties.Chart))
+			if (request_length == sizeof(g_writeProperties.Chart))
 			{
     			g_writeProperties.Chart.Parse(m_rxData);
     			g_properties.Chart.Parse(m_rxData); // установить значения в ОЗУ
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case Save:
+	case ShowerCode::kSave:
 		{
 			g_eeprom.Save();
-			m_request.SendResponse(OK);
+			m_request.SendResponse(kOK);
 			break;
 		}
-	case Reset:
+	case ShowerCode::kReset:
 		{
-			m_request.SendResponse(OK);
+			m_request.SendResponse(kOK);
 			taskENTER_CRITICAL();
 			IWDG_ReloadCounter();
 			NVIC_SystemReset();		// (!) Бесконечный цикл внутри.
 			break;
 		}
-	case Ping:
+	case ShowerCode::kPing:
 		{
-			m_request.SendResponse(Ping);
+			m_request.SendResponse(kPing);
 			break;
 		}
-	case GetWaterPercent:
+	case ShowerCode::kGetWaterPercent:
 		{
 			m_request.SendResponse(g_waterLevelTask.DisplayingPercent);
 			break;
 		}
-	case GetExternalTemp:
+	case ShowerCode::kGetExternalTemp:
 		{
 			m_request.SendResponse(g_tempSensorTask.ExternalTemp);
 			break;
 		}
-	case GetAverageExternalTemp:
+	case ShowerCode::kGetAverageExternalTemp:
 		{
 			m_request.SendResponse(g_tempSensorTask.AverageExternalTemp);
 			break;
 		}
-	case GetInternalTemp:
+	case ShowerCode::kGetInternalTemp:
 		{
 			m_request.SendResponse(g_tempSensorTask.InternalTemp);
 			break;
 		}
-	case GetMinimumWaterHeatingLevel:
+	case ShowerCode::kGetMinimumWaterHeatingLevel:
 		{
 			m_request.SendResponse(g_writeProperties.MinimumWaterHeatingPercent);
 			break;
 		}
-	case SetMinimumWaterHeatingLevel:
+	case ShowerCode::kSetMinimumWaterHeatingLevel:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				g_writeProperties.MinimumWaterHeatingPercent = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetHeatingTimeLimit:
+	case ShowerCode::kGetHeatingTimeLimit:
 		{
 			m_request.SendResponse(g_writeProperties.HeatingTimeLimitMin);
 			break;
 		}
-	case SetHeatingTimeLimit:
+	case ShowerCode::kSetHeatingTimeLimit:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				g_writeProperties.HeatingTimeLimitMin = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetLightBrightness:
+	case ShowerCode::kGetLightBrightness:
 		{
 			m_request.SendResponse(g_writeProperties.LightBrightness);
 			break;
 		}
-	case SetLightBrightness:
+	case ShowerCode::kSetLightBrightness:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				g_writeProperties.LightBrightness = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetTimeLeft:
+	case ShowerCode::kGetTimeLeft:
 		{
-			uint8_t value = g_heatingTimeLeft.GetTimeLeft();
+			uint8_t value = g_heatingTimeLeft.GetTimeLeftMin();
 			m_request.SendResponse(value);
 			break;
 		}
-	case GetHeatingTimeoutState:
+	case ShowerCode::kGetHeatingTimeoutState:
 		{
 			bool value = g_heaterTask.GetTimeoutOccured();
 			m_request.SendResponse(value);
 			break;
 		}
-	case GetAbsoluteTimeoutStatus:
+	case ShowerCode::kGetAbsoluteTimeoutStatus:
 		{
 			bool value = g_heaterTask.GetAbsoluteTimeoutOccured();
 			m_request.SendResponse(value);
 			break;
 		}
-	case GetHeaterEnabled:
+	case ShowerCode::kGetHeaterEnabled:
 		{
 			bool enabled = g_heaterTask.GetIsHeaterEnabled();
 			m_request.SendResponse(enabled);
 			break;
 		}
-	case GetAbsoluteHeatingTimeLimit:
+	case ShowerCode::kGetAbsoluteHeatingTimeLimit:
 		{
 			m_request.SendResponse(g_writeProperties.AbsoluteHeatingTimeLimitHours);
 			break;
 		}
-	case SetAbsoluteHeatingTimeLimit:
+	case ShowerCode::kSetAbsoluteHeatingTimeLimit:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				g_writeProperties.AbsoluteHeatingTimeLimitHours = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetWiFiPower:
+	case ShowerCode::kGetWiFiPower:
 		{
 			m_request.SendResponse(g_writeProperties.WiFiPower);
 			break;
 		}
-	case SetWiFiPower:
+	case ShowerCode::kSetWiFiPower:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				g_writeProperties.WiFiPower = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetWatchDogWasReset:
+	case ShowerCode::kGetWatchDogWasReset:
 		{
 			m_request.SendResponse(g_watchDogTask.GetWasReset());
 			break;
 		}
-	case GetHasMainPower:
+	case ShowerCode::kGetHasMainPower:
 		{
-			bool hasMainPower = CircuitBreakerIsOn();
-			m_request.SendResponse(hasMainPower);
+			bool circuit_breaker_is_on = Common::CircuitBreakerIsOn();
+			m_request.SendResponse(circuit_breaker_is_on);
 			break;
 		}
-	case GetHeatingLimit:
+	case ShowerCode::kGetHeatingLimit:
 		{
 			uint8_t value = g_heaterTask.GetHeatingLimit();
 			m_request.SendResponse(value);
 			break;
 		}
-	case GetAverageInternalTemp:
+	case ShowerCode::kGetAverageInternalTemp:
 		{
 			m_request.SendResponse(g_tempSensorTask.AverageInternalTemp);
 			break;
 		}
-	case SetCurAP:
+	case ShowerCode::kSetCurAP:
 		{
-			if (length > 1)
+			if (request_length > 1)
 			{
-				m_request.SendResponse(OK);
-				_SetCurAP(m_rxData, length);
+				m_request.SendResponse(kOK);
+				InnerSetCurAP(m_rxData, request_length);
 			}
 			break;
 		}
-	case SetDefAP:
+	case ShowerCode::kSetDefAP:
 		{
-			if (length > 1)
+			if (request_length > 1)
 			{
-				m_request.SendResponse(OK);
-				_SetDefAP(m_rxData, length);
+				m_request.SendResponse(kOK);
+				InnerSetDefAP(m_rxData, request_length);
 			}
 			break;
 		}
-	case GetHeatingProgress:
+	case ShowerCode::kGetHeatingProgress:
 		{
 			uint8_t value = g_heatingTimeLeft.GetProgress();
 			m_request.SendResponse(value);
 			break;
 		}
-	case GetWaterHeated:
+	case ShowerCode::kGetWaterHeated:
 		{
 			bool value = g_heaterTask.WaterHeated();
 			m_request.SendResponse(value);
 			break;
 		}
-	case GetWaterLevelMeasureInterval:
+	case ShowerCode::kGetWaterLevelMeasureInterval:
 		{
 			m_request.SendResponse(g_writeProperties.WaterLevel_Measure_IntervalMsec);
 			break;
 		}
-	case SetWaterLevelMeasureInterval:
+	case ShowerCode::kSetWaterLevelMeasureInterval:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				g_writeProperties.WaterLevel_Measure_IntervalMsec = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetWaterValveCutOffPercent:
+	case ShowerCode::kGetWaterValveCutOffPercent:
 		{
 			m_request.SendResponse(g_writeProperties.WaterValve_Cut_Off_Percent);
 			break;
 		}
-	case SetWaterValveCutOffPercent:
+	case ShowerCode::kSetWaterValveCutOffPercent:
 		{
 			g_writeProperties.WaterValve_Cut_Off_Percent = *m_rxData;
-			m_request.SendResponse(OK);
+			m_request.SendResponse(kOK);
 			break;
 		}
-	case GetWaterLevelMedianBufferSize:
+	case ShowerCode::kGetWaterLevelMedianBufferSize:
 		{
 			m_request.SendResponse(g_writeProperties.WaterLevel_Median_Buffer_Size);
 			break;
 		}
-	case SetWaterLevelMedianBufferSize:
+	case ShowerCode::kSetWaterLevelMedianBufferSize:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				auto value = *m_rxData;
 				g_writeProperties.WaterLevel_Median_Buffer_Size = value;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetWaterLevelAverageBufferSize:
+	case ShowerCode::kGetWaterLevelAverageBufferSize:
 		{
 			m_request.SendResponse(g_writeProperties.WaterLevel_Avg_Buffer_Size);
 			break;
 		}
-	case SetWaterLevelAverageBufferSize:
+	case ShowerCode::kSetWaterLevelAverageBufferSize:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
     			auto value = *m_rxData;
 				g_writeProperties.WaterLevel_Avg_Buffer_Size = value;
-    			m_request.SendResponse(OK);
+    			m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetTempSensorInternalTempAverageSize:
+	case ShowerCode::kGetTempSensorInternalTempAverageSize:
 		{
 			m_request.SendResponse(g_writeProperties.InternalTemp_Avg_Size);
 			break;
 		}
-	case SetTempSensorInternalTempAverageSize:
+	case ShowerCode::kSetTempSensorInternalTempAverageSize:
 		{
-			if (length == 1)
+			if (request_length == 1)
 			{
 				g_writeProperties.InternalTemp_Avg_Size = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetWaterLevelUsecPerDeg:
+	case ShowerCode::kGetWaterLevelUsecPerDeg:
 		{
 			m_request.SendResponse((uint16_t)0);
 			break;
 		}
-	case SetWaterLevelUsecPerDeg:
+	case ShowerCode::kSetWaterLevelUsecPerDeg:
 		{
-			if (length == 2)
+			if (request_length == 2)
 			{
 				//_writeOnlyPropertiesStruct.WaterLevel_Usec_Per_Deg = *(uint16_t*)_data;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetWaterValveTimeoutSec:
+	case ShowerCode::kGetWaterValveTimeoutSec:
 		{
 			m_request.SendResponse(g_writeProperties.WaterValve_TimeoutSec);	
 			break;
 		}
-	case SetWaterValveTimeoutSec:
+	case ShowerCode::kSetWaterValveTimeoutSec:
 		{
-			if (length == sizeof(g_writeProperties.WaterValve_TimeoutSec))
+			if (request_length == sizeof(g_writeProperties.WaterValve_TimeoutSec))
 			{
 				g_writeProperties.WaterValve_TimeoutSec = *m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;
 		}
-	case GetButtonTimeMsec:
+	case ShowerCode::kGetButtonTimeMsec:
     	{
-        	m_request.SendResponse(g_writeProperties.ButtonPressTimeMs);	
+        	m_request.SendResponse(g_writeProperties.ButtonPressTimeMsec);	
         	break;
     	}
-	case SetButtonTimeMsec:
+	case ShowerCode::kSetButtonTimeMsec:
     	{
-        	if (length == sizeof(g_writeProperties.ButtonPressTimeMs))
+        	if (request_length == sizeof(g_writeProperties.ButtonPressTimeMsec))
         	{
-            	g_writeProperties.ButtonPressTimeMs = *m_rxData;
-            	m_request.SendResponse(OK);
+            	g_writeProperties.ButtonPressTimeMsec = *m_rxData;
+            	m_request.SendResponse(kOK);
         	}
         	break;
     	}
-	case GetTempLowerBound:
+	case ShowerCode::kGetButtonLongPressTimeMsec:
+    	{
+        	m_request.SendResponse(g_writeProperties.ButtonLongPressTimeMsec);	
+        	break;
+    	}
+	case ShowerCode::kSetButtonLongPressTimeMsec:
+    	{
+	    	if (request_length == sizeof(g_writeProperties.ButtonLongPressTimeMsec))
+        	{
+	        	g_writeProperties.ButtonLongPressTimeMsec = *(uint16_t*)m_rxData;
+            	m_request.SendResponse(kOK);
+        	}
+        	break;
+    	}
+	case ShowerCode::kGetTempLowerBound:
     	{
         	m_request.SendResponse(LOWER_BOUND);	
         	break;
     	}
-	case GetTempUpperBound:
+	case ShowerCode::kGetTempUpperBound:
     	{
         	m_request.SendResponse(UPPER_BOUND);	
         	break;
     	}
-	case GetWaterTankVolumeLitre:
+	case ShowerCode::kGetWaterTankVolumeLitre:
 		{
 			m_request.SendResponse(g_writeProperties.WaterTankVolumeLitre);
 			break;	
 		}
-	case SetWaterTankVolumeLitre:
+	case ShowerCode::kSetWaterTankVolumeLitre:
 		{
-			if (length == sizeof(g_writeProperties.WaterTankVolumeLitre))
+			if (request_length == sizeof(g_writeProperties.WaterTankVolumeLitre))
 			{
 				g_writeProperties.WaterTankVolumeLitre = *(float*)m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;	
 		}
-	case GetWaterHeaterPowerKWatt:
+	case ShowerCode::kGetWaterHeaterPowerKWatt:
 		{
 			m_request.SendResponse(g_writeProperties.WaterHeaterPowerKWatt);
 			break;	
 		}
-	case SetWaterHeaterPowerKWatt:
+	case ShowerCode::kSetWaterHeaterPowerKWatt:
 		{
-			if (length == sizeof(g_writeProperties.WaterHeaterPowerKWatt))
+			if (request_length == sizeof(g_writeProperties.WaterHeaterPowerKWatt))
 			{
 				g_writeProperties.WaterHeaterPowerKWatt = *(float*)m_rxData;
-				m_request.SendResponse(OK);
+				m_request.SendResponse(kOK);
 			}
 			break;	
 		}
 	default:
 		{
-			m_request.SendResponse(UnknownCode);
+			m_request.SendResponse(kUnknownCode);
 			break;
 		}
 	}

@@ -1,7 +1,5 @@
 #include "RTOSwrapper.h"
 
-RTOSwrapperClass g_rtosHelper;
-
 void RTOSwrapperClass::CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority)
 {
     obj->Init();

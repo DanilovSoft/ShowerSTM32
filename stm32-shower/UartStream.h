@@ -10,9 +10,9 @@ class UartStream final
 public:
 	
 	void Init();
-	WaitStatus WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeoutMsec);
-	WaitStatus WaitLine(const char* str1, const char* str2, uint16_t timeoutMsec);
-	WaitStatus WaitLine(const char* str1, uint16_t timeoutMsec);
+	WaitStatus WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeout_msec);
+	WaitStatus WaitLine(const char* str1, const char* str2, uint16_t timeout_msec);
+	WaitStatus WaitLine(const char* str1, uint16_t timeout_msec);
 	void WriteLine(const char* str);
 	void WriteData(const char* data, const uint16_t count);
 	WaitStatus SendResponse(const uint8_t connection_id, const char* data, const uint16_t count);
@@ -23,16 +23,17 @@ public:
 private:
 	
     // Буффер в который копируем данные из RX_FIFO_BUF.
-	uint8_t m_rxBuf[UART_RX_FIFO_SZ] = { };
-    char m_rxStrBuf[UART_MAX_STR_LEN] = { };  // Буфер для записи строк из кольцевого буффера m_rxBuf.
+	uint8_t m_rxBuf[kUartRxFifoSize] = { };
+    char m_rxStrBuf[kUartMaxStrLen] = { };  // Буфер для записи строк из кольцевого буффера m_rxBuf.
 	ConnectionsBuffer m_connectionBuffer;
 	uint16_t m_count = 0;
 	uint16_t m_head = 0;
-	uint16_t m_head2 = UART_RX_FIFO_SZ;
+	uint16_t m_head2 = kUartRxFifoSize;
 	uint16_t m_tail = 0;
+	volatile uint8_t m_rxFifoBuf[kUartRxFifoSize];
     
 	bool CopyRingBuf();
-	void LineReceived(const char* str, const uint8_t strLength);
+	void LineReceived(const char* str, const uint8_t str_length);
 	bool HandleIpd();
 	bool HandleLine();
 	uint16_t GetAbsoluteOffset(uint16_t offset);
@@ -41,7 +42,7 @@ private:
 	bool Find(const char ch, const uint16_t offset, uint16_t &position); // Возвращает индекс первого вхождения строки начиная от 0
 	bool IsIpd(); // Проверяет начинается ли кольцевой буффер _buf со строки '+IPD'
 	bool StartWith(const char* data, const uint16_t count);
-	bool WaitSpecific(const char* data, const uint16_t count, const uint16_t timeoutMsec);
+	bool WaitSpecific(const char* data, const uint16_t count, const uint16_t timeout_msec);
 	WaitStatus ReadLine(const char* str1, const char* str2, const char* str3);
 	uint8_t ReadIpd(uint8_t &connection_id);
 	void DMAWriteData(const char* data, const uint16_t count);

@@ -6,6 +6,9 @@ class ValveTask final : public iActiveTask
 {	
 public:
 	
+	// Включен ли клапан воды.
+	static bool ValveIsOpen();
+	
 	// Вызывается только если кнопка была нажата.
 	void PushButton();
 	
@@ -14,8 +17,6 @@ public:
 	
 	// Вызывается каждый раз, после PushButton().
 	void SensorOff();
-	
-	volatile bool ValveIsOpen();
 
 private:
 	

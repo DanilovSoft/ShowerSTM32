@@ -506,18 +506,18 @@ void I2C::ResetBus()
 	for (int i = 0; i < 10; i++) 
 	{ 
 		GPIO_SetBits(GPIOB, GPIO_I2C_SCL_Pin);
-		Delay_us(5);
+		DELAY_US(5);
 		GPIO_ResetBits(GPIOB, GPIO_I2C_SCL_Pin);
-		Delay_us(5);
+		DELAY_US(5);
 	}
 
 	// A STOP signal (SDA from low to high while CLK is high).
 	GPIO_ResetBits(GPIOB, GPIO_I2C_SDA_Pin);
-	Delay_us(5);
+	DELAY_US(5);
 	GPIO_SetBits(GPIOB, GPIO_I2C_SCL_Pin);
-	Delay_us(2);
+	DELAY_US(2);
 	GPIO_SetBits(GPIOB, GPIO_I2C_SDA_Pin);
-	Delay_us(2);
+	DELAY_US(2);
 	// Bus status is now : FREE.
     	
 	// Return to power up mode.

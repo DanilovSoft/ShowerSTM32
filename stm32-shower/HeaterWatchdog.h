@@ -6,12 +6,12 @@ class HeaterWatchdog final
 public:
 
 	void Init();
-	void Reset();
+	void ResetSession();
 	void ResetAbsolute();
 	bool TimeOut();
 	// Абсолютный таймаут отсчитывает время когда включен рубильник автомата.
     bool AbsoluteTimeout();
-	bool IsTimeoutOccurred();
+	bool IsSessionTimeoutOccurred();
 	bool IsAbsoluteTimeoutOccured();
 	
 private:
@@ -20,6 +20,6 @@ private:
 	uint32_t m_absoluteIntervalSec;	
 	RealTimeClockStopwatch m_timeoutStopwatch;
 	RealTimeClockStopwatch m_absoluteTimeoutStopwatch;
-	volatile bool m_timeoutOccurred;
+	volatile bool m_sessionTimeoutOccurred;
 	volatile bool m_absoluteTimeoutOccured;
 };

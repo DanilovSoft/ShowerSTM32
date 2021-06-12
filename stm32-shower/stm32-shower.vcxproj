@@ -68,12 +68,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="additional_defines.c" />
-    <ClCompile Include="ButtonsTask.cpp" />
-    <ClCompile Include="Buzzer.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="ConnectionsBuffer.cpp" />
     <ClCompile Include="Eeprom.cpp" />
-    <ClCompile Include="EepromTask.cpp" />
     <ClCompile Include="FreeRTOS\Source\croutine.c" />
     <ClCompile Include="FreeRTOS\Source\event_groups.c" />
     <ClCompile Include="FreeRTOS\Source\list.c" />
@@ -82,24 +79,17 @@
     <ClCompile Include="FreeRTOS\Source\stream_buffer.c" />
     <ClCompile Include="FreeRTOS\Source\tasks.c" />
     <ClCompile Include="FreeRTOS\Source\timers.c" />
-    <ClCompile Include="ButtonDebounce.cpp" />
     <ClCompile Include="HeaterTask.cpp" />
-    <ClCompile Include="HeaterTempLimit.cpp" />
     <ClCompile Include="HeaterWatchdog.cpp" />
     <ClCompile Include="HeatingTimeLeft.cpp" />
     <ClCompile Include="I2C.cpp" />
-    <ClCompile Include="IpdBuffer.cpp" />
     <ClCompile Include="IRQ.cpp" />
-    <ClCompile Include="LcdTask.cpp" />
-    <ClCompile Include="LedLightTask.cpp" />
     <ClCompile Include="LiquidCrystal.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MedianFilter.cpp" />
     <ClCompile Include="MovingAverageFilter.cpp" />
-    <ClCompile Include="Properties.cpp" />
     <ClCompile Include="RealTimeClockStopwatch.cpp" />
     <ClCompile Include="RTOSwrapper.cpp" />
-    <ClCompile Include="WaterSensorButton.cpp" />
     <ClCompile Include="StdPeriph\Src\misc.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_adc.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_bkp.c" />
@@ -125,12 +115,8 @@
     <ClCompile Include="StdPeriph\Src\stm32f10x_wwdg.c" />
     <ClCompile Include="TicksStopwatch.cpp" />
     <ClCompile Include="system_stm32f10x.c" />
-    <ClCompile Include="TaskHelper.cpp" />
-    <ClCompile Include="TempSensor.cpp" />
     <ClCompile Include="UartStream.cpp" />
     <ClCompile Include="ValveTask.cpp" />
-    <ClCompile Include="WatchDogTask.cpp" />
-    <ClCompile Include="WaterLevelAnimTask.cpp" />
     <ClCompile Include="WaterLevelTask.cpp" />
     <ClCompile Include="WiFi.cpp" />
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c" />

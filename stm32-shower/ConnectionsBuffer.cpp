@@ -2,7 +2,7 @@
 
 void ConnectionsBuffer::MoveNext()
 {
-	m_nextConnectionId = (m_nextConnectionId + 1) % IPD_BUF_SZ;
+	m_nextConnectionId = (m_nextConnectionId + 1) % kIpdBufSize;
 }
 
 IpdBuffer* ConnectionsBuffer::operator[](const uint8_t index)
@@ -12,7 +12,7 @@ IpdBuffer* ConnectionsBuffer::operator[](const uint8_t index)
 
 void ConnectionsBuffer::Clear(const uint8_t connection_id)
 {
-	if (connection_id < IPD_BUF_SZ)
+	if (connection_id < kIpdBufSize)
 	{
 		m_buf[connection_id].Clear();
 	}
@@ -20,7 +20,7 @@ void ConnectionsBuffer::Clear(const uint8_t connection_id)
 
 void ConnectionsBuffer::ClearAll()
 {
-	for (uint8_t i = 0; i < IPD_BUF_SZ; i++)
+	for (uint8_t i = 0; i < kIpdBufSize; i++)
 	{
 		m_buf[i].Clear();
 	}
@@ -28,7 +28,7 @@ void ConnectionsBuffer::ClearAll()
 
 uint8_t ConnectionsBuffer::GetRequestSize(uint8_t &connection_id)
 {
-	for (uint8_t i = 0; i < IPD_BUF_SZ; i++)
+	for (uint8_t i = 0; i < kIpdBufSize; i++)
 	{
 		MoveNext();
 		uint8_t request_length = m_buf[m_nextConnectionId].GetRequestSize();

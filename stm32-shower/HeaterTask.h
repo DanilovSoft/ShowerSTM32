@@ -17,8 +17,8 @@ public:
 	
 private:
 	
-	bool m_heaterHasPower;
-	bool m_heaterEnabled;
+	bool m_circuitBreakerIsOn; // Для запоминания состояния переключателя автомата.
+	bool m_heaterEnabled; // Для запоминания состояния нагревателя (включено реле или нет).
 	Stopwatch m_beepStopwatch; // Для периодического звукового сигнала.
 	HeaterWatchdog m_heaterWatchdog; // Для защиты от слишком долгого нагрева.
 	volatile bool m_forcedSessionRequired; // Для принудительного включения нагрева игнорируя датчик уровня воды.
@@ -32,10 +32,10 @@ private:
 	void PeriodicBeepTimeout();
 	void ControlTurnOn();
 	void ControlTurnOff();
-	void TurnOffWithSound();
+	void TurnOffHeaterWithSound();
 	void TurnOff();
 	void TurnOn();
-	void TurnOnWithSound();
+	void TurnOnHeaterWithSound();
 };
 
 extern HeaterTask g_heaterTask;

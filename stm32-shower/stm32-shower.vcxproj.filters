@@ -35,12 +35,6 @@
     <Filter Include="Source files\FreeRTOS">
       <UniqueIdentifier>{b049bb23-bb22-44c4-ae07-6d2387faa495}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source files\Source">
-      <UniqueIdentifier>{01c44d8f-7ef1-46b8-adc8-f67d0d8b4841}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header files\Source">
-      <UniqueIdentifier>{12acbea5-aea8-42ce-b38f-236244653f00}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source files\Tasks">
       <UniqueIdentifier>{b0bfd951-9de2-4c14-86be-42b18b978977}</UniqueIdentifier>
     </Filter>
@@ -148,9 +142,6 @@
     <ClCompile Include="additional_defines.c">
       <Filter>Source files\FreeRTOS</Filter>
     </ClCompile>
-    <ClCompile Include="Buzzer.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="Common.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
@@ -160,9 +151,6 @@
     <ClCompile Include="Eeprom.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="HeaterTempLimit.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="HeaterWatchdog.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
@@ -170,9 +158,6 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="I2C.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="IpdBuffer.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="IRQ.cpp">
@@ -185,9 +170,6 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="MovingAverageFilter.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="Properties.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="RealTimeClockStopwatch.cpp">
@@ -205,46 +187,16 @@
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
       <Filter>Source files\Device-specific files</Filter>
     </ClCompile>
-    <ClCompile Include="ButtonDebounce.cpp">
-      <Filter>Source files\Source</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterSensorButton.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="ButtonsTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="EepromTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
     <ClCompile Include="HeaterTask.cpp">
       <Filter>Source files\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="LcdTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="LedLightTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
     <ClCompile Include="ValveTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="WatchDogTask.cpp">
       <Filter>Source files\Tasks</Filter>
     </ClCompile>
     <ClCompile Include="WaterLevelTask.cpp">
       <Filter>Source files\Tasks</Filter>
     </ClCompile>
     <ClCompile Include="WiFi.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterLevelAnimTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="TempSensor.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="TaskHelper.cpp">
       <Filter>Source files\Tasks</Filter>
     </ClCompile>
   </ItemGroup>
@@ -477,10 +429,10 @@
     <ClInclude Include="FreeRTOS\Source\include\task.h">
       <Filter>Header files\FreeRTOS</Filter>
     </ClInclude>
-    <ClInclude Include="ButtonDebounce.h">
-      <Filter>Header files\Source</Filter>
-    </ClInclude>
     <ClInclude Include="WaterSensorButton.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="ButtonDebounce.h">
       <Filter>Header files</Filter>
     </ClInclude>
   </ItemGroup>

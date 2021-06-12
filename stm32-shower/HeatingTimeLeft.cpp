@@ -3,8 +3,6 @@
 #include "TempSensor.h"
 #include "WaterLevelTask.h"
 
-HeatingTimeLeft g_heatingTimeLeft;
-
 void HeatingTimeLeft::Init(float tankVolumeLitre, float heaterPowerKWatt)
 {
 	m_tankVolumeLitre = tankVolumeLitre;
@@ -38,7 +36,7 @@ void HeatingTimeLeft::OnStartHeating()
     
 }
 
-float HeatingTimeLeft::GetTimeLeft()
+float HeatingTimeLeft::GetTimeLeftMin()
 {
     float intTemp = g_tempSensorTask.AverageInternalTemp;
     float extTemp = g_tempSensorTask.AverageExternalTemp;

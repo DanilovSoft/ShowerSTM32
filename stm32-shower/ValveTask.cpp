@@ -6,7 +6,11 @@
 #include "Interlocked.h"
 #include "semphr.h"
 
-ValveTask g_valveTask;
+// Включен ли клапан воды.
+bool ValveTask::ValveIsOpen()
+{
+	return GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin);
+}
 
 void ValveTask::Init()
 {
@@ -124,7 +128,7 @@ void ValveTask::OpenValveIfAllowed()
 	
 void ValveTask::PushButton()
 {
-    if (ValveOpened())
+    if (ValveIsOpen())
     {
     	// Нужно остановить воду.
         m_stopRequired = true;
@@ -156,9 +160,4 @@ void ValveTask::SensorOff()
         // Нужно остановить воду.
         m_stopRequired = true;
     }
-}
-    
-volatile bool ValveTask::ValveIsOpen()
-{
-    return ValveOpened();
 }

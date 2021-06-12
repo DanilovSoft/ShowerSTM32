@@ -14,9 +14,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-UartStream g_uartStream;
-volatile uint8_t _rxFifoBuf[UART_RX_FIFO_SZ];
-
 bool UartStream::CopyRingBuf()
 {
 	// Возвращает кол. байт сколько осталось до 0.
@@ -24,10 +21,10 @@ bool UartStream::CopyRingBuf()
 	uint16_t dma_left = DMA_GetCurrDataCounter(WIFI_DMA_CH_RX);	
 	while (m_head2 != dma_left)
 	{
-		m_rxBuf[m_tail] = _rxFifoBuf[m_tail];
-		m_tail = (m_tail + 1) % UART_RX_FIFO_SZ;
+		m_rxBuf[m_tail] = m_rxFifoBuf[m_tail];
+		m_tail = (m_tail + 1) % kUartRxFifoSize;
 				
-		if (m_count < UART_RX_FIFO_SZ)
+		if (m_count < kUartRxFifoSize)
 		{
 			m_count++;
 		}
@@ -35,36 +32,36 @@ bool UartStream::CopyRingBuf()
 		--m_head2;
 		if (m_head2 == 0)
 		{
-			m_head2 = UART_RX_FIFO_SZ;		
+			m_head2 = kUartRxFifoSize;		
 		}
 	}
 	return m_count;
 }
     
-void UartStream::LineReceived(const char* str, const uint8_t strLength)
+void UartStream::LineReceived(const char* str, const uint8_t str_length)
 {
-	if (strLength > 1) // Нет смысла рассматривать строки короче 2 символов.
+	if (str_length > 1) // Нет смысла рассматривать строки короче 2 символов.
 	{
-    	if (streql(str + 1, ",CONNECT"))
+		if (Common::streql(str + 1, ",CONNECT"))
     	{
-        	uint8_t connection_id = ctoi(str[0]);
+	    	uint8_t connection_id = Common::ctoi(str[0]);
         	m_connectionBuffer.Clear(connection_id);
     	}
-    	else if (streql(str + 1, ",CLOSED"))
+		else if (Common::streql(str + 1, ",CLOSED"))
     	{
-        	uint8_t connection_id = ctoi(str[0]);
+	    	uint8_t connection_id = Common::ctoi(str[0]);
         	m_connectionBuffer.Clear(connection_id);
     	}
-    	else if (streql(str + 1, ",CONNECT FAIL"))
+		else if (Common::streql(str + 1, ",CONNECT FAIL"))
     	{
-        	uint8_t connection_id = ctoi(str[0]);
+	    	uint8_t connection_id = Common::ctoi(str[0]);
         	m_connectionBuffer.Clear(connection_id);
     	}
-		else if (streql(str, "WIFI CONNECTED"))
+		else if (Common::streql(str, "WIFI CONNECTED"))
 		{
 			m_connectionBuffer.ClearAll();
 		}
-		else if (streql(str, "WIFI DISCONNECT"))
+		else if (Common::streql(str, "WIFI DISCONNECT"))
 		{
 			m_connectionBuffer.ClearAll();
 		}
@@ -100,7 +97,7 @@ uint16_t UartStream::GetAbsoluteOffset(uint16_t offset)
 
 	while(offset--)
 	{
-		head = (head + 1) % UART_RX_FIFO_SZ;
+		head = (head + 1) % kUartRxFifoSize;
 	}
     
 	return head;
@@ -119,7 +116,7 @@ bool UartStream::GetLineLength(uint16_t &count)
 			return true;
 		}
 		prev = ch;
-		head = (head + 1) % UART_RX_FIFO_SZ;
+		head = (head + 1) % kUartRxFifoSize;
 	}
 	return false;
 }
@@ -131,10 +128,10 @@ uint8_t UartStream::CopyLine(char* str, const uint16_t count)
 	// Строка может быть не больше UART_MAX_STR_LEN
 	// Следовательно скопировать начиная с конца не больше чем UART_MAX_STR_LEN
     
-	if (count >= UART_MAX_STR_LEN)
+	if (count >= kUartMaxStrLen)
 	{
-		tmp_count = (UART_MAX_STR_LEN - 1);
-		uint16_t overflowCount = (count - (UART_MAX_STR_LEN - 1)); // -1 для учета нуль-терминатора
+		tmp_count = (kUartMaxStrLen - 1);
+		uint16_t overflowCount = (count - (kUartMaxStrLen - 1)); // -1 для учета нуль-терминатора
 
 		// Пропустить начало строки которое не вмещается в буффер str.
 		m_head = GetAbsoluteOffset(overflowCount);
@@ -143,12 +140,12 @@ uint8_t UartStream::CopyLine(char* str, const uint16_t count)
 	for (uint16_t i = 0; i < tmp_count; i++)
 	{
 		*str++ = m_rxBuf[m_head];
-		m_head = (m_head + 1) % UART_RX_FIFO_SZ;
+		m_head = (m_head + 1) % kUartRxFifoSize;
 	}
 	*str = 0; // Нуль-терминатор в конце строки
     
-	m_head = (m_head + 1) % UART_RX_FIFO_SZ; // учесть \r
-	m_head = (m_head + 1) % UART_RX_FIFO_SZ; // учесть \n
+	m_head = (m_head + 1) % kUartRxFifoSize; // учесть \r
+	m_head = (m_head + 1) % kUartRxFifoSize; // учесть \n
 	m_count -= (count + 2); // Уменьшить счетчик с учетом \r\n
 	return tmp_count;
 }
@@ -171,7 +168,7 @@ bool UartStream::Find(const char ch, const uint16_t offset, uint16_t &position)
 			position = i;
 			return true;
 		}
-		absOffset = (absOffset + 1) % UART_RX_FIFO_SZ;
+		absOffset = (absOffset + 1) % kUartRxFifoSize;
 	}
 	return false;
 }
@@ -193,7 +190,7 @@ bool UartStream::IsIpd()
 				return false;
 			}
 
-			head = (head + 1) % UART_RX_FIFO_SZ;
+			head = (head + 1) % kUartRxFifoSize;
 		}
 
 		return true;
@@ -213,16 +210,16 @@ bool UartStream::StartWith(const char* data, const uint16_t count)
 				return false;
 			}
 
-			head = (head + 1) % UART_RX_FIFO_SZ;
+			head = (head + 1) % kUartRxFifoSize;
 		}
 		return true;
 	}
 	return false;
 }
 
-bool UartStream::WaitSpecific(const char* data, const uint16_t count, const uint16_t timeoutMsec)
+bool UartStream::WaitSpecific(const char* data, const uint16_t count, const uint16_t timeout_msec)
 {
-	TaskTimeout tim(timeoutMsec);
+	TaskTimeout tim(timeout_msec);
 	while (true)
 	{
 		if (CopyRingBuf())
@@ -256,14 +253,20 @@ WaitStatus UartStream::ReadLine(const char* str1, const char* str2, const char* 
 {
     if (HandleLine())
     {
-        if (streql(m_rxStrBuf, str1))
-            return WaitStatus::STR1;
+	    if (Common::streql(m_rxStrBuf, str1))
+	    {
+		    return WaitStatus::STR1;
+	    }
 
-        if (str2 && streql(m_rxStrBuf, str2))
-            return WaitStatus::STR2;
+	    if (str2 && Common::streql(m_rxStrBuf, str2))
+	    {
+		    return WaitStatus::STR2;
+	    }
 
-        if (str3 && streql(m_rxStrBuf, str3))
-            return WaitStatus::STR3;
+	    if (str3 && Common::streql(m_rxStrBuf, str3))
+	    {
+		    return WaitStatus::STR3;
+	    }
     }
 	return WaitStatus::NOTHING;
 }
@@ -273,7 +276,7 @@ uint8_t UartStream::ReadIpd(uint8_t &connection_id)
 	// Минимум должно быть 9 символов.
 	if (m_count >= 9)
 	{
-		connection_id = ctoi(m_rxBuf[GetAbsoluteOffset(5)]);
+		connection_id = Common::ctoi(m_rxBuf[GetAbsoluteOffset(5)]);
 		uint16_t pos;
 		if (Find(':', 8, pos)) // Находим символ ':' начиная со смещения 8.
 		{
@@ -285,8 +288,8 @@ uint8_t UartStream::ReadIpd(uint8_t &connection_id)
 			uint16_t absOffset = GetAbsoluteOffset(7);
 			for (uint8_t i = 0; i < dataStrLen; i++)
 			{
-				length = length * 10 + ctoi(m_rxBuf[absOffset]);
-				absOffset = (absOffset + 1) % UART_RX_FIFO_SZ;
+				length = length * 10 + Common::ctoi(m_rxBuf[absOffset]);
+				absOffset = (absOffset + 1) % kUartRxFifoSize;
 			}
 			//////////////////////////////////////////////
 
@@ -299,7 +302,7 @@ uint8_t UartStream::ReadIpd(uint8_t &connection_id)
     			for (uint8_t i = 0; i < length; i++)
     			{
         			ipdBuf->WriteByte(m_rxBuf[absOffset]);
-        			absOffset = (absOffset + 1) % UART_RX_FIFO_SZ;
+        			absOffset = (absOffset + 1) % kUartRxFifoSize;
     			}
     				
 				///////////////////////////////////////////////////
@@ -378,7 +381,7 @@ void UartStream::Init()
 	
 	uart_struct = 
 	{
-		.USART_BaudRate = WIFI_UART_Speed,
+		.USART_BaudRate = kWiFiUartSpeed,
 		.USART_WordLength = USART_WordLength_8b,
 		.USART_StopBits = USART_StopBits_1,
 		.USART_Parity = USART_Parity_No,
@@ -396,9 +399,9 @@ void UartStream::Init()
 	DMA_InitTypeDef DMA_InitStructure = 
 	{
 		.DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR),
-		.DMA_MemoryBaseAddr = (uint32_t) _rxFifoBuf,
+		.DMA_MemoryBaseAddr = (uint32_t) m_rxFifoBuf,
 		.DMA_DIR = DMA_DIR_PeripheralSRC,
-		.DMA_BufferSize = UART_RX_FIFO_SZ,
+		.DMA_BufferSize = kUartRxFifoSize,
 		.DMA_PeripheralInc = DMA_PeripheralInc_Disable,
 		.DMA_MemoryInc = DMA_MemoryInc_Enable,
 		.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
@@ -419,9 +422,9 @@ void UartStream::Init()
 	DMA_Cmd(WIFI_DMA_CH_RX, ENABLE);
 }
     
-WaitStatus UartStream::WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeoutMsec)
+WaitStatus UartStream::WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeout_msec)
 {
-	TaskTimeout tim(timeoutMsec);
+	TaskTimeout tim(timeout_msec);
 	WaitStatus result = WaitStatus::TIMEOUT;
 		
 	while (true)
@@ -450,14 +453,14 @@ WaitStatus UartStream::WaitLine(const char* str1, const char* str2, const char* 
 	}
 }
 
-WaitStatus UartStream::WaitLine(const char* str1, const char* str2, uint16_t timeoutMsec)
+WaitStatus UartStream::WaitLine(const char* str1, const char* str2, uint16_t timeout_msec)
 {
-	return WaitLine(str1, str2, 0, timeoutMsec);
+	return WaitLine(str1, str2, 0, timeout_msec);
 }
 
-WaitStatus UartStream::WaitLine(const char* str1, uint16_t timeoutMsec)
+WaitStatus UartStream::WaitLine(const char* str1, uint16_t timeout_msec)
 {
-	return WaitLine(str1, 0, 0, timeoutMsec);
+	return WaitLine(str1, 0, 0, timeout_msec);
 }
 	
 void UartStream::WriteLine(const char* str)
@@ -470,15 +473,15 @@ void UartStream::WriteData(const char* data, const uint16_t count)
 	DMAWriteData(data, count);
 }
     
-WaitStatus UartStream::SendResponse(const uint8_t connectionId, const char* data, const uint16_t count)
+WaitStatus UartStream::SendResponse(const uint8_t connection_id, const char* data, const uint16_t count)
 {	
-	uint8_t dataStrLen = DigitsCount(count);
+	uint8_t dataStrLen = Common::DigitsCount(count);
 	char cipsend[18];
 	memcpy(cipsend, "AT+CIPSEND=", 11);
 	
-	cipsend[11] = itoa(connectionId);     // Converts an integer value to a null-terminated string
+	cipsend[11] = Common::itoa(connection_id);      // Converts an integer value to a null-terminated string
 	cipsend[12] = ',';
-	itoa(count, cipsend + 13);		// Будет добавлен null-терминатор.
+	Common::itoa(count, cipsend + 13); 		// Будет добавлен null-терминатор.
 
 	cipsend[13 + dataStrLen] = '\r';
 	cipsend[14 + dataStrLen] = '\n';

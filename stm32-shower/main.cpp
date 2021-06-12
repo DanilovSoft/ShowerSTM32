@@ -22,6 +22,34 @@
 #include "TaskHelper.h"
 #include "MedianFilter.h"
 
+// Эта структура существует только для чтения, потому что с ней 
+// работают несколько потоков, а запись не волатильна и ничем не синхронизирована.
+PropertyStruct g_properties;
+
+// Эта структура накапливает изменения и затем сохраняет их в EEPROM и уже после
+// перезугрузки устройства, изменения попадут в структуру Properties.
+PropertyStruct g_writeProperties;
+
+RTOSwrapperClass g_rtosHelper;
+
+TaskHelper g_taskHelper;
+ButtonsTask g_buttonsTask;
+EepromTask g_eepromTask;
+LcdTask g_lcdTask;
+LedLightTask g_ledLightTask;
+WatchDogTask g_watchDogTask;
+WaterLevelAnimTask g_waterLevelAnimTask;
+WiFi g_wifiTask;
+HeaterTask g_heaterTask;
+TempSensor g_tempSensorTask;
+Buzzer g_buzzer;
+Eeprom g_eeprom;
+HeaterTempLimit g_heaterTempLimit;
+HeatingTimeLeft g_heatingTimeLeft;
+UartStream g_uartStream;
+WaterLevelTask g_waterLevelTask;
+ValveTask g_valveTask;
+
 void Init()
 {
 #pragma region RCC
@@ -102,7 +130,6 @@ void Init()
     g_buzzer.Init();
     g_uartStream.Init();
 }
-
 
 static void EEPROM_Task(void* parm)
 {

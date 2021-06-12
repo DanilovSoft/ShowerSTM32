@@ -2,22 +2,107 @@
 #include "stdint.h"
 #include "Stopwatch.h"
 
-class ButtonDebounce
+class ButtonDebounce final
 {
 public:
 	
-	ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin, uint8_t pressTimeMs, uint16_t releaseTimeMs);
-	bool IsPressed();
+	ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin, uint16_t press_time_msec, uint16_t release_time_msec)
+		: m_gpio(gpio)
+		, m_gpioPin(gpio_pin)
+		, m_pressTimeMsec(press_time_msec)
+		, m_releaseTimeMsec(release_time_msec)
+	{
+		m_stopwatch.Reset();
+	}
+	
+	bool Update()
+	{
+		if (GPIO_ReadInputDataBit(m_gpio, m_gpioPin))
+		{
+			// Кнопка физически зажата.
+			 
+			if(m_canPressAgain)
+			{
+				// Нажатие на кнопку разрешено.
+				
+				if(!m_pressed)
+				{
+					// Кнопка была в отпущенном состоянии.
+						
+					// Фиксируем что кнопка нажата.
+					m_pressed = true;
+                    
+					// Начать отсчет времени зажатой кнопки.
+					m_stopwatch.Reset();
+				}
+				else
+				{
+					// Кнопка должна быть зажата некоторое время.
+					if(m_stopwatch.GetElapsedMsec() >= m_pressTimeMsec)
+					{
+						// Запретить нажатие на кнопку.
+						m_canPressAgain = false;
+                        
+						// Разрешено выполнить действие кнопки.
+						return true;
+					}
+				}
+			}
+			else
+			{
+				// Произошло нажатие но оно еще запрещено.
+				
+				// Начать отсчет времени отпущенной кнопки заново.
+				m_stopwatch.Reset();
+			}
+		}
+		else
+		{
+			// Кнопка отпущена.
+				
+			if(m_pressed)
+			{
+				// Кнопка была в нажатом состоянии.
+						
+				// Фиксируем что кнопка отпущена.
+				m_pressed = false;
+            
+				// Начать отсчет времени отпущенной кнопки.
+				m_stopwatch.Reset();
+			}
+			else
+			{
+				// Кнопка все еще отпущена.
+						
+				if(!m_canPressAgain)
+				{
+					// Нажатие на кнопку запрещено.
+								
+					// Кнопка должна быть отпущена некоторое время.
+					if(m_stopwatch.GetElapsedMsec() >= m_releaseTimeMsec)
+					{   
+						// Кнопка отпущена достаточно долго что-бы разрешить повторное нажатие.
+									
+						// Разрешить повторное нажатие на кнопку.
+						m_canPressAgain = true;
+					}
+				}
+			}
+		}
+    
+		// Действие кнопки выполнять запрещено.
+		return false;
+	}
 	
 private:
 	
-	const uint8_t _pressTimeMs;
-	const uint8_t _releaseTimeMs;
-    const uint16_t _gpioPin = 0;
-    GPIO_TypeDef* _gpio = 0;
-    Stopwatch _stopwatch;
-    bool _pressed = false;
+	const uint16_t m_pressTimeMsec;
+	const uint16_t m_releaseTimeMsec;
+    const uint16_t m_gpioPin = 0;
+    GPIO_TypeDef* m_gpio = 0;
+    Stopwatch m_stopwatch;
+    bool m_pressed = false;
     // Для гистерезиса — кнопка не должна срабатывать повторно пока 
     // её не отпустят на какое-то время.
-    bool _canPressAgain = true;
+    bool m_canPressAgain = true;
 };

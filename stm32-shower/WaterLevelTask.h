@@ -34,7 +34,7 @@ public:
 	
 	volatile bool Preinitialized = false;
 	
-	volatile bool Initialized = false;
+	bool GetIsInitialized() volatile;
 	
 	void InitGPIO_ClearDisplay();
 	
@@ -58,6 +58,7 @@ private:
 
     // По умолчанию для гистерезиса считать что вода подымается.
     bool m_waterIsRising = true;
+	volatile bool m_isInitialized = false;
 	
 	void Init();
 	void Run();

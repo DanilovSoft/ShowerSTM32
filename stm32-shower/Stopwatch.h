@@ -27,16 +27,16 @@ public:
 	// Возвращает число квантов времени FreeRTOS которое прошло с момента Reset.
 	uint32_t GetElapsedTicks()
 	{
-		uint32_t tickCount = xTaskGetTickCount();
-		return abs(tickCount, m_beginTickCount);
+		uint32_t cur_tick_count = xTaskGetTickCount();
+		return Common::abs(cur_tick_count, m_beginTickCount);
 	}
     
 	// Возвращает сколько прошло миллисекунд с момента Reset.
 	uint32_t GetElapsedMsec()
 	{
-		uint32_t curTime = xTaskGetTickCount();
-		uint32_t elapsedMs = abs(curTime, m_beginTickCount) * portTICK_PERIOD_MS;
-		return elapsedMs;
+		uint32_t cur_tick_count = xTaskGetTickCount();
+		uint32_t elapsed_msec = Common::abs(cur_tick_count, m_beginTickCount) * portTICK_PERIOD_MS;
+		return elapsed_msec;
 	}
 	
 private:

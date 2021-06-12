@@ -1,5 +1,6 @@
 #pragma once
 #include "stm32f10x_gpio.h"
+#include "string.h"
 
 #define GPIO_MainPower				(GPIOA)
 #define GPIO_Pin_MainPower			(GPIO_Pin_1)
@@ -52,21 +53,18 @@
 #define Button_GPIO                 (GPIOA)
 #define Button_Temp_Minus           (GPIO_Pin_2)
 #define Button_Temp_Plus            (GPIO_Pin_3)
-#define Button_Water                (GPIO_Pin_4)
+#define Button_Water_Pin            (GPIO_Pin_4)
 #define Button_SensorSwitch_OUT     (GPIO_Pin_7)
-#define GPIO_LED        (GPIOB)
-#define GPIO_Pin_LED    (GPIO_Pin_7)
-#define LED_TIM         (TIM4)
+#define GPIO_LED					(GPIOB)
+#define GPIO_Pin_LED				(GPIO_Pin_7)
+#define LED_TIM						(TIM4)
 
+#define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
+#define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
 
-#define CircuitBreakerIsOn()		(GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET) // Включен ли автомат нагревателя.
-#define HeaterIsOn()				(GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET) // Включен ли нагреватель.
-#define ValveOpened()               (GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin)) // Включен ли клапан воды.
-
-
-static const auto UART_RX_FIFO_SZ = 1024;
-static const auto UART_MAX_STR_LEN = 200;
-static const auto WIFI_UART_Speed = 115200;
+static constexpr auto kUartRxFifoSize = 1024;
+static constexpr auto kUartMaxStrLen = 200;
+static constexpr auto kWiFiUartSpeed = 115200;
 
 inline void _delay_loops(unsigned int loops)
 {
@@ -78,7 +76,145 @@ inline void _delay_loops(unsigned int loops)
 	 );
 }
 
-#define Delay_us( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
+#define DELAY_US( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
+
+class Common
+{
+public:
+
+	// Включен ли автомат нагревателя.
+	inline static bool CircuitBreakerIsOn()
+	{
+		return GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET;
+	}
+
+	// Включен ли нагреватель (реле).
+	inline static bool HeaterIsOn()
+	{
+		return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
+	}
+
+	inline static void DelayUs(uint16_t usec)
+	{
+		_delay_loops((unsigned int)((double)usec * (SystemCoreClock / 3000000.0)));
+	}
+	
+	static uint8_t DigitsCount(uint16_t value)
+	{
+		uint8_t count = 0;
+
+		do
+		{
+			value /= 10;
+			count++;
+		} while (value);
+
+		return count;
+	}
+
+	static char itoa(uint8_t value)
+	{
+		const char digits[] = "0123456789";
+
+		char ch = '0';
+		if (value <= 9)
+		{
+			ch = digits[value];
+		}
+		return ch;
+	}
+
+	static char* itoa(uint16_t number, char* str)
+	{
+		const char digit[] = "0123456789";
+		char* p = str;
+		//	if (i < 0)
+		//	{
+		//		*p++ = '-';
+		//		i *= -1;
+		//	}
+			int32_t shifter = number;
+		do
+		{
+			//Move to where representation ends
+	   ++p;
+			shifter = shifter / 10;
+		} while (shifter);
+		*p = '\0';
+		do
+		{
+			//Move back, inserting digits as u go
+	   * --p = digit[number % 10];
+			number = number / 10;
+		} while (number);
+		return str;
+	}
+
+	static bool streql(const char* str1, const char* str2)
+	{
+		return strcmp(str1, str2) == 0;
+	}
+
+	// Возвращает абсолютную разницу между значениями.
+	static uint16_t abs(uint8_t a, uint8_t b)
+	{
+		return a > b ? a - b : b - a;
+	}
+
+	// Возвращает абсолютную разницу между значениями.
+	static uint16_t abs(uint16_t a, uint16_t b)
+	{
+		return a > b ? a - b : b - a;
+	}
+
+	// Возвращает абсолютную разницу между значениями.
+	static uint32_t abs(uint32_t a, uint32_t b)
+	{
+		return a > b ? a - b : b - a;
+	}
+
+	static unsigned char ctoi(const char ch)
+	{
+		return ch - 48;
+	}
+
+	static bool ArrayEquals(uint8_t* array1, uint8_t arr1Size, uint8_t* array2, uint8_t arr2Size)
+	{
+		if (arr1Size != arr2Size) 
+		{
+			return false;
+		}
+	
+		for (int i = 0; i < arr1Size; ++i) 
+		{
+			if (array1[i] != array2[i])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// Passed arrays store different data types.
+	template <typename T, typename U, int size1, int size2> static bool Equal(T(&arr1)[size1], U(&arr2)[size2])
+	{
+		return false;
+	}
+
+	// Passed arrays store SAME data types.
+	template <typename T, int size1, int size2> static bool Equal(T(&arr1)[size1], T(&arr2)[size2]) 
+	{
+		if (size1 == size2) 
+		{
+			for (int i = 0; i < size1; ++i) 
+			{
+				if (arr1[i] != arr2[i]) return false;
+			}
+			return true;
+		}
+		return false;
+	}
+};
 
 // http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/
 // If you want full control among compiler optimizations, the best 1µs delay can be reached using this macro fully written in assembler.
@@ -98,16 +234,3 @@ inline void _delay_loops(unsigned int loops)
 //			"BNE 1b \n\t" : : [loops] "r" (10*us) : "memory"\
 //		      );\
 //} while(0)
-
-bool streql(const char* str1, const char* str2);
-uint16_t abs(uint8_t a, uint8_t b);
-uint16_t abs(uint16_t a, uint16_t b);
-uint32_t abs(uint32_t a, uint32_t b);
-uint8_t DigitsCount(uint16_t value);
-char itoa(uint8_t value);
-char* itoa(uint16_t number, char* str);
-//uint16_t atoi(const char* str);
-unsigned char ctoi(const char ch);
-bool ArrayEquals(uint8_t* array1, uint8_t arr1Size, uint8_t* array2, uint8_t arr2Size);
-template <typename T, typename U, int size1, int size2> bool Equal(T(&arr1)[size1], U(&arr2)[size2]);
-template <typename T, int size1, int size2> bool Equal(T(&arr1)[size1], T(&arr2)[size2]);

@@ -15,23 +15,23 @@ struct TempStep
 {
 public:
 
-	uint8_t GetLimit(uint8_t extTemp)
+	uint8_t GetLimit(uint8_t ext_temp)
 	{
-		uint8_t index = GetIndex(extTemp);
+		uint8_t index = GetIndex(ext_temp);
 		return m_internal[index];
 	}
 
-	uint8_t GetLimit(float extTemp)
+	uint8_t GetLimit(float ext_temp)
 	{
-		uint8_t index = GetIndexf(extTemp);
+		uint8_t index = GetIndexf(ext_temp);
 		return m_internal[index];
 	}
 
 	// Принимает температуру окружающего воздуха в грудусах, что-бы
 	// увеличить температуру при такой температуре окружающей среды.
-	bool TempPlus(const uint8_t airTemp)
+	bool TempPlus(const uint8_t air_temp)
 	{
-		const uint8_t index = GetIndex(airTemp);
+		const uint8_t index = GetIndex(air_temp);
 		uint8_t value = m_internal[index];
 
 		if (value < InternalTempLimit)
@@ -79,9 +79,9 @@ public:
 
 	// Принимает температуру окружающего воздуха в грудусах, что-бы
 	// уменьшить температуру при такой температуре окружающей среды.
-	bool TempMinus(const uint8_t airTemp)
+	bool TempMinus(const uint8_t air_temp)
 	{
-		const uint8_t index = GetIndex(airTemp);
+		const uint8_t index = GetIndex(air_temp);
 
 		uint8_t value = m_internal[index];
 
@@ -149,7 +149,7 @@ public:
 		}
 	}
 
-	void SelfTest()
+	void SelfFix()
 	{
 		uint8_t prevSpot = m_internal[0];
 		for (int i = 0; i < STEPS_COUNT; i++)
@@ -234,10 +234,10 @@ public:
 	uint8_t WiFiPower;
 	
 	// Минимальное время зажатой кнопки для её срабатывания (антидребезг).
-    uint8_t ButtonPressTimeMs;
+    uint8_t ButtonPressTimeMsec;
     
 	// Минимальное время зажатой кнопки для срабатывания длительного нажатия.
-	uint16_t ButtonLongPressTimeMs = 3000;
+	uint16_t ButtonLongPressTimeMsec;
     
 	// 64-битный идентификатор датчика температуры воды внутри бака. (DS18B20)
 	uint8_t InternalTempSensorId[8] = {};
@@ -271,14 +271,17 @@ public:
 	
 	void SelfFix()
 	{
-		Chart.SelfTest();
-		
 		// Обычно для антидребезга задают 50 мс.
-		if (ButtonPressTimeMs < 20 || ButtonPressTimeMs > 80)
+		if (ButtonPressTimeMsec < 20 || ButtonPressTimeMsec > 80)
 		{
-			ButtonPressTimeMs = 40;
+			ButtonPressTimeMsec = 40;
 		}
 
+		if (ButtonLongPressTimeMsec > 10000 || ButtonLongPressTimeMsec < 1000)
+		{
+			ButtonLongPressTimeMsec = 4000;
+		}
+		
 		// В одном сантиметре - 58 микросекунд.
 		if (WaterLevelEmpty < (30 * 58) || WaterLevelEmpty > (50 * 58)) // 30..50 сантиметров (1740..2900 мкс)
 		{
@@ -355,6 +358,8 @@ public:
 		{
 			WaterValve_TimeoutSec = 5;	
 		}
+		
+		Chart.SelfFix();
 	}
 	
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.

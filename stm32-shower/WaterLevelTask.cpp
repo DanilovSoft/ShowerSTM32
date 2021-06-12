@@ -9,8 +9,6 @@
 #include "Properties.h"
 #include "TempSensor.h"
 
-WaterLevelTask g_waterLevelTask;
-
 void WaterLevelTask::Init()
 {
 	m_medianFilter.Init(g_properties.WaterLevel_Median_Buffer_Size);
@@ -102,7 +100,7 @@ void WaterLevelTask::Run()
     uint8_t lastPoint = InitDisplay();
     
     // Уровень воды инициализирован.
-    Initialized = true;
+    m_isInitialized = true;
     
     // Для гистерезиса по умолчанию считаем что уровень воды поднимается (Что-бы не допустить перелив).
     m_waterIsRising = true;
@@ -189,7 +187,7 @@ uint8_t WaterLevelTask::InitDisplay()
     // И выполнить прогрев. (Почему-то сказывается при включенной оптимизации -O1 и выше).
     vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
     GPIO_SetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
-    Delay_us(10);
+    DELAY_US(10);
     GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
     vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
         
@@ -270,7 +268,7 @@ bool WaterLevelTask::GetRawUsecTime(uint16_t &usec)
 	
 	// Отправить звуковой сигнал.
     GPIO_SetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
-    Delay_us(10);
+    DELAY_US(10);
     GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
     
 	// Ждём флаг завершения (когда сработает прерывание таймера по заднему фронту или по переполнению).
@@ -480,7 +478,7 @@ void WaterLevelTask::DisplayLED(uint16_t value)
 
     /* Latch */
     GPIO_SetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
-    Delay_us(1);
+    DELAY_US(1);
     GPIO_ResetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
 }
 
@@ -494,7 +492,7 @@ void WaterLevelTask::TaskDisplayLED(uint16_t value)
 			
     /* Latch */
     GPIO_SetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
-    Delay_us(1);
+    DELAY_US(1);
     GPIO_ResetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
 }
     
@@ -556,8 +554,13 @@ void WaterLevelTask::InitGPIO_ClearDisplay()
 
 void WaterLevelTask::WaitInitialization()
 {
-    while (!Initialized)
+    while (!m_isInitialized)
     {
         taskYIELD();
     }
+}
+
+bool WaterLevelTask::GetIsInitialized() volatile
+{
+	return m_isInitialized;
 }

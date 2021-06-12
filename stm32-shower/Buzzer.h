@@ -10,20 +10,20 @@
 
 struct BeepSound final
 {
-	const uint16_t Frequency;
-	const uint16_t Duration;
+	const uint16_t kFrequency;
+	const uint16_t kDuration;
 	
 	// Без звука.
 	BeepSound(uint16_t duration)
-		: Frequency(0)
-		, Duration(duration)
+		: kFrequency(0)
+		, kDuration(duration)
 	{
 	
 	}
 	
 	BeepSound(uint16_t frequency, uint16_t duration)
-		: Frequency(frequency)
-		, Duration(duration)
+		: kFrequency(frequency)
+		, kDuration(duration)
 	{
 		
 	}
@@ -185,10 +185,10 @@ private:
 	{
 		for (uint8_t i = 0; i < length; i++)
 		{
-			Freq(samples->Frequency);
+			Freq(samples->kFrequency);
 			
 			//vTaskDelay(samples->Duration / portTICK_PERIOD_MS);
-			bool interrupted = (xSemaphoreTake(m_xSemaphorePause, samples->Duration / portTICK_PERIOD_MS) == pdTRUE);
+			bool interrupted = (xSemaphoreTake(m_xSemaphorePause, samples->kDuration / portTICK_PERIOD_MS) == pdTRUE);
 			if (interrupted)
 			{
 				break;

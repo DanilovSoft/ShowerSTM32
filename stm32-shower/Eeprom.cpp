@@ -6,11 +6,9 @@
 #include "task.h"
 #include "I2C.h"
 
-Eeprom g_eeprom;
-
-bool Eeprom::SafeBufferRead(uint8_t* pBuffer, uint8_t ReadAddr, uint8_t NumByteToRead)
+bool Eeprom::SafeBufferRead(uint8_t* pBuffer, uint8_t ReadAddr, uint8_t num_bytes_to_read)
 {
-    while (NumByteToRead--)
+    while (num_bytes_to_read--)
     {
 	    if (!g_i2c.EE_ByteRead(ReadAddr, *pBuffer))
 	    {

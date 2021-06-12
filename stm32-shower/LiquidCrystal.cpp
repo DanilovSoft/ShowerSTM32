@@ -109,7 +109,7 @@ bool LiquidCrystal::Begin(uint8_t cols, uint8_t lines)
 		return false;
 	}
 		
-	Delay_us(150);
+	DELAY_US(150);
 
 	// finally, set to 4-bit interface
 	if(!Write4bits(0x02 << 4))
@@ -329,7 +329,7 @@ bool LiquidCrystal::PulseEnable(uint8_t data)
 	}
 		
 	// Enable pulse must be >450ns.
-	Delay_us(1);
+	DELAY_US(1);
 
 	if (!ExpanderWrite(data & ~En))	// En low.
 	{
@@ -337,7 +337,7 @@ bool LiquidCrystal::PulseEnable(uint8_t data)
 	}
 		
 	// commands need > 37us to settle.
-	Delay_us(50);
+	DELAY_US(50);
 
 	return true;
 }
