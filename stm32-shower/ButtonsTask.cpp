@@ -25,7 +25,7 @@ void ButtonsTask::Init()
 	
 void ButtonsTask::PressSound()
 {
-    const BeepSound samples[]
+    static const BeepSound samples[]
     {
         BeepSound(2000, 150),
         BeepSound(50)
@@ -38,7 +38,7 @@ void ButtonsTask::PressSound()
 
 void ButtonsTask::LongPressSound()
 {
-	const BeepSound samples[]
+	static const BeepSound samples[]
 	{
 		BeepSound(2000, 500),
 		BeepSound(50)

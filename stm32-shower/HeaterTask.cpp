@@ -18,7 +18,7 @@ HeaterTask g_heaterTask;
 
 void HeaterTask::BeepHeating()
 {
-    const static BeepSound samples[]
+	static const BeepSound samples[]
     {
         BeepSound(4000, 100),
         BeepSound(30),
@@ -34,7 +34,7 @@ void HeaterTask::BeepHeating()
 
 void HeaterTask::BeepTurnOff()
 {
-	const static BeepSound samples[]
+	static const BeepSound samples[]
     {
         BeepSound(3000, 140),
         BeepSound(30),
@@ -49,7 +49,7 @@ void HeaterTask::BeepTurnOff()
 
 void HeaterTask::BeepTurnOn()
 {
-	const static BeepSound samples[]
+	static const BeepSound samples[]
     {
         BeepSound(2400, 140),
         BeepSound(30),
@@ -64,7 +64,7 @@ void HeaterTask::BeepTurnOn()
 
 void HeaterTask::BeepReady()
 {
-	const static BeepSound samples[]
+	static const BeepSound samples[]
     {
         BeepSound(4000, 80),
         BeepSound(100),
@@ -85,22 +85,22 @@ void HeaterTask::BeepReady()
 
 void HeaterTask::BeepTimeout()
 {
-	const static BeepSound samples[]
-    {
-        BeepSound(4000, 300),
-        BeepSound(100),
-        BeepSound(4000, 300),
-        BeepSound(100),
-        BeepSound(4000, 300),
-        BeepSound(30)
-    }
-    ;
+	static const BeepSound samples[]
+	{
+		BeepSound(4000, 300),
+		BeepSound(100),
+		BeepSound(4000, 300),
+		BeepSound(100),
+		BeepSound(4000, 300),
+		BeepSound(30)
+	}
+	;
 		
-    if (m_beepStopwatch.TimedOut(7000))
-    {
-        g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
-        m_beepStopwatch.Reset();
-    }
+	if (m_beepStopwatch.TimedOut(7000))
+	{
+		g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+		m_beepStopwatch.Reset();
+	}
 }
     
 void HeaterTask::Init()

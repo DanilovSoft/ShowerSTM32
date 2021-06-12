@@ -8,22 +8,24 @@
 #include "task.h"
 #include "semphr.h"
 
-struct BeepSound
+struct BeepSound final
 {
-	uint16_t Frequency;
-	uint16_t Duration;
+	const uint16_t Frequency;
+	const uint16_t Duration;
 	
 	// Без звука.
 	BeepSound(uint16_t duration)
+		: Frequency(0)
+		, Duration(duration)
 	{
-		Frequency = 0;
-		Duration = duration;
+	
 	}
 	
-	BeepSound(uint16_t freq, uint16_t duration)
+	BeepSound(uint16_t frequency, uint16_t duration)
+		: Frequency(frequency)
+		, Duration(duration)
 	{
-		Frequency = freq;
-		Duration = duration;
+		
 	}
 };
 
