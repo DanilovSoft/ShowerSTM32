@@ -1,12 +1,5 @@
 #include "HeaterWatchdog.h"
-#include "stm32f10x.h"
-#include "stm32f10x_rtc.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_pwr.h"
-#include "system_stm32f10x.h"
 #include "Properties.h"
-#include "HeaterTask.h"
-
 
 void HeaterWatchdog::Init()
 {	
@@ -63,12 +56,12 @@ bool HeaterWatchdog::AbsoluteTimeout()
     return false;
 }
 
-bool HeaterWatchdog::IsTimeoutOccurred() const
+bool HeaterWatchdog::IsTimeoutOccurred()
 {
 	return m_timeoutOccurred;
 }
 
-bool HeaterWatchdog::IsAbsoluteTimeoutOccured() const
+bool HeaterWatchdog::IsAbsoluteTimeoutOccured()
 {
 	return m_absoluteTimeoutOccured;
 }

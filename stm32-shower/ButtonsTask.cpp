@@ -32,7 +32,7 @@ void ButtonsTask::PressSound()
     }
     ;
 		
-    g_heaterTask.ResetBeepTime();
+    g_heaterTask.ResetBeepInterval();
     g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
 }
 
@@ -45,7 +45,7 @@ void ButtonsTask::LongPressSound()
 	}
 	;
 		
-	g_heaterTask.ResetBeepTime();
+	g_heaterTask.ResetBeepInterval();
 	g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
 }
 

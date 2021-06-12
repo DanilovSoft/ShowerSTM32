@@ -1,37 +1,14 @@
 #include "HeaterTask.h"
-#include "stdint.h"
-#include "Common.h"
-#include "stm32f10x.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_adc.h"
-#include "Settings.h"
 #include "WaterLevelTask.h"
 #include "Buzzer.h"
-#include "Stopwatch.h"
-#include "HeaterWatchdog.h"
 #include "TempSensor.h"
 #include "HeatingTimeLeft.h"
 #include "HeaterTempLimit.h"
 
 HeaterTask g_heaterTask;
 
-void HeaterTask::BeepHeating()
-{
-	static const BeepSound samples[]
-    {
-        BeepSound(4000, 100),
-        BeepSound(30),
-    }
-    ;
-	
-    if (m_beepStopwatch.TimedOut(7000))
-    {
-        g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
-        m_beepStopwatch.Reset();
-    }
-}
-
+// Воспроизводит звук отключения питания ТЭНа.
+// Блокирует поток на время воспроизведения.
 void HeaterTask::BeepTurnOff()
 {
 	static const BeepSound samples[]
@@ -47,6 +24,8 @@ void HeaterTask::BeepTurnOff()
     m_beepStopwatch.Reset();
 }
 
+// Воспроизводит звук подачи питания на ТЭН.
+// Блокирует поток на время воспроизведения.
 void HeaterTask::BeepTurnOn()
 {
 	static const BeepSound samples[]
@@ -62,7 +41,29 @@ void HeaterTask::BeepTurnOn()
     m_beepStopwatch.Reset();
 }
 
-void HeaterTask::BeepReady()
+// Воспроизводит звук активного процесса нагрева.
+// Звук воспроизводится только по прошествию интервала.
+// Блокирует поток на время воспроизведения.
+void HeaterTask::PeriodicBeepHeating()
+{
+	static const BeepSound samples[]
+	{
+		BeepSound(4000, 100),
+		BeepSound(30),
+	}
+	;
+	
+	if (m_beepStopwatch.TimedOut(7000))
+	{
+		g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+		m_beepStopwatch.Reset();
+	}
+}
+
+// Воспроизводит звук если вода нагрета до требуемой температуры.
+// Звук воспроизводится только по прошествию интервала.
+// Блокирует поток на время воспроизведения.
+void HeaterTask::PeriodicBeepIfWaterHeated()
 {
 	static const BeepSound samples[]
     {
@@ -83,7 +84,10 @@ void HeaterTask::BeepReady()
     }
 }
 
-void HeaterTask::BeepTimeout()
+// Воспроизводит звук аварии.
+// Звук воспроизводится только по прошествию интервала.
+// Блокирует поток на время воспроизведения.
+void HeaterTask::PeriodicBeepTimeout()
 {
 	static const BeepSound samples[]
 	{
@@ -127,7 +131,7 @@ void HeaterTask::Init()
     GPIO_Init(GPIO_Heater_Led, &gpio_init);
     GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
 		
-    TurnOffWithNoSound();
+    TurnOff();
 }
 
 void HeaterTask::Run()
@@ -136,7 +140,7 @@ void HeaterTask::Run()
     m_beepStopwatch.Reset();
     g_tempSensorTask.WaitFirstConversion();
 	
-//	while (!_waterLevelTask.Initialized && !_forcedSessionRequired)
+//	while (!g_waterLevelTask.Initialized && !m_forcedSessionRequired)
 //	{
 //		taskYIELD();
 //	}
@@ -161,10 +165,10 @@ void HeaterTask::Run()
             	// Выключить если нагреватель включен.
                 if(HeaterIsOn())
                 {	
-                    TurnOff();
+                    TurnOffWithSound();
                 }
 					
-                BeepTimeout();
+                PeriodicBeepTimeout();
             }
             else
             {
@@ -181,12 +185,12 @@ void HeaterTask::Run()
                     // Таймаут нагрева.
                     if (m_heaterWatchdog.TimeOut())
                     {
-                        TurnOff();
-                        BeepTimeout();
+                        TurnOffWithSound();
+                        PeriodicBeepTimeout();
                     }
                     else
                     {
-                        BeepHeating();
+                        PeriodicBeepHeating();
                         ControlTurnOff();
                     }
                 }
@@ -197,11 +201,11 @@ void HeaterTask::Run()
                     // Сбросить таймаут можно только отключив автомат нагревателя.
                     if (m_heaterWatchdog.IsTimeoutOccurred())
                     {
-                        BeepTimeout();
+                        PeriodicBeepTimeout();
                     }
                     else
                     {
-                        BeepReady();
+                        PeriodicBeepIfWaterHeated();
                         ControlTurnOn();
                     }
                 }
@@ -215,12 +219,26 @@ void HeaterTask::Run()
             // Выключить реле нагревателя (Отсутствует 220в).
             if(HeaterIsOn())
             {
-                TurnOff();
+                TurnOffWithSound();
             }
         }
 
         taskYIELD();
     }
+}
+
+// Выключает питание ТЭНа и тушит светодиод.
+void HeaterTask::TurnOff()
+{
+	GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
+	GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+}
+
+// Включает питание ТЭНа и зажигает светодиод.
+void HeaterTask::TurnOn()
+{
+	GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
+	GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
 }
 
 void HeaterTask::ControlTurnOn()
@@ -234,7 +252,7 @@ void HeaterTask::ControlTurnOn()
 		// Если уровень воды больше допустимого минимума И температура в баке меньше необходимой
 		if(internalTemp < limitTemp && !g_waterLevelTask.SensorIsBlocked && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
 		{
-			TurnOn();
+			TurnOnWithSound(); // Безусловное включение.
 		}
 	}
 }
@@ -248,34 +266,24 @@ void HeaterTask::ControlTurnOff()
     // Температура в баке выше порога отключения или уровень воды меньше допустимого
     if ((internalTemp >= limitTemp) || g_waterLevelTask.DisplayingPercent < g_properties.MinimumWaterHeatingPercent)
     {
-        TurnOff();
+        TurnOffWithSound(); // Безусловное отключение ТЭНа.
         m_heaterWatchdog.Reset();
     }
 }
 
-void HeaterTask::TurnOff()
+// Безусловное отключение ТЭНа.
+void HeaterTask::TurnOffWithSound()
 {
-    TurnOffWithNoSound();
+    TurnOff();
     BeepTurnOff();	
 }
-	
-void HeaterTask::TurnOffWithNoSound()
-{
-    GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
-    GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-}
 
-void HeaterTask::TurnOnWithNoSound()
-{
-    GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
-    GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-}
-	
-void HeaterTask::TurnOn()
+// Безусловное включение ТЭНа.
+void HeaterTask::TurnOnWithSound()
 {
     BeepTurnOn();
     g_heatingTimeLeft.OnStartHeating();
-    TurnOnWithNoSound();
+    TurnOn();
 }
 
 bool HeaterTask::GetIsHeaterEnabled()
@@ -283,11 +291,18 @@ bool HeaterTask::GetIsHeaterEnabled()
     return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
 }
 	
+// True если вода нагрета до нужного уровня.
 bool HeaterTask::WaterHeated()
 {
-	uint8_t limit;
-    g_heaterTempLimit.TryGetTargetTemperature(limit);
-    return g_tempSensorTask.AverageInternalTemp >= limit;
+	uint8_t targetTemp;
+	if (g_heaterTempLimit.TryGetTargetTemperature(targetTemp))
+	{
+		return g_tempSensorTask.AverageInternalTemp >= targetTemp;
+	}
+	else
+	{
+		return false;
+	}
 }
 	
 uint8_t HeaterTask::GetHeatingLimit()
@@ -297,21 +312,23 @@ uint8_t HeaterTask::GetHeatingLimit()
 	return limit;
 }
 	
-bool HeaterTask::GetTimeoutOccured() const
+bool HeaterTask::GetTimeoutOccured()
 {
     return m_heaterWatchdog.IsTimeoutOccurred();
 }
 	
-bool HeaterTask::GetAbsoluteTimeoutOccured() const
+bool HeaterTask::GetAbsoluteTimeoutOccured()
 {
     return m_heaterWatchdog.IsAbsoluteTimeoutOccured();
 }
 	
-void HeaterTask::ResetBeepTime()
+// Сбрасывает время периодического звукового сигнала на начало.
+void HeaterTask::ResetBeepInterval()
 {
     m_beepStopwatch.Reset();
 }
 
+// Разрешает включить нагрев воды для текущей сессии (сессия — пока не выключат автомат).
 void HeaterTask::IgnoreWaterLevelOnce()
 {
 	// Просим другой поток выполнить принудительное включение нагрева.

@@ -33,7 +33,7 @@ class Buzzer final
 {
 public:
 	
-	// Properties еще не инициализирован
+	// Properties еще не инициализирован.
 	void Init()
 	{	
 		DisableGPIO();

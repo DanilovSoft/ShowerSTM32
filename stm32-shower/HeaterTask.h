@@ -1,5 +1,4 @@
 #pragma once
-#include "stdint.h"
 #include "iActiveTask.h"
 #include "Stopwatch.h"
 #include "HeaterWatchdog.h"
@@ -9,12 +8,11 @@ class HeaterTask final : public iActiveTask
 public:
 	
 	bool GetIsHeaterEnabled();
-	bool WaterHeated();   // True если вода нагрета до нужного уровня
+	bool WaterHeated();   
 	uint8_t GetHeatingLimit();
-	bool GetTimeoutOccured() const;
-	bool GetAbsoluteTimeoutOccured() const;
-	void ResetBeepTime();
-	// Разрешает включить нагрев воды для текущей сессии (сессия — пока не выключат автомат).
+	bool GetTimeoutOccured();
+	bool GetAbsoluteTimeoutOccured();
+	void ResetBeepInterval();
 	void IgnoreWaterLevelOnce();
 	
 private:
@@ -27,25 +25,17 @@ private:
 	
 	void Init();
 	void Run();
-	// Воспроизводит звук активного процесса нагрева.
-	// Блокирует поток на время воспроизведения.
-	void BeepHeating();
-	// Воспроизводит звук при отключении питания тена (когда отключается реле).
-	// Блокирует поток на время воспроизведения.
+	void PeriodicBeepHeating();
 	void BeepTurnOff();
-	// Воспроизводит звук при подаче питания тена (когда включается реле).
-	// Блокирует поток на время воспроизведения.
 	void BeepTurnOn();
-	// Воспроизводит звук когда вода нагрета до требуемой температуры.
-	// Блокирует поток на время воспроизведения.
-	void BeepReady();
-	void BeepTimeout();
+	void PeriodicBeepIfWaterHeated();
+	void PeriodicBeepTimeout();
 	void ControlTurnOn();
 	void ControlTurnOff();
+	void TurnOffWithSound();
 	void TurnOff();
-	void TurnOffWithNoSound();
-	void TurnOnWithNoSound();
 	void TurnOn();
+	void TurnOnWithSound();
 };
 
 extern HeaterTask g_heaterTask;

@@ -11,15 +11,15 @@ public:
 	bool TimeOut();
 	// Абсолютный таймаут отсчитывает время когда включен рубильник автомата.
     bool AbsoluteTimeout();
-	bool IsTimeoutOccurred() const;
-	bool IsAbsoluteTimeoutOccured() const;
+	bool IsTimeoutOccurred();
+	bool IsAbsoluteTimeoutOccured();
 	
 private:
 	
-	volatile bool m_timeoutOccurred;
-	volatile bool m_absoluteTimeoutOccured;
 	uint32_t m_intervalSec;
 	uint32_t m_absoluteIntervalSec;	
 	RealTimeClockStopwatch m_timeoutStopwatch;
 	RealTimeClockStopwatch m_absoluteTimeoutStopwatch;
+	volatile bool m_timeoutOccurred;
+	volatile bool m_absoluteTimeoutOccured;
 };
