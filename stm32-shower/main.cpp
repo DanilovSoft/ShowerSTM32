@@ -1,4 +1,4 @@
-#include "WiFi.h"
+#include "WiFiTask.h"
 #include "HeaterTask.h"
 #include "WaterLevelTask.h"
 #include "LedLightTask.h"
@@ -31,7 +31,6 @@ PropertyStruct g_properties;
 PropertyStruct g_writeProperties;
 
 RTOSwrapperClass g_rtosHelper;
-
 TaskHelper g_taskHelper;
 ButtonsTask g_buttonsTask;
 EepromTask g_eepromTask;
@@ -39,16 +38,16 @@ LcdTask g_lcdTask;
 LedLightTask g_ledLightTask;
 WatchDogTask g_watchDogTask;
 WaterLevelAnimTask g_waterLevelAnimTask;
-WiFi g_wifiTask;
+WaterLevelTask g_waterLevelTask;
 HeaterTask g_heaterTask;
-TempSensor g_tempSensorTask;
+WiFiTask g_wifiTask;
+ValveTask g_valveTask;
+TempSensorTask g_tempSensorTask;
 Buzzer g_buzzer;
 Eeprom g_eeprom;
 HeaterTempLimit g_heaterTempLimit;
 HeatingTimeLeft g_heatingTimeLeft;
 UartStream g_uartStream;
-WaterLevelTask g_waterLevelTask;
-ValveTask g_valveTask;
 
 void Init()
 {

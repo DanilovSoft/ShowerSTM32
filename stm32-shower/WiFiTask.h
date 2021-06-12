@@ -2,7 +2,7 @@
 #include "Request.h"
 #include "iActiveTask.h"
 
-class WiFi : public iActiveTask
+class WiFiTask final : public iActiveTask
 {
 private:
 	
@@ -21,4 +21,4 @@ private:
     bool DoWiFiEvents();
 };
 
-extern WiFi g_wifiTask;
+extern WiFiTask g_wifiTask;

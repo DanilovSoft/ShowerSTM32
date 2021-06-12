@@ -68,7 +68,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="additional_defines.c" />
-    <ClCompile Include="Common.cpp" />
     <ClCompile Include="ConnectionsBuffer.cpp" />
     <ClCompile Include="Eeprom.cpp" />
     <ClCompile Include="FreeRTOS\Source\croutine.c" />
@@ -85,7 +84,7 @@
     <ClCompile Include="I2C.cpp" />
     <ClCompile Include="IRQ.cpp" />
     <ClCompile Include="LiquidCrystal.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Main.cpp" />
     <ClCompile Include="MedianFilter.cpp" />
     <ClCompile Include="MovingAverageFilter.cpp" />
     <ClCompile Include="RealTimeClockStopwatch.cpp" />
@@ -113,7 +112,6 @@
     <ClCompile Include="StdPeriph\Src\stm32f10x_tim.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_usart.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_wwdg.c" />
-    <ClCompile Include="TicksStopwatch.cpp" />
     <ClCompile Include="system_stm32f10x.c" />
     <ClCompile Include="UartStream.cpp" />
     <ClCompile Include="ValveTask.cpp" />
@@ -203,7 +201,7 @@
     <ClInclude Include="WatchDogTask.h" />
     <ClInclude Include="WaterLevelAnimTask.h" />
     <ClInclude Include="WaterLevelTask.h" />
-    <ClInclude Include="WiFi.h" />
+    <ClInclude Include="WiFiTask.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,4 @@
-#include "WiFi.h"
+#include "WiFiTask.h"
 #include "Common.h"
 #include "iActiveTask.h"
 #include "Buzzer.h"
@@ -12,7 +12,7 @@
 #include "HeatingTimeLeft.h"
 #include "TempSensor.h"
 
-bool WiFi::InitWiFi()
+bool WiFiTask::InitWiFi()
 {
 	bool wps_button_pressed = GPIO_ReadInputDataBit(GPIO_WPS, GPIO_WPS_Pin) == RESET;
 		
@@ -39,7 +39,7 @@ bool WiFi::InitWiFi()
 	return false;
 }
 	
-bool WiFi::TryInitWiFi()
+bool WiFiTask::TryInitWiFi()
 {
 	if (!g_uartStream.WaitLine("ready", 1000))     // Ожидание инициализации WiFi.
 	{
@@ -97,7 +97,7 @@ bool WiFi::TryInitWiFi()
 	return true;
 }
 	
-bool WiFi::WPS()
+bool WiFiTask::WPS()
 {
 	static const BeepSound samples[] = 
 	{ 
@@ -123,7 +123,7 @@ bool WiFi::WPS()
 	return true;
 }
 	
-void WiFi::Init()
+void WiFiTask::Init()
 {
 	// Кнопка WPS.
 	GPIO_InitTypeDef gpio_init = 
@@ -148,7 +148,7 @@ void WiFi::Init()
 	GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
 }
 	
-void WiFi::SetAP(const char* pref, uint8_t pref_size, uint8_t* data, uint8_t length)
+void WiFiTask::SetAP(const char* pref, uint8_t pref_size, uint8_t* data, uint8_t length)
 {
 	pref_size -= 1;  // Не учитываем нуль-терминатор.
 		
@@ -163,19 +163,19 @@ void WiFi::SetAP(const char* pref, uint8_t pref_size, uint8_t* data, uint8_t len
 	g_uartStream.WriteLine(str);
 }
 	
-void WiFi::InnerSetCurAP(uint8_t* data, uint8_t length)
+void WiFiTask::InnerSetCurAP(uint8_t* data, uint8_t length)
 {
 	const char pref[] = "AT+CWJAP_CUR=";
 	SetAP(pref, sizeof(pref), data, length);
 }
 	
-void WiFi::InnerSetDefAP(uint8_t* data, uint8_t length)
+void WiFiTask::InnerSetDefAP(uint8_t* data, uint8_t length)
 {
 	const char pref[] = "AT+CWJAP_DEF=";
 	SetAP(pref, sizeof(pref), data, length);
 }
 	
-void WiFi::Run()
+void WiFiTask::Run()
 {
 	if (InitWiFi())
 	{
@@ -189,7 +189,7 @@ void WiFi::Run()
 	}
 }
 
-bool WiFi::DoWiFiEvents()
+bool WiFiTask::DoWiFiEvents()
 {
 	uint8_t request_length;
 	if (!m_request.GetRequestSize(request_length))

@@ -95,7 +95,7 @@
 #include "string.h"
 #include "Eeprom.h"
 
-class TempSensor final : public iActiveTask
+class TempSensorTask final : public iActiveTask
 {
 public:
 
@@ -1084,4 +1084,4 @@ repeat:
 	}
 };
 
-extern TempSensor g_tempSensorTask;
+extern TempSensorTask g_tempSensorTask;

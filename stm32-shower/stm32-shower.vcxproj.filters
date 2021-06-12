@@ -136,14 +136,11 @@
     <ClCompile Include="FreeRTOS\Source\portable\GCC\ARM_CM3\port.c">
       <Filter>Source files\FreeRTOS</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="additional_defines.c">
       <Filter>Source files\FreeRTOS</Filter>
-    </ClCompile>
-    <ClCompile Include="Common.cpp">
-      <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="ConnectionsBuffer.cpp">
       <Filter>Source files</Filter>
@@ -176,9 +173,6 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="RTOSwrapper.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="TicksStopwatch.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="UartStream.cpp">
@@ -318,7 +312,7 @@
     <ClInclude Include="iActiveTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="WiFi.h">
+    <ClInclude Include="WiFiTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="FreeRTOS\Source\portable\GCC\ARM_CM3\portmacro.h">
