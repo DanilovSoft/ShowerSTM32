@@ -2,7 +2,7 @@
 #include "stdint.h"
 
 // Замеряет время на основе часов реального времени (RTC).
-class RealTimeClockStopwatch
+class RealTimeClockStopwatch final
 {
 public:
 	
@@ -12,6 +12,6 @@ public:
 	
 private:
 	
-	volatile uint32_t _lastTime;
+	volatile uint32_t m_lastTime;
 };
 

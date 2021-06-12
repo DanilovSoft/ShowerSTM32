@@ -5,7 +5,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "RTOSwrapper.h"
-#include "stm32f10x.h"
 #include "stm32f10x_bkp.h"
 #include "Eeprom.h"
 #include "ButtonsTask.h"
@@ -20,11 +19,8 @@
 #include "stm32f10x_pwr.h"
 #include "stm32f10x_rtc.h"
 #include "TempSensor.h"
-#include "Dwt.h"
 #include "TaskHelper.h"
 #include "MedianFilter.h"
-
-//#define uint unsigned int
 
 void Init()
 {
@@ -102,34 +98,34 @@ void Init()
 	
     #pragma endregion
 	
-    _waterLevelTask.InitGPIO_ClearDisplay();
-    _buzzer.Init();
-    _uartStream.Init();
+    g_waterLevelTask.InitGPIO_ClearDisplay();
+    g_buzzer.Init();
+    g_uartStream.Init();
 }
 
 
 static void EEPROM_Task(void* parm)
 {
-	_i2c.vTaskInit(); // Инициализируем шину I2C.
+	g_i2c.vTaskInit(); // Инициализируем шину I2C.
 
 	// Нельзя запускать другие потоки не считав параметры из EEPROM.
-	_eeprom.InitBeforeRTOS();  // Использует шину I2C.
+	g_eeprom.InitBeforeRTOS();  // Использует шину I2C.
 	
-	_heatingTimeLeft.Init(Properties.WaterTankVolumeLitre, Properties.WaterHeaterPowerKWatt);
+	g_heatingTimeLeft.Init(g_properties.WaterTankVolumeLitre, g_properties.WaterHeaterPowerKWatt);
 	
-    _rtosHelper.CreateTask(&_wifiTask, "WI-FI", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_lcdTask, "LCD", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_waterLevelTask, "WaterLevel", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_waterLevelAnimTask, "WaterLevelAnim", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_tempSensorTask, "TempSensor", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_heaterTask, "Heater", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_ledLightTask, "LedLight", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_buttonsTask, "Buttons", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_valveTask, "Valve", tskIDLE_PRIORITY);
-    _rtosHelper.CreateTask(&_watchDogTask, "WatchDog", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_wifiTask, "WI-FI", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_lcdTask, "LCD", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_waterLevelTask, "WaterLevel", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_waterLevelAnimTask, "WaterLevelAnim", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_tempSensorTask, "TempSensor", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_heaterTask, "Heater", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_ledLightTask, "LedLight", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_buttonsTask, "Buttons", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_valveTask, "Valve", tskIDLE_PRIORITY);
+    g_rtosHelper.CreateTask(&g_watchDogTask, "WatchDog", tskIDLE_PRIORITY);
     
 #if INCLUDE_vTaskDelete
-	vTaskDelete(_eepromTask.taskHandle);
+	vTaskDelete(g_eepromTask.taskHandle);
 #endif
 }
 
@@ -137,14 +133,14 @@ int main(void)
 {
 	Init();
     
-    _eepromTask.taskHandle = xTaskCreateStatic(
+    g_eepromTask.taskHandle = xTaskCreateStatic(
         (TaskFunction_t)EEPROM_Task, 
         "eeprom", 
         iActiveTask::ulStackDepth,
         0,
         tskIDLE_PRIORITY,
-        _eepromTask.xStack,
-        &_eepromTask.xTaskBuffer);
+        g_eepromTask.xStack,
+        &g_eepromTask.xTaskBuffer);
     
     vTaskStartScheduler();
 }

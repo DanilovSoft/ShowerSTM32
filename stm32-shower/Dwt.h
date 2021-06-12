@@ -55,4 +55,4 @@ public:
 	}
 };
 
-extern Dwt dwt;
+extern Dwt g_dwt;

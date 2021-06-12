@@ -9,14 +9,14 @@
 #include "Properties.h"
 #include "TempSensor.h"
 
-WaterLevelTask _waterLevelTask;
+WaterLevelTask g_waterLevelTask;
 
 void WaterLevelTask::Init()
 {
-	_medianFilter.Init(Properties.WaterLevel_Median_Buffer_Size);
+	m_medianFilter.Init(g_properties.WaterLevel_Median_Buffer_Size);
 	
-	_usecRange = (Properties.WaterLevelEmpty - Properties.WaterLevelFull);
-	float usec_per_percent = (Properties.WaterLevelEmpty - Properties.WaterLevelFull) / 99.0;
+	m_usecRange = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull);
+	float usec_per_percent = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull) / 99.0;
 		
 	// Trig
 	GPIO_InitTypeDef gpio_init = 
@@ -41,7 +41,7 @@ void WaterLevelTask::Init()
 	GPIO_ResetBits(WL_GPIO_TIM, WL_GPIO_TIM_Pin);
 	
 	uint16_t prescaler = SystemCoreClock / 1000000 - 1; // 1 микросекунда.
-	uint16_t period = Properties.WaterLevelEmpty + (usec_per_percent * 10); // Диаппазон таймера с запасом на пару процентов.
+	uint16_t period = g_properties.WaterLevelEmpty + (usec_per_percent * 10); // Диаппазон таймера с запасом на пару процентов.
 	
 	TIM_TimeBaseInitTypeDef base_timer =
 	{
@@ -93,7 +93,7 @@ void WaterLevelTask::Init()
 void WaterLevelTask::Run()
 {
     TickType_t xLastWakeTime;
-    _intervalPauseMsec = Properties.WaterLevel_Measure_IntervalMsec / portTICK_PERIOD_MS;
+    m_intervalPauseMsec = g_properties.WaterLevel_Measure_IntervalMsec / portTICK_PERIOD_MS;
     
     // Initialise the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
@@ -105,7 +105,7 @@ void WaterLevelTask::Run()
     Initialized = true;
     
     // Для гистерезиса по умолчанию считаем что уровень воды поднимается (Что-бы не допустить перелив).
-    _waterIsRising = true;
+    m_waterIsRising = true;
     
     while (true)
     {
@@ -116,10 +116,10 @@ void WaterLevelTask::Run()
             UsecRaw = usecRaw;
 
             // Медианный фильтр.
-            uint16_t median = _medianFilter.AddValue(usecRaw);
+            uint16_t median = m_medianFilter.AddValue(usecRaw);
 
             // Скользящее среднее.
-            uint16_t avg = _movingAverageFilter.AddValue(median);
+            uint16_t avg = m_movingAverageFilter.AddValue(median);
 
             // Скопировать фильтрованное значение микросекунд в публичную переменную.
             AvgUsec = avg;
@@ -157,7 +157,7 @@ void WaterLevelTask::Run()
         }
 
         // Пауза для затухания эха.
-        vTaskDelayUntil(&xLastWakeTime, _intervalPauseMsec);
+        vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
     }
 }
 
@@ -172,7 +172,7 @@ void WaterLevelTask::FixRawTemp(uint16_t &usec)
 
 bool WaterLevelTask::CheckSensorBlocking(uint16_t usec)
 {
-    if (usec < (Properties.WaterLevelFull * 0.8))
+    if (usec < (g_properties.WaterLevelFull * 0.8))
         /* Расстояние меньше минимального возможного на 20% */
     {
         return true;
@@ -187,14 +187,14 @@ uint8_t WaterLevelTask::InitDisplay()
 		
     // Дать датчику эксклюзивное время на инициализацию 
     // И выполнить прогрев. (Почему-то сказывается при включенной оптимизации -O1 и выше).
-    vTaskDelayUntil(&xLastWakeTime, _intervalPauseMsec);
+    vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
     GPIO_SetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
     Delay_us(10);
     GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
-    vTaskDelayUntil(&xLastWakeTime, _intervalPauseMsec);
+    vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
         
 	// Размер медианного фильтра + буфера скользящее среднее.
-    uint16_t warmupCount = Properties.WaterLevel_Median_Buffer_Size + Properties.WaterLevel_Avg_Buffer_Size;
+    uint16_t warmupCount = g_properties.WaterLevel_Median_Buffer_Size + g_properties.WaterLevel_Avg_Buffer_Size;
     
     uint8_t lastPoint;
     for (uint16_t i = 0; i < warmupCount;)
@@ -205,15 +205,15 @@ uint8_t WaterLevelTask::InitDisplay()
             UsecRaw = usecRaw;
             
             // Медианный фильтр.
-            uint16_t median = _medianFilter.AddValue(usecRaw);
+            uint16_t median = m_medianFilter.AddValue(usecRaw);
 
             // Добавить значение в буффер скользящего среднего.
-            uint16_t avg = _movingAverageFilter.AddValue(median);
+            uint16_t avg = m_movingAverageFilter.AddValue(median);
             
-            if (i < Properties.WaterLevel_Avg_Buffer_Size)
+            if (i < g_properties.WaterLevel_Avg_Buffer_Size)
             {
                 // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполненности.
-                avg = _movingAverageFilter.GetAverage() / (i + 1);  // Точность с кажной итерацией будет увеличиваться.
+                avg = m_movingAverageFilter.GetAverage() / (i + 1);  // Точность с кажной итерацией будет увеличиваться.
             }
             
             // Проверить не заслонен ли датчик.
@@ -250,7 +250,7 @@ uint8_t WaterLevelTask::InitDisplay()
         }
     	
         // Пауза.
-        vTaskDelayUntil(&xLastWakeTime, _intervalPauseMsec);
+        vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
     }
     
     // Вернуть уровень воды в пунктах.
@@ -299,13 +299,13 @@ bool WaterLevelTask::GetRawUsecTime(uint16_t &usec)
 	
 void WaterLevelTask::FixRange(uint16_t &usec)
 {
-    if (usec < Properties.WaterLevelFull)
+    if (usec < g_properties.WaterLevelFull)
     {
-        usec = Properties.WaterLevelFull;
+        usec = g_properties.WaterLevelFull;
     }
-    else if (usec > Properties.WaterLevelEmpty)
+    else if (usec > g_properties.WaterLevelEmpty)
     {   
-        usec = Properties.WaterLevelEmpty;
+        usec = g_properties.WaterLevelEmpty;
     }
 }
 	
@@ -315,15 +315,15 @@ float WaterLevelTask::GetFloatPercent(uint16_t usec)
     FixRange(usec);
 		
     /* Смещение */
-    usec -= Properties.WaterLevelFull;
+    usec -= g_properties.WaterLevelFull;
 		
     /* Уровень воды в микросекундах */
-    usec = _usecRange - usec;
+    usec = m_usecRange - usec;
 		
     uint32_t tmp = usec * 99;
 		
     /* Сколько пунктов из 99 */
-    float point = tmp / (float)_usecRange;	
+    float point = tmp / (float)m_usecRange;	
 		
     return point;
 }
@@ -338,13 +338,13 @@ inline uint8_t WaterLevelTask::GetPercent(uint8_t point)
 
 inline uint16_t WaterLevelTask::ClampRange(uint16_t usec)
 {
-    if (usec < Properties.WaterLevelFull)
+    if (usec < g_properties.WaterLevelFull)
     {
-        return Properties.WaterLevelFull;
+        return g_properties.WaterLevelFull;
     }
-    else if (usec > Properties.WaterLevelEmpty)
+    else if (usec > g_properties.WaterLevelEmpty)
     {
-        return Properties.WaterLevelEmpty;
+        return g_properties.WaterLevelEmpty;
     }
     
     return usec;
@@ -359,17 +359,17 @@ inline uint8_t WaterLevelTask::Hysteresis(uint8_t point, uint8_t lastPoint)
     if(diff != 0)
     // Если уровень воды хоть как-то изменился.
     {
-        if (_waterIsRising)
+        if (m_waterIsRising)
         // Считается что уровень воды увеличивается.
 	    {
 		    if (diff < 0)
 		    // Вода начала убывать.
 		    {
-			    if (diff <= -HysteresisPoints)
+			    if (diff <= -kHysteresisPoints)
 				// Уровень воды уменьшился более чем на 4 пункта.
 			    {
 				    // Считать что вода теперь убывает.
-				    _waterIsRising = false;
+				    m_waterIsRising = false;
 			    }
 			    else
 			    // Уровень воды уменьшился не значительно.
@@ -385,11 +385,11 @@ inline uint8_t WaterLevelTask::Hysteresis(uint8_t point, uint8_t lastPoint)
             if (diff > 0)
             // Уровень воды начал увеличиваться.
             {
-                if (diff >= HysteresisPoints)
+                if (diff >= kHysteresisPoints)
                 // Уровень увеличился более чем на 4 пункта.
                 {
                     // Считать что вода теперь прибывает.
-                    _waterIsRising = true;
+                    m_waterIsRising = true;
                 }
                 else
                 // Уровень воды увеличился не значительно.
@@ -414,15 +414,15 @@ inline uint8_t WaterLevelTask::GetIntPoint(float pointf)
 inline float WaterLevelTask::GetPoint(uint16_t usec)
 {
     // Смещение.
-    usec -= Properties.WaterLevelFull;
+    usec -= g_properties.WaterLevelFull;
 		
     // Уровень воды в микросекундах.
-    usec = (_usecRange - usec);
+    usec = (m_usecRange - usec);
 		
     uint32_t tmp = usec * 99;
 		
     // Сколько пунктов из 99.
-    float point = tmp / (float)_usecRange;
+    float point = tmp / (float)m_usecRange;
 
     return point;
 }
@@ -551,7 +551,7 @@ void WaterLevelTask::InitGPIO_ClearDisplay()
     gpio_init.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(WL_GPIO_SPI, &gpio_init);
 
-    DisplayLED(aDash, bDash);
+    DisplayLED(kADash, kBDash);
 }
 
 void WaterLevelTask::WaitInitialization()

@@ -9,21 +9,21 @@
 #include "Common.h"
 #include "stm32f10x_rcc.h"
 
-I2C _i2c;
+I2C g_i2c;
 
 void I2C::LockI2c()
 {
-	xSemaphoreTake(_xLockSemaphore, portMAX_DELAY);
+	xSemaphoreTake(m_xLockSemaphore, portMAX_DELAY);
 }
 	
 void I2C::UnlockI2c()
 {
-	xSemaphoreGive(_xLockSemaphore);
+	xSemaphoreGive(m_xLockSemaphore);
 }
 
 bool I2C::I2C_EE_WaitEepromStandbyState()
 {
-	TaskTimeout taskTimeout(I2C_TimeOutMs);
+	TaskTimeout taskTimeout(kI2CTimeoutMsec);
 		
 	__IO uint16_t SR1_Tmp = 0;
 
@@ -91,7 +91,7 @@ bool I2C::WaitFlag(uint32_t I2C_FLAG, uint16_t timeoutMsec)
     
 bool I2C::WaitFlag(uint32_t I2C_FLAG)
 {
-	TaskTimeout timeout(I2C_TimeOutMs);
+	TaskTimeout timeout(kI2CTimeoutMsec);
 	
 	while (I2C_GetFlagStatus(I2C_EE_LCD, I2C_FLAG))
 	{
@@ -109,7 +109,7 @@ bool I2C::WaitFlag(uint32_t I2C_FLAG)
     
 bool I2C::WaitEvent(uint32_t I2C_EVENT)
 {
-	TaskTimeout timeout(I2C_TimeOutMs);
+	TaskTimeout timeout(kI2CTimeoutMsec);
 	
 	while (!I2C_CheckEvent(I2C_EE_LCD, I2C_EVENT))
 	{
@@ -533,8 +533,8 @@ void I2C::ResetBus()
 void I2C::vTaskInit()
 {
 	// http://www.freertos.org/xSemaphoreCreateBinaryStatic.html
-	_xLockSemaphore = xSemaphoreCreateBinaryStatic(&_xLockSemaphoreBuffer);
-	xSemaphoreGive(_xLockSemaphore);
+	m_xLockSemaphore = xSemaphoreCreateBinaryStatic(&m_xLockSemaphoreBuffer);
+	xSemaphoreGive(m_xLockSemaphore);
     	
 	InitGPIO();
 	GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
@@ -549,7 +549,7 @@ void I2C::vTaskInit()
 	I2C_Cmd(I2C_EE_LCD, ENABLE);
 	I2C_AcknowledgeConfig(I2C1, DISABLE);
 		
-	while (!WaitFlag(I2C_FLAG_BUSY, I2C_TimeOutMs))
+	while (!WaitFlag(I2C_FLAG_BUSY, kI2CTimeoutMsec))
 	{
 		ResetBus();
 	}

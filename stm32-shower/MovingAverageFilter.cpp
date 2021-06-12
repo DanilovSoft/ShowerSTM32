@@ -2,24 +2,13 @@
 
 uint16_t MovingAverageFilter::AddValue(uint16_t value)
 {
-    _sum = _sum + (value - _buf[_head]);
-	_buf[_head] = value;
-    _head = (_head + 1) % Properties.WaterLevel_Avg_Buffer_Size;
-    return _sum / Properties.WaterLevel_Avg_Buffer_Size;
+    m_sum = m_sum + (value - m_buf[m_head]);
+	m_buf[m_head] = value;
+    m_head = (m_head + 1) % g_properties.WaterLevel_Avg_Buffer_Size;
+    return m_sum / g_properties.WaterLevel_Avg_Buffer_Size;
 }
 
 uint32_t MovingAverageFilter::GetAverage()
 {
-    return _sum;
-}
-
-void MovingAverageFilter::Init()
-{
-    // буфер уже обнуленный
-//    _head = 0;
-//    _sum = 0;
-//    for (auto i = 0; i < WL_BUF_MAX_SIZE; i++)
-//    {
-//        _buf[i] = 0;
-//    }
+    return m_sum;
 }

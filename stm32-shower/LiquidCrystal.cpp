@@ -12,7 +12,7 @@ bool LiquidCrystal::Write(uint8_t value)
 
 void LiquidCrystal::WriteString(const char* str) 
 {
-    for (uint8_t i = 0; i < _lcdi2c.cols; i++)
+    for (uint8_t i = 0; i < m_lcdi2c.cols; i++)
     {
         Write(str[i]);
     }
@@ -20,10 +20,10 @@ void LiquidCrystal::WriteString(const char* str)
 
 bool LiquidCrystal::Setup(uint8_t lcd_cols, uint8_t lcd_rows)
 {
-	_lcdi2c.cols = lcd_cols;
-	_lcdi2c.rows = lcd_rows;
-	_lcdi2c.backlightval = LCD_BACKLIGHT;
-	_lcdi2c.displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
+	m_lcdi2c.cols = lcd_cols;
+	m_lcdi2c.rows = lcd_rows;
+	m_lcdi2c.backlightval = LCD_BACKLIGHT;
+	m_lcdi2c.displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 
 	// set up number of columns and rows
 	if(!Begin(lcd_cols, lcd_rows))
@@ -32,22 +32,22 @@ bool LiquidCrystal::Setup(uint8_t lcd_cols, uint8_t lcd_rows)
 	}
 
 	// Create a new custom character.
-	if(!CreateChar(1, celsius))
+	if(!CreateChar(1, kCelsius))
 	{
 		return false;
 	}
     	
-	if (!CreateChar(2, backslash))
+	if (!CreateChar(2, kBackslash))
 	{
 		return false;
 	}
     	
-	if (!CreateChar(3, vertical_bar))
+	if (!CreateChar(3, kVerticalBar))
 	{
 		return false;
 	}
     	
-	if (!CreateChar(4, right_arrow))
+	if (!CreateChar(4, kRightArrow))
 	{
 		return false;
 	}
@@ -59,10 +59,10 @@ bool LiquidCrystal::Begin(uint8_t cols, uint8_t lines)
 {
 	if (lines > 1)
 	{
-		_lcdi2c.displayfunction |= LCD_2LINE;
+		m_lcdi2c.displayfunction |= LCD_2LINE;
 	}
 		
-	_lcdi2c.numlines = lines;
+	m_lcdi2c.numlines = lines;
 
 			// for some 1 line displays you can select a 10 pixel high font
 			/*	if ((dotsize != 0) && (lines == 1)) {
@@ -75,7 +75,7 @@ bool LiquidCrystal::Begin(uint8_t cols, uint8_t lines)
 	vTaskDelay(50 / portTICK_PERIOD_MS);
 
 	// Now we pull both RS and R/W low to begin commands
-	if(!ExpanderWrite(_lcdi2c.backlightval))	// reset expanderand turn backlight off (Bit 8 =1)
+	if(!ExpanderWrite(m_lcdi2c.backlightval))	// reset expanderand turn backlight off (Bit 8 =1)
 	{
 		return false;
 	}
@@ -118,13 +118,13 @@ bool LiquidCrystal::Begin(uint8_t cols, uint8_t lines)
 	}
 
 	// set # lines, font size, etc.
-	if(!Command(LCD_FUNCTIONSET | _lcdi2c.displayfunction))
+	if(!Command(LCD_FUNCTIONSET | m_lcdi2c.displayfunction))
 	{
 		return false;
 	}
 
 	// turn the display on with no cursor or blinking default
-	_lcdi2c.displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
+	m_lcdi2c.displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
 	if (!Display())
 	{
 		return false;
@@ -137,10 +137,10 @@ bool LiquidCrystal::Begin(uint8_t cols, uint8_t lines)
 	}
 		
 	// Initialize to default text direction (for roman languages)
-	_lcdi2c.displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
+	m_lcdi2c.displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
 
 	// set the entry mode
-	if(!Command(LCD_ENTRYMODESET | _lcdi2c.displaymode))
+	if(!Command(LCD_ENTRYMODESET | m_lcdi2c.displaymode))
 	{
 		return false;
 	}
@@ -171,23 +171,23 @@ void LiquidCrystal::SetCursor(uint8_t col, uint8_t row)
 {
 	int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
 	
-	if (row > _lcdi2c.numlines) 
+	if (row > m_lcdi2c.numlines) 
 	{
-		row = _lcdi2c.numlines - 1;    // we count rows starting w/0
+		row = m_lcdi2c.numlines - 1;    // we count rows starting w/0
 	}
 	Command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
 }
 
 bool LiquidCrystal::NoDisplay() 
 {
-	_lcdi2c.displaycontrol &= ~LCD_DISPLAYON;
-	return Command(LCD_DISPLAYCONTROL | _lcdi2c.displaycontrol);
+	m_lcdi2c.displaycontrol &= ~LCD_DISPLAYON;
+	return Command(LCD_DISPLAYCONTROL | m_lcdi2c.displaycontrol);
 }
 
 bool LiquidCrystal::Display() 
 {
-	_lcdi2c.displaycontrol |= LCD_DISPLAYON;
-	if (!Command(LCD_DISPLAYCONTROL | _lcdi2c.displaycontrol))
+	m_lcdi2c.displaycontrol |= LCD_DISPLAYON;
+	if (!Command(LCD_DISPLAYCONTROL | m_lcdi2c.displaycontrol))
 		return false;
 		
 	return true;
@@ -195,26 +195,26 @@ bool LiquidCrystal::Display()
 
 void LiquidCrystal::NoCursor() 
 {
-	_lcdi2c.displaycontrol &= ~LCD_CURSORON;
-	Command(LCD_DISPLAYCONTROL | _lcdi2c.displaycontrol);
+	m_lcdi2c.displaycontrol &= ~LCD_CURSORON;
+	Command(LCD_DISPLAYCONTROL | m_lcdi2c.displaycontrol);
 }
 
 void LiquidCrystal::Cursor() 
 {
-	_lcdi2c.displaycontrol |= LCD_CURSORON;
-	Command(LCD_DISPLAYCONTROL | _lcdi2c.displaycontrol);
+	m_lcdi2c.displaycontrol |= LCD_CURSORON;
+	Command(LCD_DISPLAYCONTROL | m_lcdi2c.displaycontrol);
 }
 
 void LiquidCrystal::NoBlink() 
 {
-	_lcdi2c.displaycontrol &= ~LCD_BLINKON;
-	Command(LCD_DISPLAYCONTROL | _lcdi2c.displaycontrol);
+	m_lcdi2c.displaycontrol &= ~LCD_BLINKON;
+	Command(LCD_DISPLAYCONTROL | m_lcdi2c.displaycontrol);
 }
 
 void LiquidCrystal::Blink() 
 {
-	_lcdi2c.displaycontrol |= LCD_BLINKON;
-	Command(LCD_DISPLAYCONTROL | _lcdi2c.displaycontrol);
+	m_lcdi2c.displaycontrol |= LCD_BLINKON;
+	Command(LCD_DISPLAYCONTROL | m_lcdi2c.displaycontrol);
 }
 
 void LiquidCrystal::ScrollDisplayLeft() 
@@ -229,26 +229,26 @@ void LiquidCrystal::ScrollDisplayRight()
 
 void LiquidCrystal::LeftToRight() 
 {
-	_lcdi2c.displaymode |= LCD_ENTRYLEFT;
-	Command(LCD_ENTRYMODESET | _lcdi2c.displaymode);
+	m_lcdi2c.displaymode |= LCD_ENTRYLEFT;
+	Command(LCD_ENTRYMODESET | m_lcdi2c.displaymode);
 }
 
 void LiquidCrystal::RightToLeft() 
 {
-	_lcdi2c.displaymode &= ~LCD_ENTRYLEFT;
-	Command(LCD_ENTRYMODESET | _lcdi2c.displaymode);
+	m_lcdi2c.displaymode &= ~LCD_ENTRYLEFT;
+	Command(LCD_ENTRYMODESET | m_lcdi2c.displaymode);
 }
 
 void LiquidCrystal::AutoScroll() 
 {
-	_lcdi2c.displaymode |= LCD_ENTRYSHIFTINCREMENT;
-	Command(LCD_ENTRYMODESET | _lcdi2c.displaymode);
+	m_lcdi2c.displaymode |= LCD_ENTRYSHIFTINCREMENT;
+	Command(LCD_ENTRYMODESET | m_lcdi2c.displaymode);
 }
 
 void LiquidCrystal::NoAutoscroll() 
 {
-	_lcdi2c.displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
-	Command(LCD_ENTRYMODESET | _lcdi2c.displaymode);
+	m_lcdi2c.displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
+	Command(LCD_ENTRYMODESET | m_lcdi2c.displaymode);
 }
 
 bool LiquidCrystal::CreateChar(uint8_t location, const uint8_t charmap[]) 
@@ -268,13 +268,13 @@ bool LiquidCrystal::CreateChar(uint8_t location, const uint8_t charmap[])
 
 void LiquidCrystal::NoBacklight() 
 {
-	_lcdi2c.backlightval = LCD_NOBACKLIGHT;
+	m_lcdi2c.backlightval = LCD_NOBACKLIGHT;
 	ExpanderWrite(0);
 }
 
 void LiquidCrystal::Backlight() 
 {
-	_lcdi2c.backlightval = LCD_BACKLIGHT;
+	m_lcdi2c.backlightval = LCD_BACKLIGHT;
 	ExpanderWrite(0);
 }
 
@@ -318,7 +318,7 @@ bool LiquidCrystal::Write4bits(uint8_t value)
 
 bool LiquidCrystal::ExpanderWrite(uint8_t data) 
 {
-	return _i2c.LCD_expanderWrite(data | _lcdi2c.backlightval);
+	return g_i2c.LCD_expanderWrite(data | m_lcdi2c.backlightval);
 }
 
 bool LiquidCrystal::PulseEnable(uint8_t data) 

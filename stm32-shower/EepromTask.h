@@ -1,11 +1,19 @@
 #pragma once
 #include "iActiveTask.h"
 
-class EepromTask : public iActiveTask
+class EepromTask final : public iActiveTask
 {
-    void Run() { }
+private:
+	
+    void Run() 
+	{
+		
+	}
     
-    void Init() { }
+    void Init() 
+	{
+		
+	}
 };
 
-extern EepromTask _eepromTask;
+extern EepromTask g_eepromTask;

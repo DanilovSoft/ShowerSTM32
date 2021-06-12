@@ -1,6 +1,6 @@
 #include "RTOSwrapper.h"
 
-RTOSwrapperClass _rtosHelper;
+RTOSwrapperClass g_rtosHelper;
 
 void RTOSwrapperClass::CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority)
 {
@@ -21,6 +21,7 @@ void RTOSwrapperClass::Run(void* parm)
 {
     iActiveTask* task = (iActiveTask*)parm;
     task->Run();
+	
 #if INCLUDE_vTaskDelete
     vTaskDelete(task->taskHandle);
 #endif

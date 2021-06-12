@@ -5,18 +5,31 @@
 
 typedef enum { NOTHING = -1, TIMEOUT = 0, STR1 = 1, STR2 = 2, STR3 = 3 } WaitStatus;
 
-class UartStream
+class UartStream final
 {
+public:
+	
+	void Init();
+	WaitStatus WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeoutMsec);
+	WaitStatus WaitLine(const char* str1, const char* str2, uint16_t timeoutMsec);
+	WaitStatus WaitLine(const char* str1, uint16_t timeoutMsec);
+	void WriteLine(const char* str);
+	void WriteData(const char* data, const uint16_t count);
+	WaitStatus SendResponse(const uint8_t connection_id, const char* data, const uint16_t count);
+	uint8_t GetRequestSize(uint8_t &connection_id);
+	ShowerCode ReadRequest(const uint8_t connection_id, uint8_t* buf);
+	uint8_t GetRequest(uint8_t &connection_id);
+	
 private:
-    
+	
     // Буффер в который копируем данные из RX_FIFO_BUF.
-	uint8_t _buf[RX_FIFO_SZ] = { };
-    char _str_buf[UART_MAX_STR_LEN] = { };  // Буфер для записи строк из кольцевого буффера _buf
-	ConnectionsBuffer _connectionBuffer;
-	uint16_t _count = 0;
-	uint16_t _head = 0;
-	uint16_t _head2 = RX_FIFO_SZ;
-	uint16_t _tail = 0;
+	uint8_t m_rxBuf[UART_RX_FIFO_SZ] = { };
+    char m_rxStrBuf[UART_MAX_STR_LEN] = { };  // Буфер для записи строк из кольцевого буффера m_rxBuf.
+	ConnectionsBuffer m_connectionBuffer;
+	uint16_t m_count = 0;
+	uint16_t m_head = 0;
+	uint16_t m_head2 = UART_RX_FIFO_SZ;
+	uint16_t m_tail = 0;
     
 	bool CopyRingBuf();
 	void LineReceived(const char* str, const uint8_t strLength);
@@ -32,19 +45,6 @@ private:
 	WaitStatus ReadLine(const char* str1, const char* str2, const char* str3);
 	uint8_t ReadIpd(uint8_t &connection_id);
 	void DMAWriteData(const char* data, const uint16_t count);
-	
-public:
-	
-	void Init();
-	WaitStatus WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeoutMsec);
-	WaitStatus WaitLine(const char* str1, const char* str2, uint16_t timeoutMsec);
-	WaitStatus WaitLine(const char* str1, uint16_t timeoutMsec);
-	void WriteLine(const char* str);
-	void WriteData(const char* data, const uint16_t count);
-	WaitStatus SendResponse(const uint8_t connection_id, const char* data, const uint16_t count);
-	uint8_t GetRequestSize(uint8_t &connection_id);
-	ShowerCode ReadRequest(const uint8_t connection_id, uint8_t* buf);
-	uint8_t GetRequest(uint8_t &connection_id);
 };
 
-extern UartStream _uartStream;
+extern UartStream g_uartStream;

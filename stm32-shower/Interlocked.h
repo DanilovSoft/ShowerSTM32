@@ -2,7 +2,7 @@
 #include "core_cm3.h"
 #include "stdint.h"
 
-class Interlocked
+class Interlocked final
 {
 public:
 	inline static bool CompareExchange(uint32_t* ptr, uint32_t oldValue, uint32_t newValue)

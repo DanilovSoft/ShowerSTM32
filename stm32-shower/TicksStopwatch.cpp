@@ -15,16 +15,16 @@ TicksStopwatch::TicksStopwatch()
 
 void TicksStopwatch::Reset()
 {
-	_startValue = DWT->CYCCNT;
+	m_startValue = DWT->CYCCNT;
 }
 
 void TicksStopwatch::Stop()
 {
-	_stopValue = DWT->CYCCNT;
+	m_stopValue = DWT->CYCCNT;
 }
 
 uint32_t TicksStopwatch::GetElapsedTicks()
 {
-	uint32_t elapsed = _stopValue - _startValue; // всегда верно, даже если _stopValue < _startValue
+	uint32_t elapsed = m_stopValue - m_startValue; // всегда верно, даже если _stopValue < _startValue
 	return elapsed;
 }

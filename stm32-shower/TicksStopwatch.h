@@ -2,7 +2,7 @@
 #include "stdint.h"
 
 // Замеряет время в тактах процессора.
-class TicksStopwatch
+class TicksStopwatch final
 {
 public:
 	
@@ -14,7 +14,7 @@ public:
 	
 private:
 	
-    uint32_t _startValue = 0;
-    uint32_t _stopValue = 0;
+    uint32_t m_startValue = 0;
+    uint32_t m_stopValue = 0;
 };
 

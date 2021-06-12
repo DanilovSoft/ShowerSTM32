@@ -10,7 +10,7 @@
 #include "ButtonDebounce.h"
 #include "WaterSensorButton.h"
 
-ButtonsTask _buttonsTask;
+ButtonsTask g_buttonsTask;
 
 void ButtonsTask::Init()
 {
@@ -32,8 +32,8 @@ void ButtonsTask::PressSound()
     }
     ;
 		
-    _heaterTask.ResetBeepTime();
-    _buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
+    g_heaterTask.ResetBeepTime();
+    g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
 }
 
 void ButtonsTask::LongPressSound()
@@ -45,16 +45,16 @@ void ButtonsTask::LongPressSound()
 	}
 	;
 		
-	_heaterTask.ResetBeepTime();
-	_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
+	g_heaterTask.ResetBeepTime();
+	g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
 }
 
 void ButtonsTask::Run()
 {
-	ButtonDebounce buttonTempPlus(Button_GPIO, Button_Temp_Plus, Properties.ButtonPressTimeMs, Properties.ButtonPressTimeMs * 2);
-	ButtonDebounce buttonTempMinus(Button_GPIO, Button_Temp_Minus, Properties.ButtonPressTimeMs, Properties.ButtonPressTimeMs * 2);
-	ButtonDebounce buttonValve(Button_GPIO, Button_Water, Properties.ButtonPressTimeMs, Properties.ButtonPressTimeMs * 2);
-	ButtonDebounce longPressButtonValve(Button_GPIO, Button_Water, Properties.ButtonLongPressTimeMs, Properties.ButtonPressTimeMs * 2);
+	ButtonDebounce buttonTempPlus(Button_GPIO, Button_Temp_Plus, g_properties.ButtonPressTimeMs, g_properties.ButtonPressTimeMs * 2);
+	ButtonDebounce buttonTempMinus(Button_GPIO, Button_Temp_Minus, g_properties.ButtonPressTimeMs, g_properties.ButtonPressTimeMs * 2);
+	ButtonDebounce buttonValve(Button_GPIO, Button_Water, g_properties.ButtonPressTimeMs, g_properties.ButtonPressTimeMs * 2);
+	ButtonDebounce longPressButtonValve(Button_GPIO, Button_Water, g_properties.ButtonLongPressTimeMs, g_properties.ButtonPressTimeMs * 2);
     WaterSensorButton sensorSwitch(Button_GPIO, Button_SensorSwitch_OUT);
    
     while (true)
@@ -74,7 +74,7 @@ void ButtonsTask::Run()
         if (buttonValve.IsPressed())
         {
             PressSound();
-            _valveTask.PushButton();
+            g_valveTask.PushButton();
         }
 
 	    if (longPressButtonValve.IsPressed())
@@ -84,7 +84,7 @@ void ButtonsTask::Run()
 		    if (CircuitBreakerIsOn())
 		    {
                 // Пытаемся принудительно включить нагрев воды.
-			    _heaterTask.IgnoreWaterLevelOnce();
+			    g_heaterTask.IgnoreWaterLevelOnce();
 		    }
 		    else
 		    {
@@ -94,11 +94,11 @@ void ButtonsTask::Run()
 	    
         if (sensorSwitch.IsOn())
         {
-            _valveTask.SensorOn();
+            g_valveTask.SensorOn();
         }
         else
         {
-            _valveTask.SensorOff();
+            g_valveTask.SensorOff();
         }
 		
         taskYIELD();
@@ -108,12 +108,12 @@ void ButtonsTask::Run()
 void ButtonsTask::TempPlus()
 {
 	uint8_t externalTemp;
-	if (_heaterTempLimit.TryGetLastExternalTemp(externalTemp))
+	if (g_heaterTempLimit.TryGetLastExternalTemp(externalTemp))
     {
-        if (WriteProperties.Chart.TempPlus(externalTemp))
+        if (g_writeProperties.Chart.TempPlus(externalTemp))
         {
-            _eeprom.Save();
-            Properties.Chart.TempPlus(externalTemp);
+            g_eeprom.Save();
+            g_properties.Chart.TempPlus(externalTemp);
         }
     }
 }
@@ -121,17 +121,17 @@ void ButtonsTask::TempPlus()
 void ButtonsTask::TempMinus()
 {
 	uint8_t externalTemp;
-	if (_heaterTempLimit.TryGetLastExternalTemp(externalTemp))
+	if (g_heaterTempLimit.TryGetLastExternalTemp(externalTemp))
     {
-        if (WriteProperties.Chart.TempMinus(externalTemp))
+        if (g_writeProperties.Chart.TempMinus(externalTemp))
         {
-            _eeprom.Save();
-            Properties.Chart.TempMinus(externalTemp);
+            g_eeprom.Save();
+            g_properties.Chart.TempMinus(externalTemp);
         }
     }
 }
 	
 void ButtonsTask::WaterPushButton()
 {
-    _valveTask.PushButton();
+    g_valveTask.PushButton();
 }

@@ -2,7 +2,7 @@
 #include "stdint.h"
 #include "ShowerCode.h"
 
-class IpdBuffer
+class IpdBuffer final
 {
 public:
 
@@ -13,9 +13,9 @@ public:
 
 private:
 
-	const static uint8_t BUF_SZ = 200;
-    uint8_t _buf[BUF_SZ] = { };
-    uint8_t _count = 0;
-    uint8_t _head = 0;
-    uint8_t _tail = 0;
+	static const uint8_t kBufSize = 200;
+    uint8_t m_buf[kBufSize] = { };
+    uint8_t m_count = 0;
+    uint8_t m_head = 0;
+    uint8_t m_tail = 0;
 };

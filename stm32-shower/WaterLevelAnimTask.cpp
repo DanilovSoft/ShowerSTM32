@@ -3,64 +3,60 @@
 
 #define AnimSpeedMsec   (300)
 
-WaterLevelAnimTask _waterLevelAnimTask;
+WaterLevelAnimTask g_waterLevelAnimTask;
 TickType_t xLastWakeTime;
-
 
 void WaterLevelAnimTask::Init()
 {
-    _cur = ANIM1;
-    _pos = 0;
+    m_cur = ANIM1;
+    m_pos = 0;
 }
   
-
 void WaterLevelAnimTask::Run()
 {   
     // Initialise the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
     
-    while (!_waterLevelTask.Initialized)
+    while (!g_waterLevelTask.Initialized)
     {
         Pause();
             
-        switch (_pos)
+        switch (m_pos)
         {
         case 0:
             {
-                _cur = ANIM2; /* | */
-                _pos = 1;
+                m_cur = ANIM2; // '|'
+                m_pos = 1;
                 break;   
             }
         case 1:
             {
-                _cur = ANIM3; /* / */
-                _pos = 2;
+                m_cur = ANIM3; // '/'
+                m_pos = 2;
                 break;   
             }
         case 2:
             {
-                _cur = ANIM4; /* - */
-                _pos = 3;
+                m_cur = ANIM4; // '–'
+                m_pos = 3;
                 break;   
             }
         case 3:
             {
-                _cur = ANIM1; /* \ */
-                _pos = 0;
+                m_cur = ANIM1; // '\'
+                m_pos = 0;
                 break;   
             }
         }
     }
 }
     
-
 void WaterLevelAnimTask::Pause()
 {
     vTaskDelayUntil(&xLastWakeTime, (AnimSpeedMsec / portTICK_PERIOD_MS));
 }
    
-    
 char WaterLevelAnimTask::GetChar()
 {
-    return _cur;
+    return m_cur;
 }

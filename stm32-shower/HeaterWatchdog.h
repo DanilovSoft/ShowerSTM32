@@ -1,7 +1,7 @@
 #pragma once
 #include "RealTimeClockStopwatch.h"
 
-class HeaterWatchdog
+class HeaterWatchdog final
 {
 public:
 
@@ -11,15 +11,15 @@ public:
 	bool TimeOut();
 	// Абсолютный таймаут отсчитывает время когда включен рубильник автомата.
     bool AbsoluteTimeout();
-	bool IsTimeoutOccurred();
-	bool IsAbsoluteTimeoutOccured();
+	bool IsTimeoutOccurred() const;
+	bool IsAbsoluteTimeoutOccured() const;
 	
 private:
 	
-	volatile bool _timeoutOccurred;
-	volatile bool _absoluteTimeoutOccured;
-	uint32_t _intervalSec;
-	uint32_t _absoluteIntervalSec;	
-	RealTimeClockStopwatch _timeoutStopwatch;
-	RealTimeClockStopwatch _absoluteTimeoutStopwatch;
+	volatile bool m_timeoutOccurred;
+	volatile bool m_absoluteTimeoutOccured;
+	uint32_t m_intervalSec;
+	uint32_t m_absoluteIntervalSec;	
+	RealTimeClockStopwatch m_timeoutStopwatch;
+	RealTimeClockStopwatch m_absoluteTimeoutStopwatch;
 };

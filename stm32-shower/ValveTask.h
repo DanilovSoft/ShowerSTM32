@@ -2,10 +2,7 @@
 #include "iActiveTask.h"
 #include "semphr.h"
 
-// Время для антидребезга.
-static const auto ValveDebounceMsec = 200;
-
-class ValveTask : public iActiveTask
+class ValveTask final : public iActiveTask
 {	
 public:
 	
@@ -22,29 +19,32 @@ public:
 
 private:
 	
+	// Время для антидребезга.
+	static const auto kValveDebounceMsec = 200;
+	
 	enum SensorSwitchState { StateOn, StateOff };
 	
-	SensorSwitchState _sensorSwitchLastState = SensorSwitchState::StateOff;
-	SemaphoreHandle_t _xValveSemaphore;
-	StaticSemaphore_t _xValveSemaphoreBuffer;
-	volatile bool _stopRequired = false;
-	volatile bool _openValveAllowed = false;
+	SensorSwitchState m_sensorSwitchLastState = SensorSwitchState::StateOff;
+	SemaphoreHandle_t m_xValveSemaphore;
+	StaticSemaphore_t m_xValveSemaphoreBuffer;
+	volatile bool m_stopRequired = false;
+	volatile bool m_openValveAllowed = false;
 	
 	void Init();
 	
+	void Run();
+	
 	// Включает питание сенсора.
 	void GpioTurnOnSensorSwitch();
-	
+
 	// Выключает питание сенсора.
 	void GpioTurnOffSensorSwitch();
 	
 	void GPIOOpenValve();
 	
 	void GPIOCloseValve();
-	
-	void Run();
-	
+		
 	void OpenValveIfAllowed();
 };
 
-extern ValveTask _valveTask;
+extern ValveTask g_valveTask;

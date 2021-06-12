@@ -6,13 +6,13 @@
 #include "task.h"
 #include "I2C.h"
 
-Eeprom _eeprom;
+Eeprom g_eeprom;
 
-bool Eeprom::EE_SafeBufferRead(uint8_t* pBuffer, uint8_t ReadAddr, uint8_t NumByteToRead)
+bool Eeprom::SafeBufferRead(uint8_t* pBuffer, uint8_t ReadAddr, uint8_t NumByteToRead)
 {
     while (NumByteToRead--)
     {
-	    if (!_i2c.EE_ByteRead(ReadAddr, *pBuffer))
+	    if (!g_i2c.EE_ByteRead(ReadAddr, *pBuffer))
 	    {
 		    return false;
 	    }
@@ -28,14 +28,14 @@ bool Eeprom::InitProps()
 {
     uint8_t dataIndex;
 	
-	if (!_i2c.EE_ByteRead(0, dataIndex))
+	if (!g_i2c.EE_ByteRead(0, dataIndex))
 	{
 		return false;
 	}
 		
-    _curPageAddr = dataIndex == 0 ? EE_DataAddr1 : EE_DataAddr2;
+    m_curPageAddr = dataIndex == 0 ? EE_DataAddr1 : EE_DataAddr2;
 		
-	if (!EE_SafeBufferRead((uint8_t*)&WriteProperties, _curPageAddr, sizeof(WriteProperties)))
+	if (!SafeBufferRead((uint8_t*)&g_writeProperties, m_curPageAddr, sizeof(g_writeProperties)))
 	{
 		return false;
 	}
@@ -43,7 +43,7 @@ bool Eeprom::InitProps()
     return true;
 }
 
-bool Eeprom::EE_SafeBufferCRC32(uint8_t ReadAddr, uint8_t NumByteToRead, uint32_t &crc32)
+bool Eeprom::SafeBufferCRC32(uint8_t ReadAddr, uint8_t NumByteToRead, uint32_t &crc32)
 {
     uint8_t buf[4];
     CRC_ResetDR();
@@ -53,7 +53,7 @@ bool Eeprom::EE_SafeBufferCRC32(uint8_t ReadAddr, uint8_t NumByteToRead, uint32_
         uint8_t bufIndex = i % 4;
         uint8_t& bufAddr = buf[bufIndex];
 			
-        if (!_i2c.EE_ByteRead(ReadAddr, bufAddr))
+        if (!g_i2c.EE_ByteRead(ReadAddr, bufAddr))
             return false;
 			
         ReadAddr++;
@@ -71,37 +71,37 @@ bool Eeprom::EE_SafeBufferCRC32(uint8_t ReadAddr, uint8_t NumByteToRead, uint32_
 bool Eeprom::InnerSave()
 {	
 	// Используем соседнюю половину памяти.
-    uint16_t pageAddress = (_curPageAddr == EE_DataAddr1 ? EE_DataAddr2 : EE_DataAddr1);
+    uint16_t pageAddress = (m_curPageAddr == EE_DataAddr1 ? EE_DataAddr2 : EE_DataAddr1);
 
-	if (!_i2c.EE_BufferWrite((uint8_t*)&WriteProperties, pageAddress, sizeof(WriteProperties)))
+	if (!g_i2c.EE_BufferWrite((uint8_t*)&g_writeProperties, pageAddress, sizeof(g_writeProperties)))
 	{
 		return false;
 	}
 		
     uint32_t eeprom_crc32;
 	
-	if (!EE_SafeBufferCRC32(pageAddress, sizeof(WriteProperties), eeprom_crc32))
+	if (!SafeBufferCRC32(pageAddress, sizeof(g_writeProperties), eeprom_crc32))
 	{
 		return false;
 	}
 		
     CRC_ResetDR();
 
-	if (eeprom_crc32 != CRC_CalcBlockCRC((uint32_t*)&WriteProperties, sizeof(WriteProperties) / 4))
+	if (eeprom_crc32 != CRC_CalcBlockCRC((uint32_t*)&g_writeProperties, sizeof(g_writeProperties) / 4))
 	{
 		return false;
 	}
 		
-    uint8_t newIndex = _curPageAddr == EE_DataAddr1 ? 1 : 0;
+    uint8_t newIndex = m_curPageAddr == EE_DataAddr1 ? 1 : 0;
 
-	if (!_i2c.EE_ByteWrite(0, newIndex))
+	if (!g_i2c.EE_ByteWrite(0, newIndex))
 	{
 		return false;
 	}
 						
     uint8_t indexTest;
 	
-	if (!_i2c.EE_ByteRead(0, indexTest))
+	if (!g_i2c.EE_ByteRead(0, indexTest))
 	{
 		return false;
 	}
@@ -111,7 +111,7 @@ bool Eeprom::InnerSave()
 		return false;
 	}
 								
-    _curPageAddr = pageAddress;
+    m_curPageAddr = pageAddress;
     return true;
 }
 
@@ -122,8 +122,9 @@ void Eeprom::InitBeforeRTOS()
 		// тут недоступен taskYIELD.
 	}
 		
-    WriteProperties.SelfFix();
-    Properties = WriteProperties;
+    g_writeProperties.SelfFix();
+	
+    g_properties = g_writeProperties; // Копируем всю структуру.
 }
 
 void Eeprom::Save()

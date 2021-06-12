@@ -2,15 +2,14 @@
 #include "iActiveTask.h"
 #include "LiquidCrystal.h"
 
-
-class LcdTask : public iActiveTask
+class LcdTask final : public iActiveTask
 {
 private:
 
-    LiquidCrystal _lc;
+    LiquidCrystal m_lc;
 	void Init();
-	void DisplayTemp(char* buf, int16_t temp);
 	void Run();
+	void DisplayTemp(char* buf, int16_t temp);
 };
 
-extern LcdTask _lcdTask;
+extern LcdTask g_lcdTask;

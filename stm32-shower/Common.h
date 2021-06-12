@@ -39,6 +39,24 @@
 #define I2C_EE_LCD					(I2C1)
 #define GPIO_I2C_SCL_Pin			(GPIO_Pin_8)
 #define GPIO_I2C_SDA_Pin			(GPIO_Pin_9)
+#define OneWire_USART				(USART1)
+#define OneWire_GPIO				(GPIOB)
+#define OW_GPIO_Pin_Tx				(GPIO_Pin_6)
+#define OW_DMA_CH_RX				(DMA1_Channel5)
+#define OW_DMA_CH_TX				(DMA1_Channel4)
+#define OW_DMA_FLAG					(DMA1_FLAG_TC5)
+#define WIFI_GPIO					(GPIOB)
+#define WIFI_GPIO_CH_PD_Pin			(GPIO_Pin_1)
+#define GPIO_WPS					(GPIOB)
+#define GPIO_WPS_Pin				(GPIO_Pin_12)
+#define Button_GPIO                 (GPIOA)
+#define Button_Temp_Minus           (GPIO_Pin_2)
+#define Button_Temp_Plus            (GPIO_Pin_3)
+#define Button_Water                (GPIO_Pin_4)
+#define Button_SensorSwitch_OUT     (GPIO_Pin_7)
+#define GPIO_LED        (GPIOB)
+#define GPIO_Pin_LED    (GPIO_Pin_7)
+#define LED_TIM         (TIM4)
 
 
 #define CircuitBreakerIsOn()		(GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET) // Включен ли автомат нагревателя.
@@ -46,7 +64,7 @@
 #define ValveOpened()               (GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin)) // Включен ли клапан воды.
 
 
-static const auto RX_FIFO_SZ = 1024;
+static const auto UART_RX_FIFO_SZ = 1024;
 static const auto UART_MAX_STR_LEN = 200;
 static const auto WIFI_UART_Speed = 115200;
 

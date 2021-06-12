@@ -1,9 +1,7 @@
 #pragma once
 #include "stdint.h"
 
-static const auto Q = 0.00117;
-
-class HeatingTimeLeft
+class HeatingTimeLeft final
 {
 public:
 	
@@ -21,11 +19,13 @@ public:
 	
 private:
     
-	// Объём вобы полного бака в литрах.
-	float _tankVolumeLitre;
+	static constexpr float kQ = 0.00117;
+	
+	// Объём воды полного бака в литрах.
+	float m_tankVolumeLitre;
 
 	// Электрическая мощность нагревательного элемента — ТЭНа с учётом его КПД, кВТ.
-	float _heaterPowerKWatt;
+	float m_heaterPowerKWatt;
 	
 	// Время до окончания нагрева в минутах.
 	// "internalTemp" - Текущая температура воды в баке.
@@ -33,4 +33,4 @@ private:
     float CalcTimeLeft(float internalTemp, uint8_t targetTemp, uint8_t tankPercent);
 };
 
-extern HeatingTimeLeft _heatingTimeLeft;
+extern HeatingTimeLeft g_heatingTimeLeft;

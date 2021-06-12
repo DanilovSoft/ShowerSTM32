@@ -1,23 +1,20 @@
 #pragma once
-#include "stm32f10x_gpio.h"
 #include "Stopwatch.h"
 
-class WaterSensorButton
+class WaterSensorButton final
 {
 public:
 	
 	WaterSensorButton(GPIO_TypeDef* gpio, uint16_t gpio_pin);
-	~WaterSensorButton();
 	bool IsOn();
 	
 private:
 	
-	const uint16_t _gpio_pin = 0;
-	GPIO_TypeDef* _gpio = 0;
-    
-	bool _isOn = false;
-    bool _pendingOn = false;
-    bool _pendingOff = false;
-    Stopwatch _debounce;
+	const uint16_t m_gpio_pin = 0;
+	GPIO_TypeDef* m_gpio = 0;
+	bool m_isOn = false;
+    bool m_pendingOn = false;
+    bool m_pendingOff = false;
+    Stopwatch m_debounce;
 };
 

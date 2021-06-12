@@ -1,9 +1,7 @@
 #pragma once
 #include "Properties.h"
 
-constexpr auto STOPPER = 0;   // Smaller than any datum.
-
-class MedianFilter
+class MedianFilter final
 {
 public:
 
@@ -20,19 +18,20 @@ private:
 	    // Values to sort.
         uint16_t Value;
     };
+
+	const static uint16_t kStopper = 0;     // Smaller than any datum.
 	
 	// Buffer of nwidth pairs.
-    struct Pair _buffer[WL_MEDIAN_BUF_MAX_SIZE] = { 0 };
+    struct Pair m_buffer[WL_MEDIAN_BUF_MAX_SIZE] = { 0 };
 
 	// Pointer into circular buffer of data.
-    struct Pair *_datpoint = _buffer;
+    struct Pair *m_datpoint = m_buffer;
 
 	// Chain stopper.
-	struct Pair _small = { NULL, STOPPER };
+	struct Pair m_small = { NULL, kStopper };
     
 	// Pointer to head (largest) of linked list.
-	struct Pair _big = { &_small, 0 };
+	struct Pair m_big = { &m_small, 0 };
     
-	uint8_t _medianFilterSize;
+	uint8_t m_medianFilterSize;
 };
-

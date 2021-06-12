@@ -3,9 +3,6 @@
 #include "semphr.h"
 #include "Properties.h"
 
-
-constexpr auto I2C_TimeOutMs = 2000;
-
 // Всего 8 блоков памяти по 256 байт (по 16 страниц).
 // Каждый блок имеет свой уникальный адрес как отдельное устройство,
 // в зависимости от битов b3, b2, b1
@@ -25,7 +22,7 @@ constexpr auto EE_DataAddr2 =           0x0000 + 128;
 #define EE_AvailableDataSize			(EE_BlockSize / 2 - EE_FLASH_PAGESIZE)   // 112 байт
 static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of PropertyStruct struct greater than available in eeprom");
 
-class I2C
+class I2C final
 {
 public:
 
@@ -38,8 +35,9 @@ public:
 
 private:
 	
-	StaticSemaphore_t _xLockSemaphoreBuffer;
-	SemaphoreHandle_t _xLockSemaphore;
+	static const uint16_t kI2CTimeoutMsec = 2000;
+	StaticSemaphore_t m_xLockSemaphoreBuffer;
+	SemaphoreHandle_t m_xLockSemaphore;
 	
     void LockI2c();
     void UnlockI2c();
@@ -62,4 +60,4 @@ private:
     void ResetBus();
 };
 
-extern I2C _i2c;
+extern I2C g_i2c;

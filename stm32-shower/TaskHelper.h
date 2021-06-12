@@ -3,7 +3,15 @@
 
 class TaskHelper
 {   
-    const static uint32_t ulStackDepth = configMINIMAL_STACK_SIZE;
+public:
+	
+	static void Run(void* parm);
+	static void CreateTask(TaskHelper* taskHelper, void* func, const char* name);
+	void CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority);
+	
+private:
+	
+	static const uint32_t ulStackDepth = configMINIMAL_STACK_SIZE;
 
     TaskHandle_t taskHandle;
 
@@ -14,12 +22,6 @@ class TaskHelper
 
     /* Structure that will hold the TCB of the task being created. */
     StaticTask_t xTaskBuffer;
-
-public:
-    void CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority);
-    static void Run(void* parm);
-    static void CreateTask(TaskHelper* taskHelper, void* func, const char* name);
 };
 
-extern TaskHelper taskHelper;
-
+extern TaskHelper g_taskHelper;

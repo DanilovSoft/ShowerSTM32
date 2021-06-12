@@ -1,40 +1,41 @@
 #pragma once
 #include "Interlocked.h"
 
-class UartBuffer
+class UartBuffer final
 {
-	const static uint16_t BUF_SZ = 500;
-	unsigned char _buf[BUF_SZ];
-	uint32_t _count;  	        //счетчик символов
-	uint16_t _head;   			//"указатель" головы буфера
-	uint16_t _tail;   				//"указатель" хвоста буфера
-
 public:
 
 	void PutChar(unsigned char ch)
 	{
-		if (Interlocked::Read(&_count) < BUF_SZ)
+		if (Interlocked::Read(&m_count) < kBufSize)
 		{
-			_buf[_tail] = ch;
-			Interlocked::Increment(&_count);
-			_tail++;
-			if (_tail == BUF_SZ)
-				_tail = 0;
+			m_buf[m_tail] = ch;
+			Interlocked::Increment(&m_count);
+			m_tail++;
+			if (m_tail == kBufSize)
+				m_tail = 0;
 		}
 	}
 
 	bool GetChar(unsigned char &ch)
 	{
-		if (Interlocked::Read(&_count) > 0)
+		if (Interlocked::Read(&m_count) > 0)
 		{
-			ch = _buf[_head];
-			Interlocked::Decrement(&_count);
-			_head++;
-			if (_head == BUF_SZ)
-				_head = 0;
+			ch = m_buf[m_head];
+			Interlocked::Decrement(&m_count);
+			m_head++;
+			if (m_head == kBufSize)
+				m_head = 0;
 
 			return true;
 		}
 		return false;
 	}
+	
+private:
+	static const uint16_t kBufSize = 500;
+	unsigned char m_buf[kBufSize];
+	uint32_t m_count;  	        // Счетчик символов.
+	uint16_t m_head;   			// "Указатель" головы буфера.
+	uint16_t m_tail;   			// "Указатель" хвоста буфера.
 };

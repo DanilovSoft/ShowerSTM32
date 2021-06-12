@@ -387,9 +387,6 @@
     <ClInclude Include="ConnectionsBuffer.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="Dwt.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
     <ClInclude Include="Eeprom.h">
       <Filter>Header files</Filter>
     </ClInclude>
@@ -445,9 +442,6 @@
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="TicksStopwatch.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="TaskSemaphoreSlim.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="TempSensor.h">

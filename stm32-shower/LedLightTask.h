@@ -1,17 +1,13 @@
 #pragma once
 #include "iActiveTask.h"
 
-#define GPIO_LED        (GPIOB)
-#define GPIO_Pin_LED    (GPIO_Pin_7)
-#define LED_TIM         (TIM4)
-
-class LedLightTask : public iActiveTask
+class LedLightTask final : public iActiveTask
 {
 private:
 	
-	bool _turnedOn;
+	bool m_turnedOn;
 	void Init();
 	void Run();
 };
 
-extern LedLightTask _ledLightTask;
+extern LedLightTask g_ledLightTask;

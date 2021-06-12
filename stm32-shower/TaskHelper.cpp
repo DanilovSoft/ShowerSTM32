@@ -1,6 +1,6 @@
 #include "TaskHelper.h"
 
-TaskHelper taskHelper;
+TaskHelper g_taskHelper;
 
 void TaskHelper::CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority)
 {

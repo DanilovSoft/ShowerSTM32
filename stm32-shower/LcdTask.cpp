@@ -8,7 +8,7 @@
 #include "ValveTask.h"
 #include "Common.h"
 
-LcdTask _lcdTask;
+LcdTask g_lcdTask;
 	
 void LcdTask::Init()
 {
@@ -36,7 +36,7 @@ void LcdTask::DisplayTemp(char* buf, int16_t temp)
 	
 void LcdTask::Run()
 {
-	if (!_lc.Setup(16, 2))
+	if (!m_lc.Setup(16, 2))
 	{
 		return;
 	}
@@ -46,21 +46,21 @@ void LcdTask::Run()
     char lineWaterReady[17] = "  \x42o\xE3\x61 \xBD\x61\xB4pe\xBF\x61  "; // Вода нагрета
     char lineWaterLevel[17] = "\xA9po\xB3\x65\xBD\xC4 \xB3o\xE3\xC3 -- ";  // Уровень воды --%
 
-    _lc.Clear();
+    m_lc.Clear();
 
     while (true)
     {
         uint8_t internalTempLimit = 0;
-	    bool gotInternalTempLimit = _heaterTempLimit.TryGetTargetTemperature(internalTempLimit);
-        bool heaterEnabled = _heaterTask.GetIsHeaterEnabled();
+	    bool gotInternalTempLimit = g_heaterTempLimit.TryGetTargetTemperature(internalTempLimit);
+        bool heaterEnabled = g_heaterTask.GetIsHeaterEnabled();
         bool heaterSwitchEnabled = CircuitBreakerIsOn();  // Включен ли автомат
-        bool valveIsOpen = _valveTask.ValveIsOpen();
+        bool valveIsOpen = g_valveTask.ValveIsOpen();
     		
-        _lc.SetCursor(0, 0);
+        m_lc.SetCursor(0, 0);
     		
         if (valveIsOpen && heaterEnabled)
         {   // уровень воды в 1 строке
-            if (_waterLevelTask.SensorIsBlocked)
+            if (g_waterLevelTask.SensorIsBlocked)
             {
                 lineWaterLevel[13] = ' ';
                 lineWaterLevel[14] = '?';
@@ -68,26 +68,26 @@ void LcdTask::Run()
             }
             else
             {
-	            uint8_t water_level = _waterLevelTask.DisplayingPercent;
+	            uint8_t water_level = g_waterLevelTask.DisplayingPercent;
                 char tmp = itoa(water_level / 10);
                 lineWaterLevel[13] = tmp == '0' ? ' ' : tmp;
                 lineWaterLevel[14] = itoa(water_level % 10);
                 lineWaterLevel[15] = '%';
             }
-            _lc.WriteString(lineWaterLevel);
+            m_lc.WriteString(lineWaterLevel);
         }
         else
         {
-	        if (_tempSensorTask.InternalSensorInitialized)
+	        if (g_tempSensorTask.InternalSensorInitialized)
 	        {
 		        // Записывает 2 символа в lineTemperatureBuf в положение "Температура в баке"
-                DisplayTemp(lineTemperatureBuf + 9, round(_tempSensorTask.AverageInternalTemp));
+                DisplayTemp(lineTemperatureBuf + 9, round(g_tempSensorTask.AverageInternalTemp));
 	        }
 	        
-	        if (_tempSensorTask.ExternalSensorInitialized)
+	        if (g_tempSensorTask.ExternalSensorInitialized)
 	        {
 		        // Записывает 2 символа в lineTemperatureBuf в положение "Температура на улице"
-                DisplayTemp(lineTemperatureBuf, round(_tempSensorTask.AverageExternalTemp));
+                DisplayTemp(lineTemperatureBuf, round(g_tempSensorTask.AverageExternalTemp));
 	        }
 	        
 	        if (gotInternalTempLimit)
@@ -98,12 +98,12 @@ void LcdTask::Run()
             }
         }
 			
-        _lc.WriteString(lineTemperatureBuf);
+        m_lc.WriteString(lineTemperatureBuf);
 			
-        _lc.SetCursor(0, 1);	
+        m_lc.SetCursor(0, 1);	
         if (heaterEnabled)
         {
-	        float timeLeftMin = _heatingTimeLeft.GetTimeLeft();
+	        float timeLeftMin = g_heatingTimeLeft.GetTimeLeft();
 	        
 	        // Округляем до целых.
 	        uint8_t timeLeft = roundf(timeLeftMin);
@@ -122,44 +122,44 @@ void LcdTask::Run()
             lineTimeLeft[9] = tmp == '0' ? ' ' : tmp;
             lineTimeLeft[10] = itoa(timeLeft % 10);
 	        
-            _lc.WriteString(lineTimeLeft);
+            m_lc.WriteString(lineTimeLeft);
         }
         else
         {
             bool waterReady = false;
-	        if (gotInternalTempLimit && _tempSensorTask.InternalSensorInitialized)
+	        if (gotInternalTempLimit && g_tempSensorTask.InternalSensorInitialized)
 	        {
-		        waterReady = (round(_tempSensorTask.AverageInternalTemp) >= internalTempLimit);
+		        waterReady = (round(g_tempSensorTask.AverageInternalTemp) >= internalTempLimit);
 	        }
     			
-	        if (heaterSwitchEnabled && waterReady && _waterLevelTask.DisplayingPercent >= Properties.MinimumWaterHeatingPercent)
+	        if (heaterSwitchEnabled && waterReady && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
             {  // 'Вода нагрета'
-                _lc.WriteString(lineWaterReady);
+                m_lc.WriteString(lineWaterReady);
             }
             else
             {  // Уровень воды во 2 строке.
-	            if (_waterLevelTask.Preinitialized)
+	            if (g_waterLevelTask.Preinitialized)
                 {
-	                if (_waterLevelTask.SensorIsBlocked)
+	                if (g_waterLevelTask.SensorIsBlocked)
                     {
                         lineWaterLevel[13] = ' ';
                         lineWaterLevel[14] = '?';
-	                    lineWaterLevel[15] = _waterLevelTask.Initialized ? ' ' : _waterLevelAnimTask.GetChar();
+	                    lineWaterLevel[15] = g_waterLevelTask.Initialized ? ' ' : g_waterLevelAnimTask.GetChar();
                     }
                     else
                     {
-	                    uint8_t water_level = _waterLevelTask.DisplayingPercent;
+	                    uint8_t water_level = g_waterLevelTask.DisplayingPercent;
                         char tmp = itoa(water_level / 10);
                         lineWaterLevel[13] = tmp == '0' ? ' ' : tmp;
                         lineWaterLevel[14] = itoa(water_level % 10);
-	                    lineWaterLevel[15] = _waterLevelTask.Initialized ? '%' : _waterLevelAnimTask.GetChar();
+	                    lineWaterLevel[15] = g_waterLevelTask.Initialized ? '%' : g_waterLevelAnimTask.GetChar();
                     }
                 }
                 else
                 {
-                    lineWaterLevel[15] = _waterLevelAnimTask.GetChar();
+                    lineWaterLevel[15] = g_waterLevelAnimTask.GetChar();
                 }
-                _lc.WriteString(lineWaterLevel);
+                m_lc.WriteString(lineWaterLevel);
             }
         }
         taskYIELD();

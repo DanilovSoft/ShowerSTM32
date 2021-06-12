@@ -10,9 +10,9 @@
 #define PAGE_63              (FLASH_BASE + 63 * 1024)
 ///////////////////////////////////////////////////////
 
-extern PropertyStruct WriteProperties;
+extern PropertyStruct g_writeProperties;
 
-class Settings
+class Settings final
 {
 public:
 
@@ -20,39 +20,39 @@ public:
 	{
 		RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
 
-		_curPageAddr = PAGE_62;
+		m_curPageAddr = PAGE_62;
 		if (!ReadData(PAGE_62))		// Контрольная сумма страницы не валидна
 		{
-			_curPageAddr = PAGE_63;
+			m_curPageAddr = PAGE_63;
 			ReadData(PAGE_63);
 		}
 
-		WriteProperties.SelfFix();
-		Properties = WriteProperties;
+		g_writeProperties.SelfFix();
+		g_properties = g_writeProperties;
 	}
 
 	void Save()
 	{
-		uint32_t pageAddress = (_curPageAddr == PAGE_62 ? PAGE_63 : PAGE_62);		// Используем соседнюю страницу
+		uint32_t pageAddress = (m_curPageAddr == PAGE_62 ? PAGE_63 : PAGE_62);		// Используем соседнюю страницу
 
 		FLASH_Unlock();
 		FLASH_ErasePage(pageAddress);													// Оцищаем соседнюю страницу
 		WriteData(pageAddress);																// Записываем данные
-		FLASH_ErasePage(_curPageAddr);																// Очищаем старую страницу
+		FLASH_ErasePage(m_curPageAddr);																// Очищаем старую страницу
 		FLASH_Lock();
-		_curPageAddr = pageAddress;																	// Обновляем указатель на страницу
+		m_curPageAddr = pageAddress;																	// Обновляем указатель на страницу
 	}
 
 private:
 
-	uint32_t _curPageAddr;     // Начальный адрес страницы где хранятся настройки
+	uint32_t m_curPageAddr;     // Начальный адрес страницы где хранятся настройки
 
 	// Восстановить данные при инициализации
 	static bool ReadData(uint32_t pageAddress)
 	{
 		uint32_t data;
-		uint32_t propsAddr = (uint32_t) & WriteProperties;
-		uint16_t dataSizeLeft = sizeof(WriteProperties);
+		uint32_t propsAddr = (uint32_t) & g_writeProperties;
+		uint16_t dataSizeLeft = sizeof(g_writeProperties);
 		
 		CRC_ResetDR();
 		do
@@ -74,8 +74,8 @@ private:
 	static void WriteData(uint32_t address)
 	{	
 		uint32_t data;
-		uint32_t propsAddr = (uint32_t) & WriteProperties;
-		uint16_t dataSizeLeft = sizeof(WriteProperties);
+		uint32_t propsAddr = (uint32_t) & g_writeProperties;
+		uint16_t dataSizeLeft = sizeof(g_writeProperties);
 		
 		CRC_ResetDR();
 		do

@@ -2,11 +2,7 @@
 #include "Request.h"
 #include "iActiveTask.h"
 
-#define WIFI_GPIO               (GPIOB)
-#define WIFI_GPIO_CH_PD_Pin     (GPIO_Pin_1)
-#define GPIO_WPS                (GPIOB)
-#define GPIO_WPS_Pin            (GPIO_Pin_12)
-#define  WIFI_INIT_TRY_COUNT    (3)
+#define WIFI_INIT_TRY_COUNT     (3)
 
 //  AT+UART_DEF=57600,8,1,0,0
 //	AT+CWMODE_DEF=1
@@ -17,9 +13,11 @@ class WiFi : public iActiveTask
 {
 private:
 	
-	Request _req;
-    uint8_t _data[256] = { };
+	Request m_request;
+    uint8_t m_rxData[256] = { };
     
+    void Init();
+    void Run();
     bool InitWiFi();
     bool TryInitWiFi();
     bool WPS();
@@ -27,8 +25,6 @@ private:
     void _SetCurAP(uint8_t* data, uint8_t length);
     void _SetDefAP(uint8_t* data, uint8_t length);
     bool DoEvents();
-    void Init();
-    void Run();
 };
 
-extern WiFi _wifiTask;
+extern WiFi g_wifiTask;

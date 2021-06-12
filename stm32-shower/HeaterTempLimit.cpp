@@ -4,25 +4,25 @@
 #include "math.h"
 #include "Common.h"
 
-HeaterTempLimit _heaterTempLimit;
+HeaterTempLimit g_heaterTempLimit;
 
 bool HeaterTempLimit::TryGetTargetTemperature(uint8_t& internalTempLimit)
 {
-	if (_tempSensorTask.ExternalSensorInitialized)
+	if (g_tempSensorTask.ExternalSensorInitialized)
 	{
-		float extTemp = _tempSensorTask.AverageExternalTemp;
+		float extTemp = g_tempSensorTask.AverageExternalTemp;
 		uint8_t t = round(extTemp);
 		
-		if (abs(t, _lastExternalTemp) > 1)
+		if (abs(t, m_lastExternalTemp) > 1)
 		{
-			_lastExternalTemp = t;
+			m_lastExternalTemp = t;
 		}
 		else
 		{
-			t = _lastExternalTemp;
+			t = m_lastExternalTemp;
 		}
 		
-		internalTempLimit = Properties.Chart.GetLimit(t);	
+		internalTempLimit = g_properties.Chart.GetLimit(t);	
 		return true;
 	}
 	return false;
@@ -30,9 +30,9 @@ bool HeaterTempLimit::TryGetTargetTemperature(uint8_t& internalTempLimit)
 	
 bool HeaterTempLimit::TryGetLastExternalTemp(uint8_t& lastExternalTemp)
 {
-	if (_tempSensorTask.ExternalSensorInitialized)
+	if (g_tempSensorTask.ExternalSensorInitialized)
 	{
-		lastExternalTemp = _lastExternalTemp;
+		lastExternalTemp = m_lastExternalTemp;
 		return true;
 	}
 	return false;

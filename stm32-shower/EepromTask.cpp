@@ -1,3 +1,3 @@
 #include "EepromTask.h"
 
-EepromTask _eepromTask;
+EepromTask g_eepromTask;

@@ -27,7 +27,7 @@ struct BeepSound
 	}
 };
 
-class Buzzer
+class Buzzer final
 {
 public:
 	
@@ -35,15 +35,14 @@ public:
 	void Init()
 	{	
 		DisableGPIO();
-		
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 		
 		TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct = 
 		{
-			.TIM_Prescaler = (uint16_t)(SystemCoreClock / 100000 - 1),       // 100 KHz timebase
+			.TIM_Prescaler = (uint16_t)(SystemCoreClock / 100000 - 1),  // 100 KHz timebase
 			.TIM_CounterMode = TIM_CounterMode_Up,
-			.TIM_Period = (uint16_t)(SystemCoreClock / 10000 - 1),       // Arbitary placeholder 100 Hz
-			.TIM_ClockDivision = TIM_CKD_DIV1,       // без  делителя
+			.TIM_Period = (uint16_t)(SystemCoreClock / 10000 - 1),      // Arbitary placeholder 100 Hz
+			.TIM_ClockDivision = TIM_CKD_DIV1,       // без  делителя.
 			.TIM_RepetitionCounter = 0
 		};
 		TIM_TimeBaseInit(Buzzer_TIM, &TIM_TimeBaseInitStruct);
@@ -53,7 +52,7 @@ public:
 			.TIM_OCMode = TIM_OCMode_PWM1,
 			.TIM_OutputState = TIM_OutputState_Enable,
 			.TIM_OutputNState = TIM_OutputNState_Disable,
-			.TIM_Pulse = (uint16_t)((TIM_TimeBaseInitStruct.TIM_Period + 1) / 2),       // 50% Duty
+			.TIM_Pulse = (uint16_t)((TIM_TimeBaseInitStruct.TIM_Period + 1) / 2),       // 50% Duty.
 			.TIM_OCPolarity = TIM_OCPolarity_High,
 			.TIM_OCNPolarity = TIM_OCPolarity_High,
 			.TIM_OCIdleState = TIM_OCIdleState_Reset,
@@ -64,44 +63,43 @@ public:
 		TIM_OC1PreloadConfig(Buzzer_TIM, TIM_OCPreload_Enable);
 		TIM_ARRPreloadConfig(Buzzer_TIM, ENABLE);
 		
-		const uint16_t period = 100000 / 1000;   // 1000 гц
+		const uint16_t period = 100000 / 1000;   // 1000 гц.
 		Buzzer_TIM->ARR = period - 1;
 		Buzzer_TIM->CCR1 = period / 2;
 		
 		DisableGPIO();
-		
 		TIM_Cmd(Buzzer_TIM, ENABLE);
 		
-		_xSemaphore = xSemaphoreCreateBinaryStatic(&_xSemaphoreBuffer);
-		xSemaphoreGive(_xSemaphore);
+		m_xSemaphore = xSemaphoreCreateBinaryStatic(&m_xSemaphoreBuffer);
+		xSemaphoreGive(m_xSemaphore);
 
-		_xSemaphoreHighPrio = xSemaphoreCreateBinaryStatic(&_xSemaphoreHighPrioBuffer);
-		xSemaphoreGive(_xSemaphoreHighPrio);
+		m_xSemaphoreHighPrio = xSemaphoreCreateBinaryStatic(&m_xSemaphoreHighPrioBuffer);
+		xSemaphoreGive(m_xSemaphoreHighPrio);
 		
-		_xSemaphorePause = xSemaphoreCreateBinaryStatic(&_xSemaphorePauseBuffer);
+		m_xSemaphorePause = xSemaphoreCreateBinaryStatic(&m_xSemaphorePauseBuffer);
 	}
 	
 	void BeepHighPrio(const BeepSound* samples, uint8_t length)
 	{
-		xSemaphoreTake(_xSemaphoreHighPrio, portMAX_DELAY);
+		xSemaphoreTake(m_xSemaphoreHighPrio, portMAX_DELAY);
 		{
-			bool busy = uxSemaphoreGetCount(_xSemaphore) == 0;
+			bool busy = uxSemaphoreGetCount(m_xSemaphore) == 0;
 
 			// Пищалка занята
 			if(busy)
 			{
 				// Прервать
-				xSemaphoreGive(_xSemaphorePause);
+				xSemaphoreGive(m_xSemaphorePause);
 			}
 			
-			xSemaphoreTake(_xSemaphore, portMAX_DELAY);
+			xSemaphoreTake(m_xSemaphore, portMAX_DELAY);
 			
 			if (busy)
 			{
 				// Другой поток не успел захватить мьютекс
-				if(uxSemaphoreGetCount(_xSemaphorePause))
+				if(uxSemaphoreGetCount(m_xSemaphorePause))
 				{
-					xSemaphoreTake(_xSemaphorePause, portMAX_DELAY);
+					xSemaphoreTake(m_xSemaphorePause, portMAX_DELAY);
 				}
 			}
 			
@@ -110,37 +108,38 @@ public:
 				vTaskDelay(70);
 			}
 				
-			BeepInternal(samples, length);
-			xSemaphoreGive(_xSemaphore);
+			InnerPlaySound(samples, length);
+			xSemaphoreGive(m_xSemaphore);
 			
-			xSemaphoreGive(_xSemaphoreHighPrio);
+			xSemaphoreGive(m_xSemaphoreHighPrio);
 		}
 		
 		// если был прерван чей-то звук, сделать дополнительную паузу в начале
 	}
 	
-	void Beep(const BeepSound* samples, uint8_t length)
+	// Воспроизводит звуковые семплы блокируя поток.
+	void PlaySound(const BeepSound* samples, uint8_t length)
 	{
-		xSemaphoreTake(_xSemaphore, portMAX_DELAY);
+		xSemaphoreTake(m_xSemaphore, portMAX_DELAY);
 		{
-			if (uxSemaphoreGetCount(_xSemaphoreHighPrio))
+			if (uxSemaphoreGetCount(m_xSemaphoreHighPrio))
 			{
-				BeepInternal(samples, length);
+				InnerPlaySound(samples, length);
 			}
-			xSemaphoreGive(_xSemaphore);
+			xSemaphoreGive(m_xSemaphore);
 		}
 	}
 	
 private:
 
-	SemaphoreHandle_t _xSemaphore;
-	StaticSemaphore_t _xSemaphoreBuffer;
+	SemaphoreHandle_t m_xSemaphore;
+	StaticSemaphore_t m_xSemaphoreBuffer;
 	
-	SemaphoreHandle_t _xSemaphoreHighPrio;
-	StaticSemaphore_t _xSemaphoreHighPrioBuffer;
+	SemaphoreHandle_t m_xSemaphoreHighPrio;
+	StaticSemaphore_t m_xSemaphoreHighPrioBuffer;
 	
-	SemaphoreHandle_t _xSemaphorePause;
-	StaticSemaphore_t _xSemaphorePauseBuffer;
+	SemaphoreHandle_t m_xSemaphorePause;
+	StaticSemaphore_t m_xSemaphorePauseBuffer;
 	
 	void Freq(uint16_t freq)
 	{
@@ -180,14 +179,14 @@ private:
 		GPIO_Init(GPIO_Buzzer, &GPIO_InitStructure);
 	}
 	
-	void BeepInternal(const BeepSound* samples, uint8_t length)
+	void InnerPlaySound(const BeepSound* samples, uint8_t length)
 	{
 		for (uint8_t i = 0; i < length; i++)
 		{
 			Freq(samples->Frequency);
 			
 			//vTaskDelay(samples->Duration / portTICK_PERIOD_MS);
-			bool interrupted = (xSemaphoreTake(_xSemaphorePause, samples->Duration / portTICK_PERIOD_MS) == pdTRUE);
+			bool interrupted = (xSemaphoreTake(m_xSemaphorePause, samples->Duration / portTICK_PERIOD_MS) == pdTRUE);
 			if (interrupted)
 			{
 				break;
@@ -198,5 +197,4 @@ private:
 	}
 };
 
-extern Buzzer _buzzer;
-
+extern Buzzer g_buzzer;

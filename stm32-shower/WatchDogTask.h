@@ -1,12 +1,17 @@
 #pragma once
 #include "iActiveTask.h"
 
-class WatchDogTask : public iActiveTask
+class WatchDogTask final : public iActiveTask
 {
+public:
+	
+	bool GetWasReset();
+	
+private:
+	
+	bool m_wasReset = false;
 	void Init();
 	void Run();
-public:
-	bool WasReset = false;
 };
 
-extern WatchDogTask _watchDogTask;
+extern WatchDogTask g_watchDogTask;

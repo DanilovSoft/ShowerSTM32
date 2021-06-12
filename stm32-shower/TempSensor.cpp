@@ -10,7 +10,7 @@
 #include "string.h"
 #include "Eeprom.h"
 
-TempSensor _tempSensorTask;
+TempSensor g_tempSensorTask;
 
 // сокращенно ow_buf.
 volatile uint8_t _oneWireBuffer[8] = { };
@@ -63,11 +63,11 @@ void TempSensor::Run()
 	TryRegisterNewSensors();
 	
 	// Готовим команду - чтение памяти устройства.
-	memcpy(_internalDeviceReadScratchCommand + 1, Properties.InternalTempSensorId, 8);
-	memcpy(_externalDeviceReadScratchCommand + 1, Properties.ExternalTempSensorId, 8);
+	memcpy(m_internalDeviceReadScratchCommand + 1, g_properties.InternalTempSensorId, 8);
+	memcpy(m_externalDeviceReadScratchCommand + 1, g_properties.ExternalTempSensorId, 8);
 	
-	SetResolution(DS18B20_Resolution_9_bit, Properties.InternalTempSensorId); // Для 9 бит время измерения = 750 msec / 16 = 93.75 msec.
-	SetResolution(DS18B20_Resolution_9_bit, Properties.ExternalTempSensorId);
+	SetResolution(DS18B20_Resolution_9_bit, g_properties.InternalTempSensorId); // Для 9 бит время измерения = 750 msec / 16 = 93.75 msec.
+	SetResolution(DS18B20_Resolution_9_bit, g_properties.ExternalTempSensorId);
 	
 	while (!TryGetFirstTemps())
 	{
@@ -240,11 +240,11 @@ repeat:
 	// Если в списке только одно устройство и оно новое то зарегистрировать как датчик для бака.
 	if(devCount == 1)
 	{
-		bool isInternalSensor = ArrayEquals(devices, 8, Properties.InternalTempSensorId, 8);
+		bool isInternalSensor = ArrayEquals(devices, 8, g_properties.InternalTempSensorId, 8);
 		
 		if (!isInternalSensor)
 		{
-			bool isExternalSensor = ArrayEquals(devices, 8, Properties.ExternalTempSensorId, 8);
+			bool isExternalSensor = ArrayEquals(devices, 8, g_properties.ExternalTempSensorId, 8);
 			
 			if (!isExternalSensor)
 			{
@@ -274,18 +274,18 @@ repeat:
 						return;
 					}
 					
-					memcpy(WriteProperties.InternalTempSensorId, newInternalDevice, 8);
+					memcpy(g_writeProperties.InternalTempSensorId, newInternalDevice, 8);
 				
-					if (ArrayEquals(WriteProperties.InternalTempSensorId, 8, WriteProperties.ExternalTempSensorId, 8))
+					if (ArrayEquals(g_writeProperties.InternalTempSensorId, 8, g_writeProperties.ExternalTempSensorId, 8))
 					{
-						memset(WriteProperties.ExternalTempSensorId, 0, 8);
+						memset(g_writeProperties.ExternalTempSensorId, 0, 8);
 					}
 					
 					// Перезаписываем идентификатор датчика.
-					_eeprom.Save();
+					g_eeprom.Save();
 					
 					// Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
-					memcpy(Properties.InternalTempSensorId, newInternalDevice, 8);
+					memcpy(g_properties.InternalTempSensorId, newInternalDevice, 8);
 				}
 			}
 		}
@@ -295,7 +295,7 @@ repeat:
 		// Если устройств 2, где один это датчик бака, а другое новое то зарегистрировать второй как датчик окружающего воздуха.
 
 		// Является ли первое устройство в массиве датчиком бака.
-		bool firstIsInternal = ArrayEquals(devices, 8, Properties.InternalTempSensorId, 8);
+		bool firstIsInternal = ArrayEquals(devices, 8, g_properties.InternalTempSensorId, 8);
 		
 		bool secondIsInternal;
 		
@@ -305,14 +305,14 @@ repeat:
 		}
 		else
 		{
-			secondIsInternal = ArrayEquals(devices + 8, 8, Properties.InternalTempSensorId, 8);
+			secondIsInternal = ArrayEquals(devices + 8, 8, g_properties.InternalTempSensorId, 8);
 		}
 		
 		if (firstIsInternal || secondIsInternal)
 		{
 			uint8_t* nextDev = firstIsInternal ? devices + 8 : devices;
 			
-			if (!ArrayEquals(nextDev, 8, Properties.ExternalTempSensorId, 8))
+			if (!ArrayEquals(nextDev, 8, g_properties.ExternalTempSensorId, 8))
 			{
 				// Обнаружен новый датчик. Предупредим пользователя, выдержим паузу, перечитаем идентификатор и зарегистрируем его как датчик воздуха.
 				
@@ -337,13 +337,13 @@ repeat:
 						return;
 					}
 					
-					memcpy(WriteProperties.ExternalTempSensorId, newExternalDevice, 8);
+					memcpy(g_writeProperties.ExternalTempSensorId, newExternalDevice, 8);
 				
 					// Перезаписываем идентификатор датчика.
-					_eeprom.Save();
+					g_eeprom.Save();
 					
 					// Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
-					memcpy(Properties.ExternalTempSensorId, newExternalDevice, 8);
+					memcpy(g_properties.ExternalTempSensorId, newExternalDevice, 8);
 				}
 			}
 		}
@@ -596,7 +596,7 @@ float TempSensor::Decode(uint8_t* scratchPad)
 
 void TempSensor::Pause()
 {
-	vTaskDelay(_pauseMsec / portTICK_PERIOD_MS);
+	vTaskDelay(m_pauseMsec / portTICK_PERIOD_MS);
 }
 
 bool TempSensor::TryUpdateTemp()
@@ -606,7 +606,7 @@ bool TempSensor::TryUpdateTemp()
 		
 	if (OneWire_Send(AllDevicessStartConvert, 2))
 	{
-		vTaskDelay(_minimumDelayMsec / portTICK_PERIOD_MS);	
+		vTaskDelay(m_minimumDelayMsec / portTICK_PERIOD_MS);	
     	
 		float internalTemp;
 		if (TryGetInternalTemp(internalTemp))
@@ -614,11 +614,11 @@ bool TempSensor::TryUpdateTemp()
 			InternalTemp = internalTemp;
 			
 			// Записать в скользящее окно.
-			_intTempSum -= _intTempBuf[_intTempHead];
-			_intTempSum += InternalTemp;
-			_intTempBuf[_intTempHead] = InternalTemp;
-			_intTempHead = (_intTempHead + 1) % Properties.InternalTemp_Avg_Size;
-			AverageInternalTemp = _intTempSum / Properties.InternalTemp_Avg_Size;
+			m_intTempSum -= m_intTempBuf[m_intTempHead];
+			m_intTempSum += InternalTemp;
+			m_intTempBuf[m_intTempHead] = InternalTemp;
+			m_intTempHead = (m_intTempHead + 1) % g_properties.InternalTemp_Avg_Size;
+			AverageInternalTemp = m_intTempSum / g_properties.InternalTemp_Avg_Size;
 		}
 		
 		float externalTemp;
@@ -626,11 +626,11 @@ bool TempSensor::TryUpdateTemp()
 		{
 			ExternalTemp = externalTemp;
 			// Записать в скользящее окно.
-			_extTempSum -= _extTempBuf[_extTempHead];
-			_extTempSum += ExternalTemp;
-			_extTempBuf[_extTempHead] = ExternalTemp;
-			_extTempHead = (_extTempHead + 1) % EXT_TEMP_AVG_BUF_SZ;
-			AverageExternalTemp = _extTempSum / EXT_TEMP_AVG_BUF_SZ;
+			m_extTempSum -= m_extTempBuf[m_extTempHead];
+			m_extTempSum += ExternalTemp;
+			m_extTempBuf[m_extTempHead] = ExternalTemp;
+			m_extTempHead = (m_extTempHead + 1) % EXT_TEMP_AVG_BUF_SZ;
+			AverageExternalTemp = m_extTempSum / EXT_TEMP_AVG_BUF_SZ;
 			return internalSuccess;
 		}
 	}
@@ -646,7 +646,7 @@ bool TempSensor::TryGetFirstTemps()
 	
 	if (OneWire_Send(AllDevicessStartConvert, 2))
 	{
-		vTaskDelay(_minimumDelayMsec / portTICK_PERIOD_MS);	
+		vTaskDelay(m_minimumDelayMsec / portTICK_PERIOD_MS);	
     	
 		float internalTemp;
 		if (TryGetInternalTemp(internalTemp))
@@ -674,7 +674,7 @@ bool TempSensor::TryGetInternalTemp(float& internalTemp)
 	uint8_t scratchpad[9];
 		
 	// Читаем блокнот конкретного устройства.
-	if(OneWire_Send(_internalDeviceReadScratchCommand, 10, scratchpad, 9, true))
+	if(OneWire_Send(m_internalDeviceReadScratchCommand, 10, scratchpad, 9, true))
 	{
 		// Значение COUNT_PER_°C должно равняться заданной разрядности.
 		uint8_t count_per_c = scratchpad[7];
@@ -691,7 +691,7 @@ bool TempSensor::TryGetExternalTemp(float& externalTemp)
 {
 	uint8_t scratchpad[9];
 	
-	if (OneWire_Send(_externalDeviceReadScratchCommand, 10, scratchpad, 9, true))
+	if (OneWire_Send(m_externalDeviceReadScratchCommand, 10, scratchpad, 9, true))
 	{
 		uint8_t count_per_c = scratchpad[7];
 		if (count_per_c == COUNT_PER_C)
@@ -705,22 +705,22 @@ bool TempSensor::TryGetExternalTemp(float& externalTemp)
 
 void TempSensor::InitAverageInternalTemp(const float internalTemp)
 {
-	_intTempSum = internalTemp * Properties.InternalTemp_Avg_Size;
-	for (size_t i = 0; i < Properties.InternalTemp_Avg_Size; i++)
+	m_intTempSum = internalTemp * g_properties.InternalTemp_Avg_Size;
+	for (size_t i = 0; i < g_properties.InternalTemp_Avg_Size; i++)
 	{
-		_intTempBuf[i] = internalTemp;
+		m_intTempBuf[i] = internalTemp;
 	}
-	_intTempHead = 0;
+	m_intTempHead = 0;
 }
 
 void TempSensor::InitAverageExternalTemp(const float externalTemp)
 {
-	_extTempSum = externalTemp * EXT_TEMP_AVG_BUF_SZ;
+	m_extTempSum = externalTemp * EXT_TEMP_AVG_BUF_SZ;
 	for (size_t i = 0; i < EXT_TEMP_AVG_BUF_SZ; i++)
 	{
-		_extTempBuf[i] = externalTemp;
+		m_extTempBuf[i] = externalTemp;
 	}
-	_extTempHead = 0;
+	m_extTempHead = 0;
 }
 	
 uint8_t TempSensor::OneWire_Scan(uint8_t* buf, uint8_t num) 

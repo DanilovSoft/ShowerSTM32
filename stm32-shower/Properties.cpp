@@ -2,8 +2,8 @@
 
 // Эта структура существует только для чтения, потому что с ней 
 // работают несколько потоков, а запись не волатильна и ничем не синхронизирована.
-PropertyStruct Properties;
+PropertyStruct g_properties;
 
 // Эта структура накапливает изменения и затем сохраняет их в EEPROM и уже после
 // перезугрузки устройства, изменения попадут в структуру Properties.
-PropertyStruct WriteProperties;
+PropertyStruct g_writeProperties;

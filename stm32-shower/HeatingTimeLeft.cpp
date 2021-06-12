@@ -3,12 +3,12 @@
 #include "TempSensor.h"
 #include "WaterLevelTask.h"
 
-HeatingTimeLeft _heatingTimeLeft;
+HeatingTimeLeft g_heatingTimeLeft;
 
 void HeatingTimeLeft::Init(float tankVolumeLitre, float heaterPowerKWatt)
 {
-	_tankVolumeLitre = tankVolumeLitre;
-	_heaterPowerKWatt = heaterPowerKWatt;
+	m_tankVolumeLitre = tankVolumeLitre;
+	m_heaterPowerKWatt = heaterPowerKWatt;
 }
 
 float HeatingTimeLeft::CalcTimeLeft(float internalTemp, uint8_t targetTemp, uint8_t tankPercent)
@@ -25,7 +25,7 @@ float HeatingTimeLeft::CalcTimeLeft(float internalTemp, uint8_t targetTemp, uint
 	//  tн – начальная температура воды, °С
 	//  W – электрическая мощность нагревательного элемента — ТЭНа, кВТ
 
-	float timeH = Q * _tankVolumeLitre * (targetTemp - internalTemp) / _heaterPowerKWatt;
+	float timeH = kQ * m_tankVolumeLitre * (targetTemp - internalTemp) / m_heaterPowerKWatt;
 
 	// В минутах.
     float minutes = timeH * 60;
@@ -40,15 +40,15 @@ void HeatingTimeLeft::OnStartHeating()
 
 float HeatingTimeLeft::GetTimeLeft()
 {
-    float intTemp = _tempSensorTask.AverageInternalTemp;
-    float extTemp = _tempSensorTask.AverageExternalTemp;
+    float intTemp = g_tempSensorTask.AverageInternalTemp;
+    float extTemp = g_tempSensorTask.AverageExternalTemp;
 	
 	// Узнаём желаемую температуру воды в баке.
 	uint8_t limitTemp;
-	_heaterTempLimit.TryGetTargetTemperature(limitTemp);
+	g_heaterTempLimit.TryGetTargetTemperature(limitTemp);
 
 	// Нужно учесть на сколько процентов заполнен бак.
-	uint8_t tankPercent = _waterLevelTask.DisplayingPercent;
+	uint8_t tankPercent = g_waterLevelTask.DisplayingPercent;
 	
 	float minutes = CalcTimeLeft(intTemp, limitTemp, tankPercent);
     return minutes;
@@ -56,11 +56,11 @@ float HeatingTimeLeft::GetTimeLeft()
 
 uint8_t HeatingTimeLeft::GetProgress()
 {
-    float internalTemp = _tempSensorTask.AverageInternalTemp;
+    float internalTemp = g_tempSensorTask.AverageInternalTemp;
     
 	// Узнаём желаемую температуру воды в баке.
 	uint8_t limitTemp;
-	_heaterTempLimit.TryGetTargetTemperature(limitTemp);
+	g_heaterTempLimit.TryGetTargetTemperature(limitTemp);
 		
 	if (internalTemp > limitTemp)
 	{

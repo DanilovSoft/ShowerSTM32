@@ -1,11 +1,12 @@
 #pragma once
 #include "iActiveTask.h"
 
-class RTOSwrapperClass
+class RTOSwrapperClass final
 {   
 public:
-	void CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority);
+	
 	static void Run(void* parm);
+	void CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority);
 };
 
-extern RTOSwrapperClass _rtosHelper;
+extern RTOSwrapperClass g_rtosHelper;

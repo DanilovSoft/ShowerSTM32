@@ -3,11 +3,11 @@
 
 void IpdBuffer::WriteByte(const uint8_t byte)
 {
-	if (_count < BUF_SZ)
+	if (m_count < kBufSize)
 	{
-		_buf[_tail] = byte;
-		_count++;
-		_tail = (_tail + 1) % BUF_SZ;
+		m_buf[m_tail] = byte;
+		m_count++;
+		m_tail = (m_tail + 1) % kBufSize;
 	}
 	else
 	{
@@ -19,21 +19,21 @@ void IpdBuffer::WriteByte(const uint8_t byte)
 
 ShowerCode IpdBuffer::Take(uint8_t* buf)
 {
-	if (_count > 0)
+	if (m_count > 0)
 	{
-		uint8_t length = _buf[_head];  // Payload Size
-		_head = (_head + 1) % BUF_SZ;
+		uint8_t length = m_buf[m_head];  // Payload Size
+		m_head = (m_head + 1) % kBufSize;
 			
-		ShowerCode code = (ShowerCode)_buf[_head];
-		_head = (_head + 1) % BUF_SZ;
+		ShowerCode code = (ShowerCode)m_buf[m_head];
+		m_head = (m_head + 1) % kBufSize;
 			
 		length -= 2; // Учесть размер хедера
 		for (uint8_t i = 0; i < length; i++)
 		{
-			buf[i] = _buf[_head];
-			_head = (_head + 1) % BUF_SZ;
+			buf[i] = m_buf[m_head];
+			m_head = (m_head + 1) % kBufSize;
 		}
-		_count -= (length + 2);
+		m_count -= (length + 2);
 		return code;
 	}
     return ShowerCode::None;
@@ -42,15 +42,15 @@ ShowerCode IpdBuffer::Take(uint8_t* buf)
 
 uint8_t IpdBuffer::GetRequestSize()
 {
-	if (_count)
+	if (m_count)
 	{
-    	uint8_t payload_length = _buf[_head]; // В первом байте записан размер Payload
+    	uint8_t payload_length = m_buf[m_head]; // В первом байте записан размер Payload
 			
 		// Payload не может быть меньше 2
 		if (payload_length < 2)
 		{
-			_count--;
-			_head = (_head + 1) % BUF_SZ;
+			m_count--;
+			m_head = (m_head + 1) % kBufSize;
 			return 0;
 		}
 		return payload_length - 1;
@@ -61,7 +61,7 @@ uint8_t IpdBuffer::GetRequestSize()
 
 void IpdBuffer::Clear()
 {
-	_count = 0;
-	_head = 0;
-	_tail = 0;
+	m_count = 0;
+	m_head = 0;
+	m_tail = 0;
 }

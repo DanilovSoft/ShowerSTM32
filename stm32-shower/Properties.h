@@ -3,7 +3,7 @@
 #include "math.h"
 
 constexpr auto WL_AVG_BUF_MAX_SIZE = 129; // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
-constexpr auto InternalTempLimit = 42; // максимальная температура воды в баке.
+constexpr auto InternalTempLimit = 42; // Максимальная температура воды в баке.
 constexpr auto WL_MEDIAN_BUF_MAX_SIZE = 255;  // Максимально допустимый размер медианного фильтра для уровня воды.
 const uint8_t LOWER_BOUND = 15; // Минимальная температура на улице.
 const uint8_t UPPER_BOUND = 40; // Максимальная температура на улице.
@@ -13,10 +13,170 @@ constexpr auto EXT_TEMP_AVG_BUF_SZ = 1;
 
 struct TempStep
 {
+public:
+
+	uint8_t GetLimit(uint8_t extTemp)
+	{
+		uint8_t index = GetIndex(extTemp);
+		return m_internal[index];
+	}
+
+	uint8_t GetLimit(float extTemp)
+	{
+		uint8_t index = GetIndexf(extTemp);
+		return m_internal[index];
+	}
+
+	// Принимает температуру окружающего воздуха в грудусах, что-бы
+	// увеличить температуру при такой температуре окружающей среды.
+	bool TempPlus(const uint8_t airTemp)
+	{
+		const uint8_t index = GetIndex(airTemp);
+		uint8_t value = m_internal[index];
+
+		if (value < InternalTempLimit)
+			// значение в допустимом пределе
+			{
+				++value;
+
+				m_internal[index] = value;
+
+				// Сделать точки слева не меньше текущего значения. Массив идет от большего к меньшему: [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
+				if(index > 0)
+				{
+					uint8_t leftPoints = index;
+
+					while (leftPoints--)
+					{
+						auto& t = m_internal[leftPoints];
+						if (t < value)
+						{
+							t = value;
+						}
+					}
+				}
+
+				uint8_t prevValue = value;
+
+				// Сделать точки справа с шагом не больше 1 градуса.
+				for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // От текущей точки не включительно к началу массива.
+				{
+					auto& t = m_internal[i];
+
+					auto nextT = (prevValue - 1);    // Не должно быть меньше.
+
+					if(t < nextT)
+					{
+						t = nextT;
+					}
+
+					prevValue = t;
+				}
+				return true;
+			}
+		return false;
+	}
+
+	// Принимает температуру окружающего воздуха в грудусах, что-бы
+	// уменьшить температуру при такой температуре окружающей среды.
+	bool TempMinus(const uint8_t airTemp)
+	{
+		const uint8_t index = GetIndex(airTemp);
+
+		uint8_t value = m_internal[index];
+
+		if (value > 0) // проверка на всякий случай.
+			{
+				--value;  // уменьшить на 1 градус.
+
+				if(value <= InternalTempLimit)
+				// значение в допустимом пределе.
+				{
+					m_internal[index] = value;  // установить новое значение
+
+					// сделать точки справа не больше текущего значени¤.  [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
+					for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // от следующей точки к концу массива
+					{
+						auto& t = m_internal[i];
+						if (t > value)
+						{
+							t = value;
+						}
+					}
+
+					if (index > 0)
+					{
+						auto prevValue = value;
+						uint8_t leftPoints = index;
+
+						// сделать точки слева с шагом не больше 1 градуса
+						while(leftPoints--)
+						{
+							auto& t = m_internal[leftPoints];
+							auto nextT = (prevValue + 1);       // не должно превышать
+
+							if(t > nextT)
+							{
+								t = nextT;
+							}
+
+							prevValue = t;
+						}
+					}
+					return true;
+				}
+			}
+		return false;
+	}
+
+	void Parse(const uint8_t* data)
+	{
+		uint8_t prev = m_internal[0];
+		for (uint8_t i = 0; i < STEPS_COUNT; i++)
+		{
+			uint8_t value = data[i];
+
+			if (i > 0)
+			{
+				if (value > prev)
+				{
+					value = prev;
+				}
+			}
+
+			m_internal[i] = value;
+			prev = value;
+		}
+	}
+
+	void SelfTest()
+	{
+		uint8_t prevSpot = m_internal[0];
+		for (int i = 0; i < STEPS_COUNT; i++)
+		{
+			uint8_t& internalTemp = m_internal[i];
+
+			if (internalTemp == 0 || internalTemp > InternalTempLimit)
+			{
+				internalTemp = 36;
+			}
+
+			if (i > 0)
+			{
+				if (internalTemp > prevSpot)
+				{
+					internalTemp = prevSpot;
+				}
+			}
+
+			prevSpot = internalTemp;
+		}
+	}
+	
 private:
 	
-	// Температура в баке
-	uint8_t _internal[STEPS_COUNT];
+	// Температура в баке.
+	uint8_t m_internal[STEPS_COUNT];
 	
 	uint8_t GetIndex(uint8_t externalTemp)
 	{
@@ -38,170 +198,12 @@ private:
 		uint8_t t = round(externalTemp);
 		return GetIndex(t);
 	}
-	
-public:
-
-	uint8_t GetLimit(uint8_t extTemp)
-	{
-		uint8_t index = GetIndex(extTemp);
-		return _internal[index];
-	}
-
-	uint8_t GetLimit(float extTemp)
-	{
-		uint8_t index = GetIndexf(extTemp);
-		return _internal[index];
-	}
-
-	// Принимает температуру окружающего воздуха в грудусах, что-бы
-	// увеличить температуру при такой температуре окружающей среды.
-	bool TempPlus(const uint8_t airTemp)
-	{
-		const uint8_t index = GetIndex(airTemp);
-		uint8_t value = _internal[index];
-
-		if (value < InternalTempLimit)
-		// значение в допустимом пределе
-		{
-			++value;
-
-			_internal[index] = value;
-
-			// Сделать точки слева не меньше текущего значения. Массив идет от большего к меньшему: [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
-			if (index > 0)
-			{
-				uint8_t leftPoints = index;
-
-				while (leftPoints--)
-				{
-					auto& t = _internal[leftPoints];
-					if (t < value)
-					{
-						t = value;
-					}
-				}
-			}
-
-			uint8_t prevValue = value;
-
-			// Сделать точки справа с шагом не больше 1 градуса.
-			for (uint8_t i = (index + 1); i < STEPS_COUNT; i++) // От текущей точки не включительно к началу массива.
-			{
-				auto& t = _internal[i];
-
-				auto nextT = (prevValue - 1);   // Не должно быть меньше.
-
-				if (t < nextT)
-				{
-					t = nextT;
-				}
-
-				prevValue = t;
-			}
-			return true;
-		}
-		return false;
-	}
-
-	// Принимает температуру окружающего воздуха в грудусах, что-бы
-	// уменьшить температуру при такой температуре окружающей среды.
-	bool TempMinus(const uint8_t airTemp)
-	{
-		const uint8_t index = GetIndex(airTemp);
-
-		uint8_t value = _internal[index];
-
-		if (value > 0) // проверка на всякий случай.
-		{
-			--value; // уменьшить на 1 градус.
-
-			if (value <= InternalTempLimit)
-			// значение в допустимом пределе.
-			{
-				_internal[index] = value; // установить новое значение
-
-				// сделать точки справа не больше текущего значени¤.  [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
-				for (uint8_t i = (index + 1); i < STEPS_COUNT; i++) // от следующей точки к концу массива
-				{
-					auto& t = _internal[i];
-					if (t > value)
-					{
-						t = value;
-					}
-				}
-
-				if (index > 0)
-				{
-					auto prevValue = value;
-					uint8_t leftPoints = index;
-
-					// сделать точки слева с шагом не больше 1 градуса
-					while (leftPoints--)
-					{
-						auto& t = _internal[leftPoints];
-						auto nextT = (prevValue + 1);      // не должно превышать
-
-						if(t > nextT)
-						{
-							t = nextT;
-						}
-
-						prevValue = t;
-					}
-				}
-				return true;
-			}
-		}
-		return false;
-	}
-
-	void Parse(const uint8_t* data)
-	{
-		uint8_t prev = _internal[0];
-		for (uint8_t i = 0; i < STEPS_COUNT; i++)
-		{
-			uint8_t value = data[i];
-
-			if (i > 0)
-			{
-				if (value > prev)
-				{
-					value = prev;
-				}
-			}
-
-			_internal[i] = value;
-			prev = value;
-		}
-	}
-
-	void SelfTest()
-	{
-		uint8_t prevSpot = _internal[0];
-		for (int i = 0; i < STEPS_COUNT; i++)
-		{
-			uint8_t& internalTemp = _internal[i];
-
-			if (internalTemp == 0 || internalTemp > InternalTempLimit)
-			{
-				internalTemp = 36;
-			}
-
-			if (i > 0)
-			{
-				if (internalTemp > prevSpot)
-				{
-					internalTemp = prevSpot;
-				}
-			}
-
-			prevSpot = internalTemp;
-		}
-	}
 };
 
 struct PropertyStruct
 {
+public:
+	
 	// Температурная зависимость.
 	TempStep Chart;
 	
@@ -357,4 +359,4 @@ struct PropertyStruct
 	
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.
 
-extern PropertyStruct Properties, WriteProperties;
+extern PropertyStruct g_properties, g_writeProperties;

@@ -151,7 +151,6 @@
     <ClInclude Include="Buzzer.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="ConnectionsBuffer.h" />
-    <ClInclude Include="Dwt.h" />
     <ClInclude Include="Eeprom.h" />
     <ClInclude Include="EepromTask.h" />
     <ClInclude Include="FreeRTOSConfig.h" />
@@ -209,7 +208,6 @@
     <ClInclude Include="StdPeriph\Inc\system_stm32f10x.h" />
     <ClInclude Include="TicksStopwatch.h" />
     <ClInclude Include="TaskHelper.h" />
-    <ClInclude Include="TaskSemaphoreSlim.h" />
     <ClInclude Include="TempSensor.h" />
     <ClInclude Include="Stopwatch.h" />
     <ClInclude Include="TaskTimeout.h" />

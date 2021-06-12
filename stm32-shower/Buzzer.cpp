@@ -1,3 +1,3 @@
 #include "Buzzer.h"
 
-Buzzer _buzzer;
+Buzzer g_buzzer;

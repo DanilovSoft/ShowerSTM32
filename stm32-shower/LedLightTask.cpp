@@ -5,7 +5,7 @@
 #include "Common.h"
 #include "Properties.h"
 
-LedLightTask _ledLightTask;
+LedLightTask g_ledLightTask;
 
 void LedLightTask::Init()
 {
@@ -34,7 +34,7 @@ void LedLightTask::Init()
     TIM_TimeBaseInit(LED_TIM, &TIM_TimeBaseInitStruct);
     
 	// Скважность от 0 до 100%.
-	uint16_t pulse = (TIM_TimeBaseInitStruct.TIM_Period + 1) / 100 * Properties.LightBrightness;
+	uint16_t pulse = (TIM_TimeBaseInitStruct.TIM_Period + 1) / 100 * g_properties.LightBrightness;
 	
 	TIM_OCInitTypeDef TIM_OCInitStruct = 
 	{
@@ -59,9 +59,9 @@ void LedLightTask::Run()
     {	
 	    if (CircuitBreakerIsOn())
 	    {
-		    if (_turnedOn)
+		    if (m_turnedOn)
 		    {
-			    _turnedOn = false;
+			    m_turnedOn = false;
 	            
 			    GPIO_InitTypeDef GPIO_InitStructure = 
 			    {
@@ -72,9 +72,9 @@ void LedLightTask::Run()
 			    GPIO_Init(GPIO_LED, &GPIO_InitStructure);
 		    }
 	    }
-	    else if (!_turnedOn)
+	    else if (!m_turnedOn)
 	    {
-		    _turnedOn = true;
+		    m_turnedOn = true;
             
 		    GPIO_InitTypeDef GPIO_InitStructure = 
 		    {

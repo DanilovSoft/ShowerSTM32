@@ -3,66 +3,62 @@
 
 
 WaterSensorButton::WaterSensorButton(GPIO_TypeDef* gpio, uint16_t gpio_pin)
-	: _gpio(gpio)
-	, _gpio_pin(gpio_pin)
+	: m_gpio(gpio)
+	, m_gpio_pin(gpio_pin)
 {
-	_isOn = false;
-	_pendingOn = false;
-	_pendingOff = false;
-	_debounce.Reset();
-}
-
-WaterSensorButton::~WaterSensorButton()
-{
+	m_isOn = false;
+	m_pendingOn = false;
+	m_pendingOff = false;
+	m_debounce.Reset();
 }
 
 bool WaterSensorButton::IsOn()
 {
-	if (GPIO_ReadInputDataBit(_gpio, _gpio_pin))
+	if (GPIO_ReadInputDataBit(m_gpio, m_gpio_pin))
     {
-        if (!_isOn)
+        if (!m_isOn)
         {
-            if (!_pendingOn)
+            if (!m_pendingOn)
             {
-                _pendingOn = true;
-                _debounce.Reset();
+                m_pendingOn = true;
+                m_debounce.Reset();
             }
             else
             {
-                if (_debounce.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
+                if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMs)
                 {
-                    _isOn = true;
-                    _pendingOn = false;
+                    m_isOn = true;
+                    m_pendingOn = false;
                 }
             }
         }
         else
         {
-            _pendingOff = false;
+            m_pendingOff = false;
         }
     }
     else
     {
-        if (_isOn)
+        if (m_isOn)
         {
-            if (!_pendingOff)
+            if (!m_pendingOff)
             {
-                _pendingOff = true;
-                _debounce.Reset();
+                m_pendingOff = true;
+                m_debounce.Reset();
             }
             else
             {
-                if (_debounce.GetElapsedMsec() >= Properties.ButtonPressTimeMs)
+                if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMs)
                 {
-                    _isOn = false;
-                    _pendingOff = false;
+                    m_isOn = false;
+                    m_pendingOff = false;
                 }
             }
         }
         else
         {
-            _pendingOn = false;
+            m_pendingOn = false;
         }
     }
-    return _isOn;
+    return m_isOn;
 }

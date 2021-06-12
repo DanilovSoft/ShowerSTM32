@@ -83,7 +83,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "iActiveTask.h"
-#include "stdint.h"
 #include "Properties.h"
 
 typedef enum 
@@ -100,27 +99,17 @@ typedef enum
 	RECALL_E2		 = 0xB8
 } COMMANDS;
 
-#define OneWire_USART            (USART1)
-#define OneWire_GPIO             (GPIOB)
-#define OW_GPIO_Pin_Tx      (GPIO_Pin_6)
-#define OW_DMA_CH_RX        (DMA1_Channel5)
-#define OW_DMA_CH_TX        (DMA1_Channel4)
-#define OW_DMA_FLAG         (DMA1_FLAG_TC5)
 #define OW_NO_CRC           (false)
 #define OW_0                (0x00)
 #define OW_1                (0xFF)
 #define OW_R_1              (0xFF)
 #define OW_NO_READ			(0xFF)
 #define OW_READ_SLOT		(0xFF)
-#define OW_SEND_RESET		(1)
-#define OW_NO_RESET			(2)
-#define STRINGIFY2(X) #X
-#define STRINGIFY(X) STRINGIFY2(X)
+#define COUNT_PER_C			(16)
 #define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
-// Команды SKIP_ROM, CONVERT_T.
+
 constexpr uint8_t AllDevicessStartConvert[] = { SKIP_ROM, CONVERT_T };
-#define COUNT_PER_C     (16)
 
 typedef enum
 {
@@ -130,33 +119,47 @@ typedef enum
 	DS18B20_Resolution_12_bit = 0x7F
 } DS18B20_Resolution;
 
-class TempSensor : public iActiveTask
+class TempSensor final : public iActiveTask
 {
+public:
+
+	volatile bool InternalSensorInitialized = false;
+	volatile bool ExternalSensorInitialized = false;
+	volatile bool RegisteringSensors;
+	// Усредненое показание с датчика.
+	volatile float AverageInternalTemp = 0;
+	// Усредненое показание с датчика.
+	volatile float AverageExternalTemp = 0;
+	// Последнее показание с датчика.
+	volatile float InternalTemp = 0;
+	// Последнее показание с датчика.
+	volatile float ExternalTemp = 0;
+	void WaitFirstConversion();
+
 private:
 	
-    const uint16_t _minimumDelayMsec = 200;
+    const uint16_t m_minimumDelayMsec = 200;
 	// Пауза между измерениями температуры.
-	const uint16_t _pauseMsec = 2000;
+	const uint16_t m_pauseMsec = 2000;
 	
-	uint8_t _internalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
-	uint8_t _externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
+	uint8_t m_internalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
+	uint8_t m_externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
 	
     // Буфер скользящее окно.
-    float _intTempBuf[INT_TEMP_AVG_BUF_SZ] = { };
-    double _intTempSum = 0;
-    uint16_t _intTempHead = 0;
-    float _extTempBuf[EXT_TEMP_AVG_BUF_SZ] = {};
-    double _extTempSum = 0;
-    uint16_t _extTempHead = 0;
+    float m_intTempBuf[INT_TEMP_AVG_BUF_SZ] = { };
+    double m_intTempSum = 0;
+    uint16_t m_intTempHead = 0;
+    float m_extTempBuf[EXT_TEMP_AVG_BUF_SZ] = {};
+    double m_extTempSum = 0;
+    uint16_t m_extTempHead = 0;
     
-	void Run();
-	void Init();
 	static void OneWire_ToBits(uint8_t ow_byte, volatile uint8_t* ow_bits);
-
 	// Конвертирует массив из 8 бит в 1 байт (каждый элемент массива должен иметь значение только 0 или 1).
 	static uint8_t OneWire_ToByte(volatile uint8_t* ow_bits);
 	static float Decode(uint8_t* scratchPad);
 	
+	void Init();
+	void Run();
 	// Отправляет команду 0xF0.
 	bool OneWire_Reset();
 	bool ValidateCrc32(uint8_t* data, uint8_t length);
@@ -177,12 +180,9 @@ private:
 	// В этом случае контрольная сумма будет пройдена успешно, а расчет температуры будет не верным.
 	// Что бы это предотвратить следует проверять значение COUNT_PER_°C которое не должно равняться нулю.
 	bool TryUpdateTemp();
-	
 	bool TryGetFirstTemps();
-	
 	bool TryGetInternalTemp(float& internalTemp);
 	bool TryGetExternalTemp(float& externalTemp);
-	
 	// Заполняет весь скользящий буфер одним значением.
 	void InitAverageInternalTemp(const float internalTemp);
 	// Заполняет весь скользящий буфер одним значением.
@@ -197,29 +197,11 @@ private:
 	//-----------------------------------------------------------------------------
 	uint8_t OneWire_Scan(uint8_t* buf, uint8_t num);
 	void OneWire_SendBits(uint8_t num_bits);
-
 	// Если датчики заменить на новые то потребуется зарегистрировать их идентификаторы.
 	void TryRegisterNewSensors();
-	
 	uint8_t GetDevider(DS18B20_Resolution resolution);
 	bool SetResolution(DS18B20_Resolution resolution, uint8_t* deviceId);
 	bool SaveResolution(DS18B20_Resolution resolution, uint8_t* deviceId);
-
-public:
-
-	volatile bool InternalSensorInitialized = false;
-	volatile bool ExternalSensorInitialized = false;
-	// Усредненое показание с датчика.
-	volatile float AverageInternalTemp = 0;
-	// Усредненое показание с датчика.
-	volatile float AverageExternalTemp = 0;
-	// Последнее показание с датчика.
-	volatile float InternalTemp = 0;
-	// Последнее показание с датчика.
-	volatile float ExternalTemp = 0;
-	void WaitFirstConversion();
-	volatile bool RegisteringSensors;
 };
 
-extern TempSensor _tempSensorTask;
-
+extern TempSensor g_tempSensorTask;
