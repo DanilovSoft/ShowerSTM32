@@ -2,6 +2,12 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "Properties.h"
+#include "stm32f10x_i2c.h"
+#include "stm32f10x_gpio.h"
+#include "TaskTimeout.h"
+#include "task.h"
+#include "Common.h"
+#include "stm32f10x_rcc.h"
 
 // Всего 8 блоков памяти по 256 байт (по 16 страниц).
 // Каждый блок имеет свой уникальный адрес как отдельное устройство,

@@ -35,9 +35,6 @@
     <Filter Include="Source files\FreeRTOS">
       <UniqueIdentifier>{b049bb23-bb22-44c4-ae07-6d2387faa495}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source files\Tasks">
-      <UniqueIdentifier>{b0bfd951-9de2-4c14-86be-42b18b978977}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="system_stm32f10x.c">
@@ -142,9 +139,6 @@
     <ClCompile Include="additional_defines.c">
       <Filter>Source files\FreeRTOS</Filter>
     </ClCompile>
-    <ClCompile Include="Eeprom.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="HeaterWatchdog.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
@@ -177,9 +171,6 @@
     </ClCompile>
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
       <Filter>Source files\Device-specific files</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterLevelTask.cpp">
-      <Filter>Source files\Tasks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

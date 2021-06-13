@@ -48,6 +48,7 @@ Eeprom g_eeprom;
 HeaterTempLimit g_heaterTempLimit;
 HeatingTimeLeft g_heatingTimeLeft;
 UartStream g_uartStream;
+I2C g_i2c;
 
 void Init()
 {

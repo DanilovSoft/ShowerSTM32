@@ -68,7 +68,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="additional_defines.c" />
-    <ClCompile Include="Eeprom.cpp" />
     <ClCompile Include="FreeRTOS\Source\croutine.c" />
     <ClCompile Include="FreeRTOS\Source\event_groups.c" />
     <ClCompile Include="FreeRTOS\Source\list.c" />
@@ -112,7 +111,6 @@
     <ClCompile Include="StdPeriph\Src\stm32f10x_wwdg.c" />
     <ClCompile Include="system_stm32f10x.c" />
     <ClCompile Include="UartStream.cpp" />
-    <ClCompile Include="WaterLevelTask.cpp" />
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c" />
   </ItemGroup>
   <ItemGroup>

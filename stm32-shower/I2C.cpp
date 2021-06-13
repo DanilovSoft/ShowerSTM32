@@ -9,8 +9,6 @@
 #include "Common.h"
 #include "stm32f10x_rcc.h"
 
-I2C g_i2c;
-
 void I2C::LockI2c()
 {
     xSemaphoreTake(m_xLockSemaphore, portMAX_DELAY);
@@ -232,14 +230,14 @@ bool I2C::StartReceive(uint8_t HWAddress)
     return true;
 }
     
-bool I2C::EE_ByteReadInternal(uint8_t ReadAddr, uint8_t &data)
+bool I2C::EE_ByteReadInternal(uint8_t read_addr, uint8_t &data)
 {
     if (!StartTransmission(EE_HW_ADDRESS))
     {
         return false;
     }
         
-    if (!I2C_WriteData(ReadAddr))
+    if (!I2C_WriteData(read_addr))
     {
         return false;
     }
@@ -261,17 +259,17 @@ bool I2C::EE_ByteReadInternal(uint8_t ReadAddr, uint8_t &data)
     return true;
 }
     
-bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t NumByteToWrite)
+bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t write_addr, uint8_t num_bytes_to_write)
 {
     uint8_t NumOfPage = 0;
     uint8_t NumOfSingle = 0;
     uint8_t count = 0;
     uint8_t Addr = 0;
 
-    Addr = WriteAddr % EE_FLASH_PAGESIZE;
+    Addr = write_addr % EE_FLASH_PAGESIZE;
     count = EE_FLASH_PAGESIZE - Addr;
-    NumOfPage =  NumByteToWrite / EE_FLASH_PAGESIZE;
-    NumOfSingle = NumByteToWrite % EE_FLASH_PAGESIZE;
+    NumOfPage =  num_bytes_to_write / EE_FLASH_PAGESIZE;
+    NumOfSingle = num_bytes_to_write % EE_FLASH_PAGESIZE;
 
     // If WriteAddr is I2C_FLASH_PAGESIZE aligned.
     if (Addr == 0)
@@ -279,7 +277,7 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
         // If NumByteToWrite < I2C_FLASH_PAGESIZE.
         if (NumOfPage == 0)
         {
-            if (!EE_PageWrite(pBuffer, WriteAddr, NumOfSingle))
+            if (!EE_PageWrite(pBuffer, write_addr, NumOfSingle))
             {
                 return false;
             }
@@ -294,7 +292,7 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
         {
             while (NumOfPage--)
             {
-                if (!EE_PageWrite(pBuffer, WriteAddr, EE_FLASH_PAGESIZE))
+                if (!EE_PageWrite(pBuffer, write_addr, EE_FLASH_PAGESIZE))
                 {
                     return false;
                 }
@@ -304,13 +302,13 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
                     return false;
                 }
                         
-                WriteAddr +=  EE_FLASH_PAGESIZE;
+                write_addr +=  EE_FLASH_PAGESIZE;
                 pBuffer += EE_FLASH_PAGESIZE;
             }
 
             if (NumOfSingle != 0)
             {
-                if (!EE_PageWrite(pBuffer, WriteAddr, NumOfSingle))
+                if (!EE_PageWrite(pBuffer, write_addr, NumOfSingle))
                 {
                     return false;
                 }
@@ -329,10 +327,10 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
         if (NumOfPage == 0)
         {
             // If the number of data to be written is more than the remaining space in the current page:
-            if (NumByteToWrite > count)
+            if (num_bytes_to_write > count)
             {
                 // Write the data conained in same page.
-                if(!EE_PageWrite(pBuffer, WriteAddr, count))
+                if(!EE_PageWrite(pBuffer, write_addr, count))
                 {
                     return false;
                 }
@@ -343,7 +341,7 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
                 }
 
                 // Write the remaining data in the following page.
-                if(!EE_PageWrite((uint8_t*)(pBuffer + count), (WriteAddr + count), (NumByteToWrite - count)))
+                if(!EE_PageWrite((uint8_t*)(pBuffer + count), (write_addr + count), (num_bytes_to_write - count)))
                 {
                     return false;
                 }
@@ -355,7 +353,7 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
             }
             else
             {
-                if (!EE_PageWrite(pBuffer, WriteAddr, NumOfSingle))
+                if (!EE_PageWrite(pBuffer, write_addr, NumOfSingle))
                 {
                     return false;
                 }
@@ -369,13 +367,13 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
         // If NumByteToWrite > I2C_FLASH_PAGESIZE.
         else
         {
-            NumByteToWrite -= count;
-            NumOfPage =  NumByteToWrite / EE_FLASH_PAGESIZE;
-            NumOfSingle = NumByteToWrite % EE_FLASH_PAGESIZE;
+            num_bytes_to_write -= count;
+            NumOfPage =  num_bytes_to_write / EE_FLASH_PAGESIZE;
+            NumOfSingle = num_bytes_to_write % EE_FLASH_PAGESIZE;
 
             if (count != 0)
             {
-                if (!EE_PageWrite(pBuffer, WriteAddr, count))
+                if (!EE_PageWrite(pBuffer, write_addr, count))
                 {
                     return false;
                 }
@@ -385,13 +383,13 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
                     return false;
                 }
                         
-                WriteAddr += count;
+                write_addr += count;
                 pBuffer += count;
             }
 
             while (NumOfPage--)
             {
-                if (!EE_PageWrite(pBuffer, WriteAddr, EE_FLASH_PAGESIZE))
+                if (!EE_PageWrite(pBuffer, write_addr, EE_FLASH_PAGESIZE))
                 {
                     return false;
                 }
@@ -401,12 +399,12 @@ bool I2C::EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t Nu
                     return false;
                 }
                         
-                WriteAddr +=  EE_FLASH_PAGESIZE;
+                write_addr +=  EE_FLASH_PAGESIZE;
                 pBuffer += EE_FLASH_PAGESIZE;
             }
             if (NumOfSingle != 0)
             {
-                if (!EE_PageWrite(pBuffer, WriteAddr, NumOfSingle))
+                if (!EE_PageWrite(pBuffer, write_addr, NumOfSingle))
                 {
                     return false;
                 }
@@ -484,23 +482,23 @@ void I2C::ResetBus()
     // Starting I2C bus recovery.
     // Try i2c bus recovery at 100kHz = 5uS high, 5uS low.
         
-    GPIO_InitTypeDef GPIO_InitStructure = 
+    GPIO_InitTypeDef gpio_init_struct = 
     {
         .GPIO_Pin = GPIO_I2C_SDA_Pin,
         .GPIO_Speed = GPIO_Speed_2MHz,
         .GPIO_Mode = GPIO_Mode_Out_PP
     };
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &gpio_init_struct);
         
     GPIO_SetBits(GPIOB, GPIO_I2C_SDA_Pin);
 
-    GPIO_InitStructure =
+    gpio_init_struct =
     {
         .GPIO_Pin = GPIO_I2C_SCL_Pin,
         .GPIO_Speed = GPIO_Speed_2MHz,
         .GPIO_Mode = GPIO_Mode_Out_PP
     };
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &gpio_init_struct);
         
     // 9nth cycle acts as NACK.
     for (int i = 0; i < 10; i++) 
@@ -556,21 +554,18 @@ void I2C::vTaskInit()
 }
     
 void I2C::InitI2C()
-{
-    I2C_InitTypeDef  I2C_InitStructure;
-    I2C_StructInit(&I2C_InitStructure);
-    
-    I2C_InitStructure = 
+{   
+    I2C_InitTypeDef i2c_init_struct = 
     {
-        .I2C_ClockSpeed = 100000, // 100kHz
+        .I2C_ClockSpeed = 100000, // 100kHz.
         .I2C_Mode = I2C_Mode_I2C,
         .I2C_DutyCycle = I2C_DutyCycle_2,
         .I2C_OwnAddress1 = 0x15,
         .I2C_Ack = I2C_Ack_Enable,
         .I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit
     };
-    
-    I2C_Init(I2C_EE_LCD, &I2C_InitStructure);
+
+    I2C_Init(I2C_EE_LCD, &i2c_init_struct);
 }
 
 bool I2C::EE_BufferWrite(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t NumByteToWrite)
