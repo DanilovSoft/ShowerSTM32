@@ -15,353 +15,353 @@ struct TempStep
 {
 public:
 
-	uint8_t GetLimit(uint8_t ext_temp)
-	{
-		uint8_t index = GetIndex(ext_temp);
-		return m_internal[index];
-	}
+    uint8_t GetLimit(uint8_t ext_temp)
+    {
+        uint8_t index = GetIndex(ext_temp);
+        return m_internal[index];
+    }
 
-	uint8_t GetLimit(float ext_temp)
-	{
-		uint8_t index = GetIndexf(ext_temp);
-		return m_internal[index];
-	}
+    uint8_t GetLimit(float ext_temp)
+    {
+        uint8_t index = GetIndexf(ext_temp);
+        return m_internal[index];
+    }
 
-	// Принимает температуру окружающего воздуха в грудусах, что-бы
-	// увеличить температуру при такой температуре окружающей среды.
-	bool TempPlus(const uint8_t air_temp)
-	{
-		const uint8_t index = GetIndex(air_temp);
-		uint8_t value = m_internal[index];
+    // Принимает температуру окружающего воздуха в грудусах, что-бы
+    // увеличить температуру при такой температуре окружающей среды.
+    bool TempPlus(const uint8_t air_temp)
+    {
+        const uint8_t index = GetIndex(air_temp);
+        uint8_t value = m_internal[index];
 
-		if (value < InternalTempLimit)
-			// значение в допустимом пределе
-			{
-				++value;
+        if (value < InternalTempLimit)
+            // значение в допустимом пределе
+            {
+                ++value;
 
-				m_internal[index] = value;
+                m_internal[index] = value;
 
-				// Сделать точки слева не меньше текущего значения. Массив идет от большего к меньшему: [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
-				if(index > 0)
-				{
-					uint8_t leftPoints = index;
+                // Сделать точки слева не меньше текущего значения. Массив идет от большего к меньшему: [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
+                if(index > 0)
+                {
+                    uint8_t leftPoints = index;
 
-					while (leftPoints--)
-					{
-						auto& t = m_internal[leftPoints];
-						if (t < value)
-						{
-							t = value;
-						}
-					}
-				}
+                    while (leftPoints--)
+                    {
+                        auto& t = m_internal[leftPoints];
+                        if (t < value)
+                        {
+                            t = value;
+                        }
+                    }
+                }
 
-				uint8_t prevValue = value;
+                uint8_t prevValue = value;
 
-				// Сделать точки справа с шагом не больше 1 градуса.
-				for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // От текущей точки не включительно к началу массива.
-				{
-					auto& t = m_internal[i];
+                // Сделать точки справа с шагом не больше 1 градуса.
+                for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // От текущей точки не включительно к началу массива.
+                {
+                    auto& t = m_internal[i];
 
-					auto nextT = (prevValue - 1);    // Не должно быть меньше.
+                    auto nextT = (prevValue - 1);    // Не должно быть меньше.
 
-					if(t < nextT)
-					{
-						t = nextT;
-					}
+                    if(t < nextT)
+                    {
+                        t = nextT;
+                    }
 
-					prevValue = t;
-				}
-				return true;
-			}
-		return false;
-	}
+                    prevValue = t;
+                }
+                return true;
+            }
+        return false;
+    }
 
-	// Принимает температуру окружающего воздуха в грудусах, что-бы
-	// уменьшить температуру при такой температуре окружающей среды.
-	bool TempMinus(const uint8_t air_temp)
-	{
-		const uint8_t index = GetIndex(air_temp);
+    // Принимает температуру окружающего воздуха в грудусах, что-бы
+    // уменьшить температуру при такой температуре окружающей среды.
+    bool TempMinus(const uint8_t air_temp)
+    {
+        const uint8_t index = GetIndex(air_temp);
 
-		uint8_t value = m_internal[index];
+        uint8_t value = m_internal[index];
 
-		if (value > 0) // проверка на всякий случай.
-			{
-				--value;  // уменьшить на 1 градус.
+        if (value > 0) // проверка на всякий случай.
+            {
+                --value;  // уменьшить на 1 градус.
 
-				if(value <= InternalTempLimit)
-				// значение в допустимом пределе.
-				{
-					m_internal[index] = value;  // установить новое значение
+                if(value <= InternalTempLimit)
+                // значение в допустимом пределе.
+                {
+                    m_internal[index] = value;  // установить новое значение
 
-					// сделать точки справа не больше текущего значени¤.  [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
-					for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // от следующей точки к концу массива
-					{
-						auto& t = m_internal[i];
-						if (t > value)
-						{
-							t = value;
-						}
-					}
+                    // сделать точки справа не больше текущего значени¤.  [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
+                    for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // от следующей точки к концу массива
+                    {
+                        auto& t = m_internal[i];
+                        if (t > value)
+                        {
+                            t = value;
+                        }
+                    }
 
-					if (index > 0)
-					{
-						auto prevValue = value;
-						uint8_t leftPoints = index;
+                    if (index > 0)
+                    {
+                        auto prevValue = value;
+                        uint8_t leftPoints = index;
 
-						// сделать точки слева с шагом не больше 1 градуса
-						while(leftPoints--)
-						{
-							auto& t = m_internal[leftPoints];
-							auto nextT = (prevValue + 1);       // не должно превышать
+                        // сделать точки слева с шагом не больше 1 градуса
+                        while(leftPoints--)
+                        {
+                            auto& t = m_internal[leftPoints];
+                            auto nextT = (prevValue + 1);       // не должно превышать
 
-							if(t > nextT)
-							{
-								t = nextT;
-							}
+                            if(t > nextT)
+                            {
+                                t = nextT;
+                            }
 
-							prevValue = t;
-						}
-					}
-					return true;
-				}
-			}
-		return false;
-	}
+                            prevValue = t;
+                        }
+                    }
+                    return true;
+                }
+            }
+        return false;
+    }
 
-	void Parse(const uint8_t* data)
-	{
-		uint8_t prev = m_internal[0];
-		for (uint8_t i = 0; i < STEPS_COUNT; i++)
-		{
-			uint8_t value = data[i];
+    void Parse(const uint8_t* data)
+    {
+        uint8_t prev = m_internal[0];
+        for (uint8_t i = 0; i < STEPS_COUNT; i++)
+        {
+            uint8_t value = data[i];
 
-			if (i > 0)
-			{
-				if (value > prev)
-				{
-					value = prev;
-				}
-			}
+            if (i > 0)
+            {
+                if (value > prev)
+                {
+                    value = prev;
+                }
+            }
 
-			m_internal[i] = value;
-			prev = value;
-		}
-	}
+            m_internal[i] = value;
+            prev = value;
+        }
+    }
 
-	void SelfFix()
-	{
-		uint8_t prevSpot = m_internal[0];
-		for (int i = 0; i < STEPS_COUNT; i++)
-		{
-			uint8_t& internalTemp = m_internal[i];
+    void SelfFix()
+    {
+        uint8_t prevSpot = m_internal[0];
+        for (int i = 0; i < STEPS_COUNT; i++)
+        {
+            uint8_t& internalTemp = m_internal[i];
 
-			if (internalTemp == 0 || internalTemp > InternalTempLimit)
-			{
-				internalTemp = 36;
-			}
+            if (internalTemp == 0 || internalTemp > InternalTempLimit)
+            {
+                internalTemp = 36;
+            }
 
-			if (i > 0)
-			{
-				if (internalTemp > prevSpot)
-				{
-					internalTemp = prevSpot;
-				}
-			}
+            if (i > 0)
+            {
+                if (internalTemp > prevSpot)
+                {
+                    internalTemp = prevSpot;
+                }
+            }
 
-			prevSpot = internalTemp;
-		}
-	}
-	
+            prevSpot = internalTemp;
+        }
+    }
+    
 private:
-	
-	// Температура в баке.
-	uint8_t m_internal[STEPS_COUNT];
-	
-	uint8_t GetIndex(uint8_t externalTemp)
-	{
-		if (externalTemp <= LOWER_BOUND)
-		{
-			return 0;
-		}
-		
-		if (externalTemp >= (UPPER_BOUND - 1))
-		{
-			return STEPS_COUNT - 1;
-		}
-		
-		return externalTemp - LOWER_BOUND;
-	}
-	
-	uint8_t GetIndexf(float externalTemp)
-	{
-		uint8_t t = round(externalTemp);
-		return GetIndex(t);
-	}
+    
+    // Температура в баке.
+    uint8_t m_internal[STEPS_COUNT];
+    
+    uint8_t GetIndex(uint8_t externalTemp)
+    {
+        if (externalTemp <= LOWER_BOUND)
+        {
+            return 0;
+        }
+        
+        if (externalTemp >= (UPPER_BOUND - 1))
+        {
+            return STEPS_COUNT - 1;
+        }
+        
+        return externalTemp - LOWER_BOUND;
+    }
+    
+    uint8_t GetIndexf(float externalTemp)
+    {
+        uint8_t t = round(externalTemp);
+        return GetIndex(t);
+    }
 };
 
 struct PropertyStruct
 {
 public:
-	
-	// Температурная зависимость.
-	TempStep Chart;
-	
-	// Максимальный уровень воды в микросекундах.
-	uint16_t WaterLevelFull;
-	
-	// Минимальный уровень воды в микросекундах.
-	uint16_t WaterLevelEmpty;
-	
-	// Минимальный уровень воды в баке (%) для включения нагревателя.
-	uint8_t MinimumWaterHeatingPercent;
-	
-	// Абсолютное время нагрева (ч).
-	// Если на протяжении заданного времени автомат нагревателя не был 
-	// физически выключен, то нагрев прекращается и алгоритм переходит в аварийное состояние.
-	uint8_t AbsoluteHeatingTimeLimitHours;
-	
-	// Максимальное время нагрева в минутах.
-	// Если на протяжении заданного времени не была достигнута желаемая температура воды в баке, 
-	// то нагрев прекращается и алгоритм переходит в аварийное состояние.
-	uint8_t HeatingTimeLimitMin;
-	
-	// Яркость освещения от 0 до 100 (%).
-	uint8_t LightBrightness;
+    
+    // Температурная зависимость.
+    TempStep Chart;
+    
+    // Максимальный уровень воды в микросекундах.
+    uint16_t WaterLevelFull;
+    
+    // Минимальный уровень воды в микросекундах.
+    uint16_t WaterLevelEmpty;
+    
+    // Минимальный уровень воды в баке (%) для включения нагревателя.
+    uint8_t MinimumWaterHeatingPercent;
+    
+    // Абсолютное время нагрева (ч).
+    // Если на протяжении заданного времени автомат нагревателя не был 
+    // физически выключен, то нагрев прекращается и алгоритм переходит в аварийное состояние.
+    uint8_t AbsoluteHeatingTimeLimitHours;
+    
+    // Максимальное время нагрева в минутах.
+    // Если на протяжении заданного времени не была достигнута желаемая температура воды в баке, 
+    // то нагрев прекращается и алгоритм переходит в аварийное состояние.
+    uint8_t HeatingTimeLimitMin;
+    
+    // Яркость освещения от 0 до 100 (%).
+    uint8_t LightBrightness;
 
-	// Мощность WiFi в единицах по 0.25 dBm.
-	// От 40 до 82 (10..20.5 dBm)
-	uint8_t WiFiPower;
-	
-	// Минимальное время зажатой кнопки для её срабатывания (антидребезг).
+    // Мощность WiFi в единицах по 0.25 dBm.
+    // От 40 до 82 (10..20.5 dBm)
+    uint8_t WiFiPower;
+    
+    // Минимальное время зажатой кнопки для её срабатывания (антидребезг).
     uint8_t ButtonPressTimeMsec;
     
-	// Минимальное время зажатой кнопки для срабатывания длительного нажатия.
-	uint16_t ButtonLongPressTimeMsec;
+    // Минимальное время зажатой кнопки для срабатывания длительного нажатия.
+    uint16_t ButtonLongPressTimeMsec;
     
-	// 64-битный идентификатор датчика температуры воды внутри бака. (DS18B20)
-	uint8_t InternalTempSensorId[8] = {};
-	
-	// 64-битный идентификатор датчика температуры окружающего воздуха. (DS18B20)
-	uint8_t ExternalTempSensorId[8] = {};
-	
-	// Объём воды полного бака в литрах.
-	float WaterTankVolumeLitre;
-	
+    // 64-битный идентификатор датчика температуры воды внутри бака. (DS18B20)
+    uint8_t InternalTempSensorId[8] = {};
+    
+    // 64-битный идентификатор датчика температуры окружающего воздуха. (DS18B20)
+    uint8_t ExternalTempSensorId[8] = {};
+    
+    // Объём воды полного бака в литрах.
+    float WaterTankVolumeLitre;
+    
     // Электрическая мощность нагревательного элемента — ТЭНа, кВТ.
     float WaterHeaterPowerKWatt;
-	
-	// Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
-	uint8_t WaterLevel_Measure_IntervalMsec;
-		
-	// Размер буфера медианного фильтра для сырых показаний датчика уровня воды.
-	uint8_t WaterLevel_Median_Buffer_Size;
-		
-	// Размер буфера для усреднения показаний после медианного фильтра.
-	uint8_t WaterLevel_Avg_Buffer_Size;
-		
-	// Порог отключения клапана набора воды.
-	uint8_t WaterValve_Cut_Off_Percent;
-		
-	// Размер скользящего окна для температуры внутри бака.
-	uint8_t InternalTemp_Avg_Size;
-		
-	// Максимальное время набора воды, если выше уровня 'Cut-Off' в секундах.
-	uint8_t WaterValve_TimeoutSec;
-	
-	void SelfFix()
-	{
-		// Обычно для антидребезга задают 50 мс.
-		if (ButtonPressTimeMsec < 20 || ButtonPressTimeMsec > 80)
-		{
-			ButtonPressTimeMsec = 40;
-		}
+    
+    // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
+    uint8_t WaterLevel_Measure_IntervalMsec;
+        
+    // Размер буфера медианного фильтра для сырых показаний датчика уровня воды.
+    uint8_t WaterLevel_Median_Buffer_Size;
+        
+    // Размер буфера для усреднения показаний после медианного фильтра.
+    uint8_t WaterLevel_Avg_Buffer_Size;
+        
+    // Порог отключения клапана набора воды.
+    uint8_t WaterValve_Cut_Off_Percent;
+        
+    // Размер скользящего окна для температуры внутри бака.
+    uint8_t InternalTemp_Avg_Size;
+        
+    // Максимальное время набора воды, если выше уровня 'Cut-Off' в секундах.
+    uint8_t WaterValve_TimeoutSec;
+    
+    void SelfFix()
+    {
+        // Обычно для антидребезга задают 50 мс.
+        if (ButtonPressTimeMsec < 20 || ButtonPressTimeMsec > 80)
+        {
+            ButtonPressTimeMsec = 40;
+        }
 
-		if (ButtonLongPressTimeMsec > 10000 || ButtonLongPressTimeMsec < 1000)
-		{
-			ButtonLongPressTimeMsec = 4000;
-		}
-		
-		// В одном сантиметре - 58 микросекунд.
-		if (WaterLevelEmpty < (30 * 58) || WaterLevelEmpty > (50 * 58)) // 30..50 сантиметров (1740..2900 мкс)
-		{
-			WaterLevelEmpty = 2618;   // 45 см
-		}
+        if (ButtonLongPressTimeMsec > 10000 || ButtonLongPressTimeMsec < 1000)
+        {
+            ButtonLongPressTimeMsec = 4000;
+        }
+        
+        // В одном сантиметре - 58 микросекунд.
+        if (WaterLevelEmpty < (30 * 58) || WaterLevelEmpty > (50 * 58)) // 30..50 сантиметров (1740..2900 мкс)
+        {
+            WaterLevelEmpty = 2618;   // 45 см
+        }
 
-		if (WaterLevelFull < 116 || WaterLevelFull > WaterLevelEmpty)     // 2 сантиметра.
-		{
-			WaterLevelFull = 922;   // 16 см
-		}
+        if (WaterLevelFull < 116 || WaterLevelFull > WaterLevelEmpty)     // 2 сантиметра.
+        {
+            WaterLevelFull = 922;   // 16 см
+        }
 
-		if (MinimumWaterHeatingPercent > 100)
-		{
-			MinimumWaterHeatingPercent = 25;
-		}
-		
-		if (HeatingTimeLimitMin < 10 || HeatingTimeLimitMin > 180)
-		{
-			HeatingTimeLimitMin = 70;
-		}
-		
-		if (LightBrightness > 100)
-		{
-			LightBrightness = 100;
-		}
+        if (MinimumWaterHeatingPercent > 100)
+        {
+            MinimumWaterHeatingPercent = 25;
+        }
+        
+        if (HeatingTimeLimitMin < 10 || HeatingTimeLimitMin > 180)
+        {
+            HeatingTimeLimitMin = 70;
+        }
+        
+        if (LightBrightness > 100)
+        {
+            LightBrightness = 100;
+        }
 
-		if (AbsoluteHeatingTimeLimitHours > 24)
-		{
-			AbsoluteHeatingTimeLimitHours = 6;
-		}
-		
-		// от 10 до 20.5 dBm.
-		if (WiFiPower < 40 || WiFiPower > 82)
-		{
-			WiFiPower = 60;   // 60 = 15.0 dBm
-		}
-    	
-		if (WaterTankVolumeLitre < 1 || WaterTankVolumeLitre > 100 || isnan(WaterTankVolumeLitre))
-		{
-			WaterTankVolumeLitre = 37.32212;
-		}
-		
-		if (WaterHeaterPowerKWatt < 0.1f || WaterHeaterPowerKWatt > 5 || isnan(WaterHeaterPowerKWatt))
-		{
-			WaterHeaterPowerKWatt = 1.247616; // Полтора-киловатный ТЭН с учётом КПД.
-		}
-		
-		if (WaterLevel_Measure_IntervalMsec < 10 || WaterLevel_Measure_IntervalMsec > 200)
-		{
-			WaterLevel_Measure_IntervalMsec = 60;
-		}
-		
-		if (WaterLevel_Median_Buffer_Size == 0 || WaterLevel_Median_Buffer_Size > WL_MEDIAN_BUF_MAX_SIZE)
-		{
-			WaterLevel_Median_Buffer_Size = 191;  // Лучше не чётное число.
-		}
-			
-		if (WaterLevel_Avg_Buffer_Size == 0 || WaterLevel_Avg_Buffer_Size > WL_AVG_BUF_MAX_SIZE)
-		{
-			WaterLevel_Avg_Buffer_Size = 32;
-		}
-			
-		if (WaterValve_Cut_Off_Percent < 90 || WaterValve_Cut_Off_Percent > 99)
-		{
-			WaterValve_Cut_Off_Percent = 90;
-		}
-			
-		if (InternalTemp_Avg_Size == 0 || InternalTemp_Avg_Size > INT_TEMP_AVG_BUF_SZ)
-		{
-			InternalTemp_Avg_Size = 4;
-		}
-			
-		if (WaterValve_TimeoutSec < 5)
-		{
-			WaterValve_TimeoutSec = 5;	
-		}
-		
-		Chart.SelfFix();
-	}
-	
+        if (AbsoluteHeatingTimeLimitHours > 24)
+        {
+            AbsoluteHeatingTimeLimitHours = 6;
+        }
+        
+        // от 10 до 20.5 dBm.
+        if (WiFiPower < 40 || WiFiPower > 82)
+        {
+            WiFiPower = 60;   // 60 = 15.0 dBm
+        }
+        
+        if (WaterTankVolumeLitre < 1 || WaterTankVolumeLitre > 100 || isnan(WaterTankVolumeLitre))
+        {
+            WaterTankVolumeLitre = 37.32212;
+        }
+        
+        if (WaterHeaterPowerKWatt < 0.1f || WaterHeaterPowerKWatt > 5 || isnan(WaterHeaterPowerKWatt))
+        {
+            WaterHeaterPowerKWatt = 1.247616; // Полтора-киловатный ТЭН с учётом КПД.
+        }
+        
+        if (WaterLevel_Measure_IntervalMsec < 10 || WaterLevel_Measure_IntervalMsec > 200)
+        {
+            WaterLevel_Measure_IntervalMsec = 60;
+        }
+        
+        if (WaterLevel_Median_Buffer_Size == 0 || WaterLevel_Median_Buffer_Size > WL_MEDIAN_BUF_MAX_SIZE)
+        {
+            WaterLevel_Median_Buffer_Size = 191;  // Лучше не чётное число.
+        }
+            
+        if (WaterLevel_Avg_Buffer_Size == 0 || WaterLevel_Avg_Buffer_Size > WL_AVG_BUF_MAX_SIZE)
+        {
+            WaterLevel_Avg_Buffer_Size = 32;
+        }
+            
+        if (WaterValve_Cut_Off_Percent < 90 || WaterValve_Cut_Off_Percent > 99)
+        {
+            WaterValve_Cut_Off_Percent = 90;
+        }
+            
+        if (InternalTemp_Avg_Size == 0 || InternalTemp_Avg_Size > INT_TEMP_AVG_BUF_SZ)
+        {
+            InternalTemp_Avg_Size = 4;
+        }
+            
+        if (WaterValve_TimeoutSec < 5)
+        {
+            WaterValve_TimeoutSec = 5;	
+        }
+        
+        Chart.SelfFix();
+    }
+    
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.
 
 extern PropertyStruct g_properties, g_writeProperties;

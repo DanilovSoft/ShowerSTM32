@@ -142,9 +142,6 @@
     <ClCompile Include="additional_defines.c">
       <Filter>Source files\FreeRTOS</Filter>
     </ClCompile>
-    <ClCompile Include="ConnectionsBuffer.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="Eeprom.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
@@ -157,7 +154,7 @@
     <ClCompile Include="I2C.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="IRQ.cpp">
+    <ClCompile Include="WaterLevel_IRQ.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="LiquidCrystal.cpp">
@@ -181,16 +178,7 @@
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
       <Filter>Source files\Device-specific files</Filter>
     </ClCompile>
-    <ClCompile Include="HeaterTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="ValveTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
     <ClCompile Include="WaterLevelTask.cpp">
-      <Filter>Source files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="WiFi.cpp">
       <Filter>Source files\Tasks</Filter>
     </ClCompile>
   </ItemGroup>
@@ -381,13 +369,7 @@
     <ClInclude Include="RTOSwrapper.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="Settings.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
     <ClInclude Include="ShowerCode.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="TicksStopwatch.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="TempSensor.h">

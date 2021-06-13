@@ -34,11 +34,11 @@ public:
     bool LCD_expanderWrite(uint8_t data);
 
 private:
-	
-	static const uint16_t kI2CTimeoutMsec = 2000;
-	StaticSemaphore_t m_xLockSemaphoreBuffer;
-	SemaphoreHandle_t m_xLockSemaphore;
-	
+    
+    static const uint16_t kI2CTimeoutMsec = 2000;
+    StaticSemaphore_t m_xLockSemaphoreBuffer;
+    SemaphoreHandle_t m_xLockSemaphore;
+    
     void LockI2c();
     void UnlockI2c();
     bool I2C_EE_WaitEepromStandbyState(); // Ожидание окончания записи (Write Cycle Polling using ACK).
@@ -55,8 +55,8 @@ private:
     bool EE_BufferWriteInternal(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t NumByteToWrite);
     bool EE_PageWrite(uint8_t* pBuffer, uint8_t WriteAddr, uint8_t NumByteToWrite);
     bool EE_ByteWriteInternal(uint8_t WriteAddr, uint8_t data);
-	
-	// Формирует сигнал STOP на ногах i2c в ручном режиме.
+    
+    // Формирует сигнал STOP на ногах i2c в ручном режиме.
     void ResetBus();
 };
 

@@ -5,13 +5,13 @@
 class RealTimeClockStopwatch final
 {
 public:
-	
-	void Reset();
-	uint32_t ElapsedSeconds();
-	bool Timeout(uint16_t seconds);
-	
+    
+    void Reset();
+    uint32_t ElapsedSeconds();
+    bool Timeout(uint16_t seconds);
+    
 private:
-	
-	volatile uint32_t m_lastTime;
+    
+    volatile uint32_t m_lastTime;
 };
 

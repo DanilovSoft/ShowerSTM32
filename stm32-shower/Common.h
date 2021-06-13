@@ -68,12 +68,12 @@ static constexpr auto kWiFiUartSpeed = 115200;
 
 inline void _delay_loops(unsigned int loops)
 {
-	 asm volatile (
-			 "1: \n"
-			 " SUBS %[loops], %[loops], #1 \n"
-			 " BNE 1b \n"
-			 : [loops] "+r"(loops)
-	 );
+     asm volatile (
+             "1: \n"
+             " SUBS %[loops], %[loops], #1 \n"
+             " BNE 1b \n"
+             : [loops] "+r"(loops)
+     );
 }
 
 #define DELAY_US( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
@@ -82,138 +82,149 @@ class Common
 {
 public:
 
-	// Включен ли автомат нагревателя.
-	inline static bool CircuitBreakerIsOn()
-	{
-		return GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET;
-	}
+    // Включен ли автомат нагревателя.
+    inline static bool CircuitBreakerIsOn()
+    {
+        return GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET;
+    }
 
-	// Включен ли нагреватель (реле).
-	inline static bool HeaterIsOn()
-	{
-		return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
-	}
+    // Включен ли нагреватель (реле).
+    inline static bool HeaterIsOn()
+    {
+        return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
+    }
 
-	inline static void DelayUs(uint16_t usec)
-	{
-		_delay_loops((unsigned int)((double)usec * (SystemCoreClock / 3000000.0)));
-	}
-	
-	static uint8_t DigitsCount(uint16_t value)
-	{
-		uint8_t count = 0;
+    // Открыт ли водяной клапан.
+    inline static bool ValveIsOpen()
+    {
+        return GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin);
+    }
+    
+    inline static bool GetIsHeaterEnabled()
+    {
+        return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
+    }
+    
+    inline static void DelayUs(uint16_t usec)
+    {
+        _delay_loops((unsigned int)((double)usec * (SystemCoreClock / 3000000.0)));
+    }
+    
+    static uint8_t DigitsCount(uint16_t value)
+    {
+        uint8_t count = 0;
 
-		do
-		{
-			value /= 10;
-			count++;
-		} while (value);
+        do
+        {
+            value /= 10;
+            count++;
+        } while (value);
 
-		return count;
-	}
+        return count;
+    }
 
-	static char itoa(uint8_t value)
-	{
-		const char digits[] = "0123456789";
+    static char itoa(uint8_t value)
+    {
+        const char digits[] = "0123456789";
 
-		char ch = '0';
-		if (value <= 9)
-		{
-			ch = digits[value];
-		}
-		return ch;
-	}
+        char ch = '0';
+        if (value <= 9)
+        {
+            ch = digits[value];
+        }
+        return ch;
+    }
 
-	static char* itoa(uint16_t number, char* str)
-	{
-		const char digit[] = "0123456789";
-		char* p = str;
-		//	if (i < 0)
-		//	{
-		//		*p++ = '-';
-		//		i *= -1;
-		//	}
-			int32_t shifter = number;
-		do
-		{
-			//Move to where representation ends
-	   ++p;
-			shifter = shifter / 10;
-		} while (shifter);
-		*p = '\0';
-		do
-		{
-			//Move back, inserting digits as u go
-	   * --p = digit[number % 10];
-			number = number / 10;
-		} while (number);
-		return str;
-	}
+    static char* itoa(uint16_t number, char* str)
+    {
+        const char digit[] = "0123456789";
+        char* p = str;
+        //	if (i < 0)
+        //	{
+        //		*p++ = '-';
+        //		i *= -1;
+        //	}
+            int32_t shifter = number;
+        do
+        {
+            //Move to where representation ends
+       ++p;
+            shifter = shifter / 10;
+        } while (shifter);
+        *p = '\0';
+        do
+        {
+            //Move back, inserting digits as u go
+       * --p = digit[number % 10];
+            number = number / 10;
+        } while (number);
+        return str;
+    }
 
-	static bool streql(const char* str1, const char* str2)
-	{
-		return strcmp(str1, str2) == 0;
-	}
+    static bool streql(const char* str1, const char* str2)
+    {
+        return strcmp(str1, str2) == 0;
+    }
 
-	// Возвращает абсолютную разницу между значениями.
-	static uint16_t abs(uint8_t a, uint8_t b)
-	{
-		return a > b ? a - b : b - a;
-	}
+    // Возвращает абсолютную разницу между значениями.
+    static uint16_t abs(uint8_t a, uint8_t b)
+    {
+        return a > b ? a - b : b - a;
+    }
 
-	// Возвращает абсолютную разницу между значениями.
-	static uint16_t abs(uint16_t a, uint16_t b)
-	{
-		return a > b ? a - b : b - a;
-	}
+    // Возвращает абсолютную разницу между значениями.
+    static uint16_t abs(uint16_t a, uint16_t b)
+    {
+        return a > b ? a - b : b - a;
+    }
 
-	// Возвращает абсолютную разницу между значениями.
-	static uint32_t abs(uint32_t a, uint32_t b)
-	{
-		return a > b ? a - b : b - a;
-	}
+    // Возвращает абсолютную разницу между значениями.
+    static uint32_t abs(uint32_t a, uint32_t b)
+    {
+        return a > b ? a - b : b - a;
+    }
 
-	static unsigned char ctoi(const char ch)
-	{
-		return ch - 48;
-	}
+    static unsigned char ctoi(const char ch)
+    {
+        return ch - 48;
+    }
 
-	static bool ArrayEquals(uint8_t* array1, uint8_t arr1Size, uint8_t* array2, uint8_t arr2Size)
-	{
-		if (arr1Size != arr2Size) 
-		{
-			return false;
-		}
-	
-		for (int i = 0; i < arr1Size; ++i) 
-		{
-			if (array1[i] != array2[i])
-			{
-				return false;
-			}
-		}
-		return true;
-	}
+    static bool ArrayEquals(uint8_t* array1, uint8_t arr1Size, uint8_t* array2, uint8_t arr2Size)
+    {
+        if (arr1Size != arr2Size) 
+        {
+            return false;
+        }
+    
+        for (int i = 0; i < arr1Size; ++i) 
+        {
+            if (array1[i] != array2[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	// Passed arrays store different data types.
-	template <typename T, typename U, int size1, int size2> static bool Equal(T(&arr1)[size1], U(&arr2)[size2])
-	{
-		return false;
-	}
+    // Passed arrays store different data types.
+    template <typename T, typename U, int size1, int size2> static bool Equal(T(&arr1)[size1], U(&arr2)[size2])
+    {
+        return false;
+    }
 
-	// Passed arrays store SAME data types.
-	template <typename T, int size1, int size2> static bool Equal(T(&arr1)[size1], T(&arr2)[size2]) 
-	{
-		if (size1 == size2) 
-		{
-			for (int i = 0; i < size1; ++i) 
-			{
-				if (arr1[i] != arr2[i]) return false;
-			}
-			return true;
-		}
-		return false;
-	}
+    // Passed arrays store SAME data types.
+    template <typename T, int size1, int size2> static bool Equal(T(&arr1)[size1], T(&arr2)[size2]) 
+    {
+        if (size1 == size2) 
+        {
+            for (int i = 0; i < size1; ++i) 
+            {
+                if (arr1[i] != arr2[i]) return false;
+            }
+            return true;
+        }
+        return false;
+    }
 };
 
 // http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/

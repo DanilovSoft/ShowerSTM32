@@ -3,7 +3,7 @@
 void RTOSwrapperClass::CreateTask(iActiveTask* obj, const char* name, UBaseType_t uxPriority)
 {
     obj->Init();
-		
+        
     obj->taskHandle = xTaskCreateStatic(
         (TaskFunction_t)Run,       /* Function that implements the task. */
         name,          /* Text name for the task. */
@@ -19,7 +19,7 @@ void RTOSwrapperClass::Run(void* parm)
 {
     iActiveTask* task = (iActiveTask*)parm;
     task->Run();
-	
+    
 #if INCLUDE_vTaskDelete
     vTaskDelete(task->taskHandle);
 #endif

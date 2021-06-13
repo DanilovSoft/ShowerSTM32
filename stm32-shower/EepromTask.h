@@ -4,16 +4,16 @@
 class EepromTask final : public iActiveTask
 {
 private:
-	
+    
     void Run() 
-	{
-		
-	}
+    {
+        
+    }
     
     void Init() 
-	{
-		
-	}
+    {
+        
+    }
 };
 
 extern EepromTask g_eepromTask;
