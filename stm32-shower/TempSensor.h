@@ -161,10 +161,10 @@ private:
     uint8_t m_externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
     
     // Буфер скользящее окно.
-    float m_intTempBuf[INT_TEMP_AVG_BUF_SZ] = { };
+    float m_intTempBuf[kInternalTempAvgFilterSize] = { };
     double m_intTempSum = 0;
     uint16_t m_intTempHead = 0;
-    float m_extTempBuf[EXT_TEMP_AVG_BUF_SZ] = {};
+    float m_extTempBuf[kAirTempAvgFilterSize] = {};
     double m_extTempSum = 0;
     uint16_t m_extTempHead = 0;
     // Сокращенно ow_buf.
@@ -790,8 +790,8 @@ repeat:
                 m_extTempSum -= m_extTempBuf[m_extTempHead];
                 m_extTempSum += ExternalTemp;
                 m_extTempBuf[m_extTempHead] = ExternalTemp;
-                m_extTempHead = (m_extTempHead + 1) % EXT_TEMP_AVG_BUF_SZ;
-                AverageExternalTemp = m_extTempSum / EXT_TEMP_AVG_BUF_SZ;
+                m_extTempHead = (m_extTempHead + 1) % kAirTempAvgFilterSize;
+                AverageExternalTemp = m_extTempSum / kAirTempAvgFilterSize;
                 return internalSuccess;
             }
         }
@@ -878,8 +878,8 @@ repeat:
     // Заполняет весь скользящий буфер одним значением.
     void InitAverageExternalTemp(const float externalTemp)
     {
-        m_extTempSum = externalTemp * EXT_TEMP_AVG_BUF_SZ;
-        for (size_t i = 0; i < EXT_TEMP_AVG_BUF_SZ; i++)
+        m_extTempSum = externalTemp * kAirTempAvgFilterSize;
+        for (size_t i = 0; i < kAirTempAvgFilterSize; i++)
         {
             m_extTempBuf[i] = externalTemp;
         }

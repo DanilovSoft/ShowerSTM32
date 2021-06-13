@@ -63,8 +63,18 @@
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
 
 static constexpr auto kUartRxFifoSize = 1024;
-static constexpr auto kUartMaxStrLen = 200;
-static constexpr auto kWiFiUartSpeed = 115200;
+static constexpr auto kUartMaxStrLen = 200;                     // Максимальная длина строки получаемая через UART.
+static constexpr auto kWiFiUartSpeed = 115200;                  // Скорость на которую настроен ESP8266 модуль.
+static constexpr uint8_t kWaterLevelAvgFilterMaxSize = 129;     // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
+static constexpr uint8_t kInternalTempLimit = 42;               // Максимальная температура воды в баке.
+static constexpr auto kWaterLevelMedianMaxSize = 255;           // Максимально допустимый размер медианного фильтра для уровня воды.
+static constexpr uint8_t kAirTempLowerBound = 15;               // Минимальная температура на улице.
+static constexpr uint8_t kAirTempUpperBound = 40;               // Максимальная температура на улице.
+static constexpr uint8_t kInternalTempAvgFilterSize = 16;       // Максимально допустимый размер фильтра 'скользящее среднее' для температуры в баке.
+static constexpr uint8_t kAirTempAvgFilterSize = 1;         // Максимально допустимый размер фильтра 'скользящее среднее' для температуры окружающего воздуха.
+static constexpr auto kAirTempSteps = kAirTempUpperBound - kAirTempLowerBound;   // Размер таблицы температур делаем исходя из возможных значений температур окружаюшего воздуха.
+
+static_assert(kAirTempUpperBound > kAirTempLowerBound, "kAirTempLowerBound should be lower than kAirTempUpperBound");
 
 inline void _delay_loops(unsigned int loops)
 {

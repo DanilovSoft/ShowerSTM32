@@ -35,6 +35,8 @@ public:
         // По умолчанию для гистерезиса считать что вода подымается.
         m_waterIsRising = true;
         m_isInitialized = false;
+        m_usecRange = 0;
+        m_intervalPauseMsec = 0;
     }
     
     // Последнее измеренное значение после усреднений.
@@ -112,17 +114,18 @@ private:
     static constexpr uint8_t kADash = 0b11011111; // Горизонтальный прочерк в первом разряде индикатора.
     static constexpr uint8_t kBDash = 0b11111101; // Горизонтальный прочерк во втором разряде индикатора.
     static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
-    uint8_t m_intervalPauseMsec = 0; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
-    uint16_t m_usecRange = 0; // Ширина полного диаппазона в микросекундах.
-    MovingAverageFilter m_movingAverageFilter;
-    MedianFilter m_medianFilter;
+    uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
+    uint16_t m_usecRange; // Ширина полного диаппазона в микросекундах.
+    MovingAverageFilter m_movingAverageFilter = {0};
+    MedianFilter m_medianFilter = {0};
     bool m_waterIsRising;
     volatile bool m_isInitialized;
     
     void Init()
     {
-        m_medianFilter.Init(g_properties.WaterLevel_Median_Buffer_Size);
-    
+        m_medianFilter = MedianFilter(g_properties.WaterLevel_Median_Buffer_Size);
+        m_movingAverageFilter = MovingAverageFilter(g_properties.WaterLevel_Avg_Buffer_Size);
+        
         m_usecRange = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull);
         float usec_per_percent = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull) / 99.0;
         
@@ -163,7 +166,7 @@ private:
         TIM_TimeBaseInit(WL_TIM, &base_timer);
         TIM_ClearITPendingBit(WL_TIM, TIM_IT_Update);
     
-        TIM_ICInitTypeDef TIM_ICInitStructure = 
+        TIM_ICInitTypeDef tim_ic_init_struct = 
         {
             .TIM_Channel = TIM_Channel_1,
             .TIM_ICPolarity = TIM_ICPolarity_Rising,
@@ -172,9 +175,9 @@ private:
             .TIM_ICFilter = 15     // Максимальное значение 15 или 0b1111
         };
     
-        TIM_ICInit(WL_TIM, &TIM_ICInitStructure);
+        TIM_ICInit(WL_TIM, &tim_ic_init_struct);
         
-        NVIC_InitTypeDef NVIC_InitStructure = 
+        NVIC_InitTypeDef nvic_init_struct = 
         { 
             .NVIC_IRQChannel = TIM1_UP_IRQn,
             .NVIC_IRQChannelPreemptionPriority = 2,
@@ -182,9 +185,9 @@ private:
             .NVIC_IRQChannelCmd = ENABLE    
         };
     
-        NVIC_Init(&NVIC_InitStructure);
+        NVIC_Init(&nvic_init_struct);
     
-        NVIC_InitStructure = 
+        nvic_init_struct = 
         {
             .NVIC_IRQChannel = TIM1_CC_IRQn,
             .NVIC_IRQChannelPreemptionPriority = 2,
@@ -192,7 +195,7 @@ private:
             .NVIC_IRQChannelCmd = ENABLE
         };
     
-        NVIC_Init(&NVIC_InitStructure);
+        NVIC_Init(&nvic_init_struct);
         
         TIM_ITConfig(WL_TIM, TIM_IT_Update, ENABLE);
         TIM_ITConfig(WL_TIM, TIM_IT_CC1, ENABLE);

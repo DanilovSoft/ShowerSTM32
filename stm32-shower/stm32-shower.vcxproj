@@ -76,16 +76,8 @@
     <ClCompile Include="FreeRTOS\Source\stream_buffer.c" />
     <ClCompile Include="FreeRTOS\Source\tasks.c" />
     <ClCompile Include="FreeRTOS\Source\timers.c" />
-    <ClCompile Include="HeaterWatchdog.cpp" />
-    <ClCompile Include="HeatingTimeLeft.cpp" />
-    <ClCompile Include="I2C.cpp" />
     <ClCompile Include="WaterLevel_IRQ.cpp" />
-    <ClCompile Include="LiquidCrystal.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MedianFilter.cpp" />
-    <ClCompile Include="MovingAverageFilter.cpp" />
-    <ClCompile Include="RealTimeClockStopwatch.cpp" />
-    <ClCompile Include="RTOSwrapper.cpp" />
     <ClCompile Include="StdPeriph\Src\misc.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_adc.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_bkp.c" />
@@ -110,7 +102,6 @@
     <ClCompile Include="StdPeriph\Src\stm32f10x_usart.c" />
     <ClCompile Include="StdPeriph\Src\stm32f10x_wwdg.c" />
     <ClCompile Include="system_stm32f10x.c" />
-    <ClCompile Include="UartStream.cpp" />
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c" />
   </ItemGroup>
   <ItemGroup>

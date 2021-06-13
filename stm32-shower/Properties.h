@@ -1,15 +1,7 @@
 #pragma once
 #include "stdint.h"
 #include "math.h"
-
-constexpr auto WL_AVG_BUF_MAX_SIZE = 129; // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
-constexpr auto InternalTempLimit = 42; // Максимальная температура воды в баке.
-constexpr auto WL_MEDIAN_BUF_MAX_SIZE = 255;  // Максимально допустимый размер медианного фильтра для уровня воды.
-const uint8_t LOWER_BOUND = 15; // Минимальная температура на улице.
-const uint8_t UPPER_BOUND = 40; // Максимальная температура на улице.
-constexpr auto STEPS_COUNT = (UPPER_BOUND - LOWER_BOUND); // Размер таблицы температур делаем исходя из возможных значений температур окружаюшего воздуха.
-constexpr auto INT_TEMP_AVG_BUF_SZ = 8;
-constexpr auto EXT_TEMP_AVG_BUF_SZ = 1;
+#include "Common.h"
 
 struct TempStep
 {
@@ -34,46 +26,47 @@ public:
         const uint8_t index = GetIndex(air_temp);
         uint8_t value = m_internal[index];
 
-        if (value < InternalTempLimit)
-            // значение в допустимом пределе
+        if (value < kInternalTempLimit)
+        {
+            // Значение в допустимом пределе.
+                
+            ++value;
+
+            m_internal[index] = value;
+
+            // Сделать точки слева не меньше текущего значения. Массив идет от большего к меньшему: [40, 40, 40, 39, 38, 37, 37, 37, 36, 36].
+            if(index > 0)
             {
-                ++value;
+                uint8_t left_points = index;
 
-                m_internal[index] = value;
-
-                // Сделать точки слева не меньше текущего значения. Массив идет от большего к меньшему: [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
-                if(index > 0)
+                while (left_points--)
                 {
-                    uint8_t leftPoints = index;
-
-                    while (leftPoints--)
+                    auto& t = m_internal[left_points];
+                    if (t < value)
                     {
-                        auto& t = m_internal[leftPoints];
-                        if (t < value)
-                        {
-                            t = value;
-                        }
+                        t = value;
                     }
                 }
-
-                uint8_t prevValue = value;
-
-                // Сделать точки справа с шагом не больше 1 градуса.
-                for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // От текущей точки не включительно к началу массива.
-                {
-                    auto& t = m_internal[i];
-
-                    auto nextT = (prevValue - 1);    // Не должно быть меньше.
-
-                    if(t < nextT)
-                    {
-                        t = nextT;
-                    }
-
-                    prevValue = t;
-                }
-                return true;
             }
+
+            uint8_t prev_value = value;
+
+            // Сделать точки справа с шагом не больше 1 градуса.
+            for(uint8_t i = (index + 1) ; i < kAirTempSteps ; i++) // От текущей точки не включительно к началу массива.
+            {
+                auto& t = m_internal[i];
+
+                auto nextT = (prev_value - 1);     // Не должно быть меньше.
+
+                if(t < nextT)
+                {
+                    t = nextT;
+                }
+
+                prev_value = t;
+            }
+            return true;
+        }
         return false;
     }
 
@@ -85,54 +78,57 @@ public:
 
         uint8_t value = m_internal[index];
 
-        if (value > 0) // проверка на всякий случай.
+        // проверка на всякий случай.
+        if(value > 0)
+        {
+            --value;     // Уменьшить на 1 градус.
+
+            if(value <= kInternalTempLimit)
             {
-                --value;  // уменьшить на 1 градус.
+                // Значение в допустимом пределе.
+                    
+                m_internal[index] = value;     // Установить новое значение.
 
-                if(value <= InternalTempLimit)
-                // значение в допустимом пределе.
+                // Сделать точки справа не больше текущего значени¤.  [40, 40, 40, 39, 38, 37, 37, 37, 36, 36].
+                for(uint8_t i = (index + 1) ; i < kAirTempSteps ; i++) // От следующей точки к концу массива.
                 {
-                    m_internal[index] = value;  // установить новое значение
-
-                    // сделать точки справа не больше текущего значени¤.  [40, 40, 40, 39, 38, 37, 37, 37, 36, 36]
-                    for(uint8_t i = (index + 1) ; i < STEPS_COUNT ; i++) // от следующей точки к концу массива
+                    auto& t = m_internal[i];
+                    if (t > value)
                     {
-                        auto& t = m_internal[i];
-                        if (t > value)
-                        {
-                            t = value;
-                        }
+                        t = value;
                     }
-
-                    if (index > 0)
-                    {
-                        auto prevValue = value;
-                        uint8_t leftPoints = index;
-
-                        // сделать точки слева с шагом не больше 1 градуса
-                        while(leftPoints--)
-                        {
-                            auto& t = m_internal[leftPoints];
-                            auto nextT = (prevValue + 1);       // не должно превышать
-
-                            if(t > nextT)
-                            {
-                                t = nextT;
-                            }
-
-                            prevValue = t;
-                        }
-                    }
-                    return true;
                 }
+
+                if (index > 0)
+                {
+                    auto prev_value = value;
+                    uint8_t left_points = index;
+
+                    // Сделать точки слева с шагом не больше 1 градуса.
+                    while(left_points--)
+                    {
+                        auto& t = m_internal[left_points];
+                        auto nextT = (prev_value + 1);   // Не должно превышать.
+
+                        if(t > nextT)
+                        {
+                            t = nextT;
+                        }
+
+                        prev_value = t;
+                    }
+                }
+                return true;
             }
+        }
         return false;
     }
 
     void Parse(const uint8_t* data)
     {
         uint8_t prev = m_internal[0];
-        for (uint8_t i = 0; i < STEPS_COUNT; i++)
+        
+        for (uint8_t i = 0; i < kAirTempSteps; i++)
         {
             uint8_t value = data[i];
 
@@ -152,45 +148,46 @@ public:
     void SelfFix()
     {
         uint8_t prevSpot = m_internal[0];
-        for (int i = 0; i < STEPS_COUNT; i++)
+        
+        for (int i = 0; i < kAirTempSteps; i++)
         {
-            uint8_t& internalTemp = m_internal[i];
+            uint8_t& internal_temp = m_internal[i];
 
-            if (internalTemp == 0 || internalTemp > InternalTempLimit)
+            if (internal_temp == 0 || internal_temp > kInternalTempLimit)
             {
-                internalTemp = 36;
+                internal_temp = 36;
             }
 
             if (i > 0)
             {
-                if (internalTemp > prevSpot)
+                if (internal_temp > prevSpot)
                 {
-                    internalTemp = prevSpot;
+                    internal_temp = prevSpot;
                 }
             }
 
-            prevSpot = internalTemp;
+            prevSpot = internal_temp;
         }
     }
     
 private:
     
     // Температура в баке.
-    uint8_t m_internal[STEPS_COUNT];
+    uint8_t m_internal[kAirTempSteps];
     
     uint8_t GetIndex(uint8_t externalTemp)
     {
-        if (externalTemp <= LOWER_BOUND)
+        if (externalTemp <= kAirTempLowerBound)
         {
             return 0;
         }
         
-        if (externalTemp >= (UPPER_BOUND - 1))
+        if (externalTemp >= (kAirTempUpperBound - 1))
         {
-            return STEPS_COUNT - 1;
+            return kAirTempSteps - 1;
         }
         
-        return externalTemp - LOWER_BOUND;
+        return externalTemp - kAirTempLowerBound;
     }
     
     uint8_t GetIndexf(float externalTemp)
@@ -334,12 +331,12 @@ public:
             WaterLevel_Measure_IntervalMsec = 60;
         }
         
-        if (WaterLevel_Median_Buffer_Size == 0 || WaterLevel_Median_Buffer_Size > WL_MEDIAN_BUF_MAX_SIZE)
+        if (WaterLevel_Median_Buffer_Size == 0 || WaterLevel_Median_Buffer_Size > kWaterLevelMedianMaxSize)
         {
             WaterLevel_Median_Buffer_Size = 191;  // Лучше не чётное число.
         }
             
-        if (WaterLevel_Avg_Buffer_Size == 0 || WaterLevel_Avg_Buffer_Size > WL_AVG_BUF_MAX_SIZE)
+        if (WaterLevel_Avg_Buffer_Size == 0 || WaterLevel_Avg_Buffer_Size > kWaterLevelAvgFilterMaxSize)
         {
             WaterLevel_Avg_Buffer_Size = 32;
         }
@@ -349,7 +346,7 @@ public:
             WaterValve_Cut_Off_Percent = 90;
         }
             
-        if (InternalTemp_Avg_Size == 0 || InternalTemp_Avg_Size > INT_TEMP_AVG_BUF_SZ)
+        if (InternalTemp_Avg_Size == 0 || InternalTemp_Avg_Size > kInternalTempAvgFilterSize)
         {
             InternalTemp_Avg_Size = 4;
         }

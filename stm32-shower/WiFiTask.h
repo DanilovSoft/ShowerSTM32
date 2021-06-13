@@ -581,12 +581,12 @@ private:
             }
         case ShowerCode::kGetTempLowerBound:
             {
-                m_request.SendResponse(LOWER_BOUND);	
+                m_request.SendResponse(kAirTempLowerBound);	
                 break;
             }
         case ShowerCode::kGetTempUpperBound:
             {
-                m_request.SendResponse(UPPER_BOUND);	
+                m_request.SendResponse(kAirTempUpperBound);	
                 break;
             }
         case ShowerCode::kGetWaterTankVolumeLitre:

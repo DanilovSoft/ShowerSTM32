@@ -131,14 +131,14 @@ void Init()
     g_uartStream.Init();
 }
 
-static void EEPROM_Task(void* parm)
+static void EepromTask(void* parm)
 {
     g_i2c.vTaskInit(); // Инициализируем шину I2C.
 
     // Нельзя запускать другие потоки не считав параметры из EEPROM.
     g_eeprom.InitBeforeRTOS();  // Использует шину I2C.
     
-    g_heatingTimeLeft.Init(g_properties.WaterTankVolumeLitre, g_properties.WaterHeaterPowerKWatt);
+    g_heatingTimeLeft = HeatingTimeLeft(g_properties.WaterTankVolumeLitre, g_properties.WaterHeaterPowerKWatt);
     
     g_rtosHelper.CreateTask(&g_wifiTask, "WI-FI", tskIDLE_PRIORITY);
     g_rtosHelper.CreateTask(&g_lcdTask, "LCD", tskIDLE_PRIORITY);
@@ -161,7 +161,7 @@ int main(void)
     Init();
     
     g_eepromTask.taskHandle = xTaskCreateStatic(
-        (TaskFunction_t)EEPROM_Task, 
+        (TaskFunction_t)EepromTask,
         "eeprom", 
         iActiveTask::ulStackDepth,
         0,

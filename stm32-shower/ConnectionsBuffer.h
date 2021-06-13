@@ -47,6 +47,7 @@ public:
     }
     
 private:
+    
     static constexpr auto kIpdBufSize = 5;
     IpdBuffer m_buf[kIpdBufSize];
     uint8_t m_nextConnectionId;
