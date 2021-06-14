@@ -303,7 +303,7 @@
     <ClInclude Include="HeatingTimeLeft.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="I2C.h">
+    <ClInclude Include="I2CHelper.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="Interlocked.h">

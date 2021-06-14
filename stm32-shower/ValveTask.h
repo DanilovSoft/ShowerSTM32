@@ -14,25 +14,10 @@ public:
     ValveTask()
     {
         m_sensorSwitchIsOnLastState = false;
-        m_openValveAllowed = false;
+        m_openValveAllowed = ValveState::PendingOpen;
         m_stopRequired = false;
     }
     
-    // Вызывается если кнопка была нажата.
-    void OnButtonPress()
-    {
-        if (Common::ValveIsOpen())
-        {
-            // Нужно остановить воду.
-            m_stopRequired = true;
-        }
-        else
-        {
-            // Попытка включить воду.
-            TryOpenValve();
-        }
-    }
-
     // Вызывается каждый раз, после OnButtonPushed().
     void UpdateSensorState(bool isOn)
     {
@@ -57,13 +42,43 @@ public:
             }
         }
     }
+    
+    // Вызывается при нажатии на кнопку.
+    void OnButtonPress()
+    {
+        if (Common::ValveIsOpen())
+        {
+            // Нужно остановить воду.
+            m_stopRequired = true;
+        }
+        else
+        {
+            // Попытка включить воду.
+            TryOpenValve();
+        }
+    }
 
+    // Вызывается при долгом нажатии на кнопку.
     void ForceOpenValve()
     {
-        
+        if (m_openValveAllowed == ValveTask::WaitingRequest)
+        {
+            // Запрещаем пользователю повторные запросы.
+            m_openValveAllowed = ValveTask::PendingForceOpen;
+            
+            // Пробуждаем поток.
+            xSemaphoreGive(m_xValveSemaphore);
+        }
     }
     
 private:
+    
+    enum ValveState
+    {
+        WaitingRequest,
+        PendingOpen,
+        PendingForceOpen
+    };
     
     // Пауза для повторного включения клапана.
     static const auto kValveDebounceMsec = 300;
@@ -74,7 +89,7 @@ private:
     volatile bool m_stopRequired;
     // Флаг предотвращающий повторные запросы на открытие клапана от пользователя,
     // пока другой поток обрабатывает первый запрос (троттлинг).
-    volatile bool m_openValveAllowed;
+    volatile ValveState m_openValveAllowed;
     
     void Init()
     {
@@ -118,6 +133,7 @@ private:
         GPIO_ResetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
     }
     
+    // Открывает клапан.
     void OpenValve()
     {
         // Включить воду.
@@ -146,10 +162,10 @@ private:
     void Run()
     {
         // Ожидание инициализации датчика уровня воды.
-        g_waterLevelTask.WaitInitialization();
+        //g_waterLevelTask.WaitInitialization();
         
         // Нужно включить флаг перед включением сенсора.
-        m_openValveAllowed = true;
+        m_openValveAllowed = ValveTask::WaitingRequest;
         
         // Включить сенсор.
         GpioTurnOnSensorSwitch();
@@ -162,21 +178,38 @@ private:
             // PS. Текущий поток может устанавливать ТОЛЬКО значение false этому флагу.
             m_stopRequired = false;
                 
-            // Нельзя набирать воду если включен нагрев из-за вероятности ложного срабатывания.
-            if(!Common::GetIsHeaterEnabled())
+            // Нельзя набирать воду если включен автомат нагревателя из-за вероятности ложного срабатывания.
+            if(!Common::CircuitBreakerIsOn())
             {
-                uint8_t waterPercent = g_waterLevelTask.DisplayingPercent;
-                
-                // Если уровень воды меньше уровень автоматического отключения.
-                if(waterPercent < g_properties.WaterValve_Cut_Off_Percent)
-                {					
+                if (m_openValveAllowed == ValveTask::PendingForceOpen)
+                {
                     // Включить воду.
                     OpenValve();	
                         
                     // Ожидаем достижение порогового уровня воды или ручной остановки.
-                    while (!m_stopRequired && g_waterLevelTask.DisplayingPercent < g_properties.WaterValve_Cut_Off_Percent)
+                    while (!m_stopRequired)
                     {
                         taskYIELD();
+                    }
+                }
+                else
+                {
+                    if (g_waterLevelTask.GetIsInitialized())
+                    {
+                        uint8_t water_percent = g_waterLevelTask.DisplayingPercent;
+                
+                        // Если уровень воды меньше уровень автоматического отключения.
+                        if(water_percent < g_properties.WaterValveCutOffPercent)
+                        {					
+                            // Включить воду.
+                            OpenValve();	
+                        
+                            // Ожидаем достижение порогового уровня воды или ручной остановки.
+                            while(!m_stopRequired && g_waterLevelTask.DisplayingPercent < g_properties.WaterValveCutOffPercent)
+                            {
+                                taskYIELD();
+                            }
+                        }
                     }
                 }
             }
@@ -185,18 +218,18 @@ private:
             CloseValve();
 
             // Разрешить следующий запрос на открытие клапана.
-            // PS. Текущий поток может устанавливать ТОЛЬКО значение true этому флагу.
-            m_openValveAllowed = true;
+            // PS. Текущий поток может устанавливать ТОЛЬКО значение WaitingRequest этому флагу.
+            m_openValveAllowed = ValveTask::WaitingRequest;
         }
     }
     
     // Вызывается когда пользователь нажимает на кнопку или на сенсорную панель.
     void TryOpenValve()
     {
-        if (m_openValveAllowed)
+        if (m_openValveAllowed == ValveTask::WaitingRequest)
         {
             // Запрещаем пользователю повторные запросы.
-            m_openValveAllowed = false;
+            m_openValveAllowed = ValveTask::PendingOpen;
             
             // Пробуждаем поток.
             xSemaphoreGive(m_xValveSemaphore);

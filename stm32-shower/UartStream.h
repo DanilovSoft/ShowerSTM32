@@ -144,9 +144,9 @@ public:
         char cipsend[18];
         memcpy(cipsend, "AT+CIPSEND=", 11);
     
-        cipsend[11] = Common::itoa(connection_id);  // Converts an integer value to a null-terminated string.
+        cipsend[11] = Common::DigitToChar(connection_id);  // Converts an integer value to a null-terminated string.
         cipsend[12] = ',';
-        Common::itoa(count, cipsend + 13);  		// Будет добавлен null-терминатор.
+        Common::NumberToString(count, cipsend + 13);  		// Будет добавлен null-терминатор.
 
         cipsend[13 + data_str_len] = '\r';
         cipsend[14 + data_str_len] = '\n';
@@ -237,17 +237,17 @@ private:
             {
                 if (Common::streql(str + 1, ",CONNECT"))
                 {
-                    uint8_t connection_id = Common::ctoi(str[0]);
+                    uint8_t connection_id = Common::CharToDigit(str[0]);
                     m_connectionBuffer.Clear(connection_id);
                 }
                 else if (Common::streql(str + 1, ",CLOSED"))
                 {
-                    uint8_t connection_id = Common::ctoi(str[0]);
+                    uint8_t connection_id = Common::CharToDigit(str[0]);
                     m_connectionBuffer.Clear(connection_id);
                 }
                 else if (Common::streql(str + 1, ",CONNECT FAIL"))
                 {
-                    uint8_t connection_id = Common::ctoi(str[0]);
+                    uint8_t connection_id = Common::CharToDigit(str[0]);
                     m_connectionBuffer.Clear(connection_id);
                 }
                 else if (Common::streql(str, "WIFI CONNECTED"))
@@ -473,7 +473,7 @@ private:
         // Минимум должно быть 9 символов.
         if(m_count >= 9)
         {
-            connection_id = Common::ctoi(m_rxBuf[GetAbsoluteOffset(5)]);
+            connection_id = Common::CharToDigit(m_rxBuf[GetAbsoluteOffset(5)]);
             uint16_t pos;
             if (Find(':', 8, pos)) // Находим символ ':' начиная со смещения 8.
                 {
@@ -485,7 +485,7 @@ private:
                     uint16_t absOffset = GetAbsoluteOffset(7);
                     for (uint8_t i = 0; i < dataStrLen; i++)
                     {
-                        length = length * 10 + Common::ctoi(m_rxBuf[absOffset]);
+                        length = length * 10 + Common::CharToDigit(m_rxBuf[absOffset]);
                         absOffset = (absOffset + 1) % kUartRxFifoSize;
                     }
                     //////////////////////////////////////////////

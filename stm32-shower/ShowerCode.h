@@ -77,6 +77,9 @@ enum ShowerCode
     kGetButtonLongPressTimeMsec = 70,
     kSetButtonLongPressTimeMsec = 71,
     
+    kGetWaterLevelErrorThreshhold = 80,
+    kSetWaterLevelErrorThreshhold = 81,
+    
     kOK = 200,
     kUnknownCode = 253,
     kReset = 254,

@@ -778,8 +778,8 @@ repeat:
                 m_intTempSum -= m_intTempBuf[m_intTempHead];
                 m_intTempSum += InternalTemp;
                 m_intTempBuf[m_intTempHead] = InternalTemp;
-                m_intTempHead = (m_intTempHead + 1) % g_properties.InternalTemp_Avg_Size;
-                AverageInternalTemp = m_intTempSum / g_properties.InternalTemp_Avg_Size;
+                m_intTempHead = (m_intTempHead + 1) % g_properties.InternalTempAvgFilterSize;
+                AverageInternalTemp = m_intTempSum / g_properties.InternalTempAvgFilterSize;
             }
         
             float externalTemp;
@@ -867,8 +867,8 @@ repeat:
     // Заполняет весь скользящий буфер одним значением.
     void InitAverageInternalTemp(const float internalTemp)
     {
-        m_intTempSum = internalTemp * g_properties.InternalTemp_Avg_Size;
-        for (size_t i = 0; i < g_properties.InternalTemp_Avg_Size; i++)
+        m_intTempSum = internalTemp * g_properties.InternalTempAvgFilterSize;
+        for (size_t i = 0; i < g_properties.InternalTempAvgFilterSize; i++)
         {
             m_intTempBuf[i] = internalTemp;
         }

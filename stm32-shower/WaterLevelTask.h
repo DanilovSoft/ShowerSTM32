@@ -37,6 +37,8 @@ public:
         m_isInitialized = false;
         m_usecRange = 0;
         m_intervalPauseMsec = 0;
+        m_errorCounter = 0;
+        m_minimumAllowedUsec = 0;
     }
     
     // Последнее измеренное значение после усреднений.
@@ -45,13 +47,11 @@ public:
     // Значение -1 означает что последнее измерение не удалось.
     volatile int16_t UsecRaw = -1;
     
-    // Если True то расстояние от датчика оказалось слишком малым.
-    volatile bool SensorIsBlocked = false;
-    
     // Отображаемый уровень воды в баке, %.
     volatile uint8_t DisplayingPercent = 0;
     
-    volatile bool Preinitialized = false;
+    // True если было получено хоть одно показание с датчика уровня.
+    volatile bool PreInitialized = false;
     
     bool GetIsInitialized() volatile
     {
@@ -98,6 +98,8 @@ public:
         };
         GPIO_Init(WL_GPIO_SPI, &gpio_init);
 
+        // Очищаем  как можно раньше что-бы предотвратить кратковременное отображение мусора на дисплее.
+        // PS. можно будет убрать если использовать LED дисплей обратной полярности.
         DisplayLED(kADash, kBDash);
     }
     
@@ -109,6 +111,12 @@ public:
         }
     }
     
+    // Возвращает True если датчик, за последнее время, получил слишком много не валидных показаний.
+    bool GetIsError() volatile
+    {
+        return m_errorCounter >= g_properties.WaterLevelErrorThreshhold;
+    }
+    
 private:
     
     static constexpr uint8_t kADash = 0b11011111; // Горизонтальный прочерк в первом разряде индикатора.
@@ -116,15 +124,19 @@ private:
     static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
     uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
     uint16_t m_usecRange; // Ширина полного диаппазона в микросекундах.
+    // Показания датчика меньше этого значения будут считаться не валидными 
+    // (например когда датчик заслонён или ловит своё эхо от зеркала).
+    uint16_t m_minimumAllowedUsec;
     MovingAverageFilter m_movingAverageFilter = {0};
     MedianFilter m_medianFilter = {0};
     bool m_waterIsRising;
     volatile bool m_isInitialized;
+    volatile uint8_t m_errorCounter;
     
     void Init()
     {
-        m_medianFilter = MedianFilter(g_properties.WaterLevel_Median_Buffer_Size);
-        m_movingAverageFilter = MovingAverageFilter(g_properties.WaterLevel_Avg_Buffer_Size);
+        m_medianFilter = MedianFilter(g_properties.WaterLevelMedianFilterSize);
+        m_movingAverageFilter = MovingAverageFilter(g_properties.WaterLevelAvgFilterSize);
         
         m_usecRange = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull);
         float usec_per_percent = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull) / 99.0;
@@ -203,14 +215,14 @@ private:
 
     void Run()
     {
-        TickType_t xLastWakeTime;
-        m_intervalPauseMsec = g_properties.WaterLevel_Measure_IntervalMsec / portTICK_PERIOD_MS;
-    
+        m_intervalPauseMsec = g_properties.WaterLevelMeasureIntervalMsec / portTICK_PERIOD_MS;
+        m_minimumAllowedUsec = g_properties.WaterLevelFull * 0.8; // На 20% меньше минимально допустимого значения.
+        
         // Initialise the xLastWakeTime variable with the current time.
-        xLastWakeTime = xTaskGetTickCount();
+        TickType_t xLastWakeTime = xTaskGetTickCount();
     
         // Хранит прошлое значение пунктов. Используется гистерезисом.
-        uint8_t lastPoint = InitDisplay();
+        uint8_t last_point = InitDisplay();
     
         // Уровень воды инициализирован.
         m_isInitialized = true;
@@ -220,23 +232,23 @@ private:
     
         while (true)
         {
-            uint16_t usecRaw;
-            if (GetRawUsecTime(usecRaw)) // Сырые показания датчика в микросекундах.
-                {
-                    // Скопировать сырые показания микросекунд в публичную переменную.
-                    UsecRaw = usecRaw;
+            uint16_t usec_raw;  // Сырые показания датчика в микросекундах.
+            if(GetRawUsecTime(usec_raw))
+            {
+                // Скопировать сырые показания микросекунд в публичную переменную.
+                UsecRaw = usec_raw;
 
+                // Проверить не заслонен ли датчик.
+                if (!SensorIsBlocked(usec_raw))
+                {
                     // Медианный фильтр.
-                    uint16_t median = m_medianFilter.AddValue(usecRaw);
+                    uint16_t median = m_medianFilter.AddValue(usec_raw);
 
                     // Скользящее среднее.
                     uint16_t avg = m_movingAverageFilter.AddValue(median);
 
                     // Скопировать фильтрованное значение микросекунд в публичную переменную.
                     AvgUsec = avg;
-
-                    // Проверить не заслонен ли датчик.
-                    SensorIsBlocked = CheckSensorBlocking(avg);
             
                     // Поправка на выход из диаппазона.
                     avg = ClampRange(avg);
@@ -248,10 +260,10 @@ private:
                     uint8_t point = GetIntPoint(pointf);
             
                     // Пункты с учетом гистерезиса.
-                    point = Hysteresis(point, lastPoint);
+                    point = Hysteresis(point, last_point);
 
                     // Запомнить прошлое значение c гистерезисом.
-                    lastPoint = point;
+                    last_point = point;
             
                     // Уровень воды от 0% до 99%
                     uint8_t percent = GetPercent(point);
@@ -261,10 +273,20 @@ private:
 
                     // Отобразить на LED.
                     TaskDisplayPercent(percent);
+                
+                    DecrementError();
                 }
+                else
+                {
+                    // Датчик чем-то заслонён — расстояние слишком короткое.
+                    
+                    IncrementError();
+                }
+            }
             else
             {
                 UsecRaw = -1;
+                IncrementError();
             }
 
             // Пауза для затухания эха.
@@ -272,24 +294,30 @@ private:
         }
     }
 
-    void FixRawTemp(uint16_t &usec)
+    void IncrementError()
     {
-        return;
-    
-        //    double v = 331 + 0.6 * tempSensor.ExternalTemp;
-        //    double d = v / 331;
-        //    usec = round(usec * d);
-    }
-
-    bool CheckSensorBlocking(uint16_t usec)
-    {
-        if (usec < (g_properties.WaterLevelFull * 0.8))
-            /* Расстояние меньше минимального возможного на 20% */
+        if (m_errorCounter < g_properties.WaterLevelErrorThreshhold)
         {
-            return true;
+            m_errorCounter++;
         }
+        else
+        {
+            TaskDisplayLED(kADash, kBDash);
+        }
+    }
     
-        return false;
+    void DecrementError()
+    {
+        if (m_errorCounter > 0)
+        {
+            m_errorCounter--;
+        }
+    }
+    
+    // Возвращает True если расстояние от датчика до воды оказалось меньше минимально возможного значения на 20%.
+    inline bool SensorIsBlocked(uint16_t usec)
+    {
+        return usec < m_minimumAllowedUsec;
     }
     
     uint8_t InitDisplay()
@@ -305,30 +333,30 @@ private:
         vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
         
         // Размер медианного фильтра + буфера скользящее среднее.
-        uint16_t warmupCount = g_properties.WaterLevel_Median_Buffer_Size + g_properties.WaterLevel_Avg_Buffer_Size;
+        uint16_t warmup_count = g_properties.WaterLevelMedianFilterSize + g_properties.WaterLevelAvgFilterSize;
     
-        uint8_t lastPoint;
-        for (uint16_t i = 0; i < warmupCount;)
+        uint8_t last_point;
+        for (uint16_t i = 0; i < warmup_count;)
         {
-            uint16_t usecRaw;
-            if (GetRawUsecTime(usecRaw)) // Сырые показания датчика.
-                {
-                    UsecRaw = usecRaw;
+            uint16_t usec_raw;  // Сырые показания датчика.
+            if(GetRawUsecTime(usec_raw)) 
+            {
+                UsecRaw = usec_raw;
             
+                // Проверить не заслонен ли датчик.
+                if(!SensorIsBlocked(usec_raw))
+                {
                     // Медианный фильтр.
-                    uint16_t median = m_medianFilter.AddValue(usecRaw);
+                    uint16_t median = m_medianFilter.AddValue(usec_raw);
 
                     // Добавить значение в буффер скользящего среднего.
                     uint16_t avg = m_movingAverageFilter.AddValue(median);
             
-                    if (i < g_properties.WaterLevel_Avg_Buffer_Size)
+                    if (i < g_properties.WaterLevelAvgFilterSize)
                     {
                         // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполненности.
-                        avg = m_movingAverageFilter.GetAverage() / (i + 1);   // Точность с кажной итерацией будет увеличиваться.
+                        avg = m_movingAverageFilter.GetAverage() / (i + 1);     // Точность с кажной итерацией будет увеличиваться.
                     }
-            
-                    // Проверить не заслонен ли датчик.
-                    SensorIsBlocked = CheckSensorBlocking(avg);
             
                     // Инициализировать глобальную переменную.
                     AvgUsec = avg;
@@ -343,21 +371,31 @@ private:
                     uint8_t point = (uint8_t)roundf(pointf);
 
                     // Запомнить прошлый уровень в пунктах.
-                    lastPoint = point;
+                    last_point = point;
             
                     // Инициализировать глобальную переменную.
                     DisplayingPercent = GetPercent(point);
 
-                    // Отобразить.
+                    // Отобразить на LED дисплее.
                     TaskDisplayPercent(DisplayingPercent);
 
-                    Preinitialized = true;
+                    PreInitialized = true;
 
-                    i++;  // Считаем только успешные измерения.
+                    i++;    // Считаем только успешные измерения.
+
+                    DecrementError();
                 }
+                else
+                {
+                    // Датчик чем-то заслонён — расстояние слишком короткое.
+                    
+                    IncrementError();
+                }
+            }
             else
             {
                 UsecRaw = -1;
+                IncrementError();
             }
         
             // Пауза.
@@ -365,7 +403,7 @@ private:
         }
     
         // Вернуть уровень воды в пунктах.
-        return lastPoint;
+        return last_point;
     }
 
     bool GetRawUsecTime(uint16_t &usec)
@@ -408,32 +446,20 @@ private:
         return success;
     }
     
-    void FixRange(uint16_t &usec)
-    {
-        if (usec < g_properties.WaterLevelFull)
-        {
-            usec = g_properties.WaterLevelFull;
-        }
-        else if (usec > g_properties.WaterLevelEmpty)
-        {   
-            usec = g_properties.WaterLevelEmpty;
-        }
-    }
-    
     float GetFloatPercent(uint16_t usec)
     {
-        /* Поправка на выход из диаппазона */
-        FixRange(usec);
+        // Поправка на выход из диаппазона.
+        usec = ClampRange(usec);
         
-        /* Смещение */
+        // Смещение.
         usec -= g_properties.WaterLevelFull;
         
-        /* Уровень воды в микросекундах */
+        // Уровень воды в микросекундах.
         usec = m_usecRange - usec;
         
         uint32_t tmp = usec * 99;
         
-        /* Сколько пунктов из 99 */
+        // Сколько пунктов из 99.
         float point = tmp / (float)m_usecRange; 
         
         return point;
@@ -464,55 +490,64 @@ private:
     }
     
     // Функция возвращает или point или lastPoint.
-    inline uint8_t Hysteresis(uint8_t point, uint8_t lastPoint)
+    uint8_t Hysteresis(uint8_t point, uint8_t last_point)
     {
         // На сколько пунктов изменился уровень воды.
-        int16_t diff = (point - lastPoint);
+        int16_t diff = (point - last_point);
     
-        // небольшая оптимизация
+        // Небольшая оптимизация.
         if(diff != 0)
-        // Если уровень воды хоть как-то изменился.
         {
-            if (m_waterIsRising)
+            // Если уровень воды хоть как-то изменился.
+            
+            if(m_waterIsRising)
+            {
                 // Считается что уровень воды увеличивается.
+                    
+                if(diff < 0)
                 {
-                    if (diff < 0)
-                        // Вода начала убывать.
-                        {
-                            if (diff <= -kHysteresisPoints)
-                                // Уровень воды уменьшился более чем на 4 пункта.
-                                {
-                                    // Считать что вода теперь убывает.
-                                    m_waterIsRising = false;
-                                }
-                            else
-                                // Уровень воды уменьшился не значительно.
-                                {
-                                    // Возвращаем прошлое значение.
-                                    return lastPoint;
-                                }
-                        }
+                    // Вода начала убывать.
+                            
+                    if(diff <= -kHysteresisPoints)
+                    {
+                        // Уровень воды уменьшился более чем на 4 пункта.
+                                    
+                        // Считать что вода теперь убывает.
+                        m_waterIsRising = false;
+                    }
+                    else
+                    {
+                        // Уровень воды уменьшился не значительно.
+                                    
+                        // Возвращаем прошлое значение.
+                        return last_point;
+                    }
                 }
+            }
             else
+            {
                 // Считается что уровень воды уменьшается.
+                    
+                if(diff > 0)
                 {
-                    if (diff > 0)
-                        // Уровень воды начал увеличиваться.
-                        {
-                            if (diff >= kHysteresisPoints)
-                                // Уровень увеличился более чем на 4 пункта.
-                                {
-                                    // Считать что вода теперь прибывает.
-                                    m_waterIsRising = true;
-                                }
-                            else
-                                // Уровень воды увеличился не значительно.
-                                {
-                                    // Возвращаем прошлое значение.
-                                    return lastPoint;
-                                }
-                        }
+                    // Уровень воды начал увеличиваться.
+                    
+                    if(diff >= kHysteresisPoints)
+                    {
+                        // Уровень увеличился более чем на 4 пункта.
+                            
+                        // Считать что вода теперь прибывает.
+                        m_waterIsRising = true;
+                    }
+                    else
+                    {
+                        // Уровень воды увеличился не значительно.
+                            
+                        // Возвращаем прошлое значение.
+                        return last_point;
+                    }
                 }
+            }
         }
     
         // По умолчанию возвращаем без гистерезиса.
@@ -544,28 +579,28 @@ private:
     
     inline void TaskDisplayPercent(uint8_t percent)
     {   
-        const static uint8_t a0 = 0b10100000;
-        const static uint8_t a1 = 0b11111100;
-        const static uint8_t a2 = 0b10010010;
-        const static uint8_t a3 = 0b10011000;
-        const static uint8_t a4 = 0b11001100;
-        const static uint8_t a5 = 0b10001001;
-        const static uint8_t a6 = 0b10000001;
-        const static uint8_t a7 = 0b10111100;
-        const static uint8_t a8 = 0b10000000;
-        const static uint8_t a9 = 0b10001000;
-        const static uint8_t b0 = 0b10000010;
-        const static uint8_t b1 = 0b11101110;
-        const static uint8_t b2 = 0b11000001;
-        const static uint8_t b3 = 0b11001000;
-        const static uint8_t b4 = 0b10101100;
-        const static uint8_t b5 = 0b10011000;
-        const static uint8_t b6 = 0b10010000;
-        const static uint8_t b7 = 0b11001110;
-        const static uint8_t b8 = 0b10000000;
-        const static uint8_t b9 = 0b10001000;
-        const static uint8_t abBlank = 0b11111111;
-        const static uint8_t aA[] { abBlank, a1, a2, a3, a4, a5, a6, a7, a8, a9 }
+        static constexpr uint8_t a0 = 0b10100000;
+        static constexpr uint8_t a1 = 0b11111100;
+        static constexpr uint8_t a2 = 0b10010010;
+        static constexpr uint8_t a3 = 0b10011000;
+        static constexpr uint8_t a4 = 0b11001100;
+        static constexpr uint8_t a5 = 0b10001001;
+        static constexpr uint8_t a6 = 0b10000001;
+        static constexpr uint8_t a7 = 0b10111100;
+        static constexpr uint8_t a8 = 0b10000000;
+        static constexpr uint8_t a9 = 0b10001000;
+        static constexpr uint8_t b0 = 0b10000010;
+        static constexpr uint8_t b1 = 0b11101110;
+        static constexpr uint8_t b2 = 0b11000001;
+        static constexpr uint8_t b3 = 0b11001000;
+        static constexpr uint8_t b4 = 0b10101100;
+        static constexpr uint8_t b5 = 0b10011000;
+        static constexpr uint8_t b6 = 0b10010000;
+        static constexpr uint8_t b7 = 0b11001110;
+        static constexpr uint8_t b8 = 0b10000000;
+        static constexpr uint8_t b9 = 0b10001000;
+        static constexpr uint8_t abBlank = 0b11111111;
+        static constexpr uint8_t aA[] { abBlank, a1, a2, a3, a4, a5, a6, a7, a8, a9 }
         ;
         const static uint8_t bB[] { b0, b1, b2, b3, b4, b5, b6, b7, b8, b9 }
         ;
@@ -573,32 +608,36 @@ private:
         TaskDisplayLED(aA[percent / 10], bB[percent % 10]);
     }
     
-    inline void TaskDisplayLED(uint8_t Ax, uint8_t Bx)
+    // Отправка данных в SPI в контексте RTOS.
+    inline void TaskDisplayLED(uint8_t a_value, uint8_t b_value)
     {
-        uint16_t value = ((Ax << 8) | Bx);
+        uint16_t value = ((a_value << 8) | b_value);
         TaskDisplayLED(value);
     }
 
-    inline void DisplayLED(uint8_t Ax, uint8_t Bx)
+    // Отправка данных в SPI НЕ в контексте RTOS.
+    inline void DisplayLED(uint8_t a_value, uint8_t b_value)
     {
-        uint16_t value = ((Ax << 8) | Bx);
+        uint16_t value = ((a_value << 8) | b_value);
         DisplayLED(value);
     }
     
+    // Отправка данных в SPI НЕ в контексте RTOS.
     void DisplayLED(uint16_t value)
     {
         SPISend(value);
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_BSY) == SET)
         {
-            // Не использовать taskYIELD иначе HardFault при вызове не из Task'a    
+            // Не использовать taskYIELD иначе HardFault при вызове не из Task'a.  
         }
 
-        /* Latch */
+        // Latch.
         GPIO_SetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
         DELAY_US(1);
         GPIO_ResetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
     }
 
+    // Отправка данных в SPI в контексте RTOS.
     void TaskDisplayLED(uint16_t value)
     {
         TaskSPISend(value);
@@ -607,22 +646,24 @@ private:
             taskYIELD();    
         }
             
-        /* Latch */
+        // Latch.
         GPIO_SetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
         DELAY_US(1);
         GPIO_ResetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
     }
     
+    // Отправка данных в SPI НЕ в контексте RTOS.
     void SPISend(uint16_t data)
     {
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_TXE) == RESET)
         {
-            // Не использовать taskYIELD иначе HardFault при вызове не из Task'a
+            // Не использовать taskYIELD иначе HardFault при вызове не из Task'a.
         }
         
         SPI_I2S_SendData(WL_SPI, data);
     }
     
+    // Отправка данных в SPI в контексте RTOS.
     void TaskSPISend(uint16_t data)
     {
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_TXE) == RESET)

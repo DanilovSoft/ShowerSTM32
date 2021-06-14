@@ -12,7 +12,7 @@
 #define GPIO_WIFI_Pin_Tx			(GPIO_Pin_10)
 #define WIFI_DMA_CH_RX				(DMA1_Channel3)
 #define WIFI_DMA_CH_TX				(DMA1_Channel2)
-#define WIFI_DMA_FLAG				(DMA1_FLAG_TC2)  // Transmit Complete
+#define WIFI_DMA_FLAG				(DMA1_FLAG_TC2)  // Transmit Complete.
 #define GPIO_WPS					(GPIOB)
 #define GPIO_WPS_Pin				(GPIO_Pin_12)
 #define GPIO_Heater					(GPIOA)
@@ -62,7 +62,7 @@
 #define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
 
-static constexpr auto kUartRxFifoSize = 1024;
+static constexpr auto kUartRxFifoSize = 1024;                   // Размер кольцевого буфера UART.
 static constexpr auto kUartMaxStrLen = 200;                     // Максимальная длина строки получаемая через UART.
 static constexpr auto kWiFiUartSpeed = 115200;                  // Скорость на которую настроен ESP8266 модуль.
 static constexpr uint8_t kWaterLevelAvgFilterMaxSize = 129;     // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
@@ -98,7 +98,7 @@ public:
         return GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET;
     }
 
-    // Включен ли нагреватель (реле).
+    // Включен ли ТЭН (реле).
     inline static bool HeaterIsOn()
     {
         return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
@@ -110,10 +110,10 @@ public:
         return GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin);
     }
     
-    inline static bool GetIsHeaterEnabled()
-    {
-        return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
-    }
+//    inline static bool GetIsHeaterEnabled()
+//    {
+//        return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
+//    }
     
     inline static void DelayUs(uint16_t usec)
     {
@@ -133,7 +133,8 @@ public:
         return count;
     }
 
-    static char itoa(uint8_t value)
+    // Преобразует число в символьное представление.
+    static char DigitToChar(uint8_t value)
     {
         const char digits[] = "0123456789";
 
@@ -145,29 +146,28 @@ public:
         return ch;
     }
 
-    static char* itoa(uint16_t number, char* str)
+    static char* NumberToString(uint16_t number, char* str)
     {
         const char digit[] = "0123456789";
         char* p = str;
-        //	if (i < 0)
-        //	{
-        //		*p++ = '-';
-        //		i *= -1;
-        //	}
-            int32_t shifter = number;
+        
+        int32_t shifter = number;
         do
         {
-            //Move to where representation ends
-       ++p;
+            // Move to where representation ends.
+            ++p;
             shifter = shifter / 10;
         } while (shifter);
+        
         *p = '\0';
+        
         do
         {
-            //Move back, inserting digits as u go
-       * --p = digit[number % 10];
+            // Move back, inserting digits as u go.
+            * --p = digit[number % 10];
             number = number / 10;
         } while (number);
+        
         return str;
     }
 
@@ -194,7 +194,7 @@ public:
         return a > b ? a - b : b - a;
     }
 
-    static unsigned char ctoi(const char ch)
+    static unsigned char CharToDigit(const char ch)
     {
         return ch - 48;
     }

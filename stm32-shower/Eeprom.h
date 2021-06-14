@@ -4,16 +4,16 @@
 #include "Properties.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "I2C.h"
+#include "I2CHelper.h"
 
 class Eeprom final
 {	
 public:
 
     // Выполняется перед запуском диспетчера потоков.
-    void InitBeforeRTOS()
+    void InitBeforeRtos()
     {
-        while (!InitProps())
+        while (!InitProperties())
         {
             // Тут недоступен taskYIELD.
         }
@@ -24,7 +24,7 @@ public:
         g_properties = g_writeProperties;
     }
 
-    // Сохраняет в EEPROM значение структуры WriteProperties.
+    // Сохраняет в EEPROM значение структуры g_writeProperties.
     void Save()
     {
         while (!InnerSave())
@@ -53,7 +53,7 @@ private:
         return true;
     }
 
-    bool InitProps()
+    bool InitProperties()
     {
         uint8_t data_index;
     
@@ -72,7 +72,7 @@ private:
         return true;
     }
 
-    bool SafeBufferCRC32(uint8_t read_addr, uint8_t num_bytes_to_read, uint32_t &crc32)
+    bool SafeBufferCrc32(uint8_t read_addr, uint8_t num_bytes_to_read, uint32_t &crc32)
     {
         uint8_t crc32_buffer[4];
         CRC_ResetDR();
@@ -111,7 +111,7 @@ private:
         
         uint32_t eeprom_crc32;
     
-        if (!SafeBufferCRC32(page_address, sizeof(g_writeProperties), eeprom_crc32))
+        if (!SafeBufferCrc32(page_address, sizeof(g_writeProperties), eeprom_crc32))
         {
             return false;
         }

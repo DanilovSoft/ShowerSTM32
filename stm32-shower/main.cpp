@@ -15,7 +15,7 @@
 #include "WaterLevelAnimTask.h"
 #include "EepromTask.h"
 #include "Buzzer.h"
-#include "I2C.h"
+#include "I2CHelper.h"
 #include "stm32f10x_pwr.h"
 #include "stm32f10x_rtc.h"
 #include "TempSensor.h"
@@ -23,11 +23,11 @@
 #include "MedianFilter.h"
 
 // Эта структура существует только для чтения, потому что с ней 
-// работают несколько потоков, а запись не волатильна и ничем не синхронизирована.
+// работают несколько потоков, а запись ничем не синхронизирована.
 PropertyStruct g_properties;
 
 // Эта структура накапливает изменения и затем сохраняет их в EEPROM и уже после
-// перезугрузки устройства, изменения попадут в структуру Properties.
+// перезугрузки устройства, изменения попадут в структуру g_properties.
 PropertyStruct g_writeProperties;
 
 RTOSwrapperClass g_rtosHelper;
@@ -48,7 +48,7 @@ Eeprom g_eeprom;
 HeaterTempLimit g_heaterTempLimit;
 HeatingTimeLeft g_heatingTimeLeft;
 UartStream g_uartStream;
-I2C g_i2c;
+I2CHelper g_i2c;
 
 void Init()
 {
@@ -136,7 +136,7 @@ static void EepromTask(void* parm)
     g_i2c.vTaskInit(); // Инициализируем шину I2C.
 
     // Нельзя запускать другие потоки не считав параметры из EEPROM.
-    g_eeprom.InitBeforeRTOS();  // Использует шину I2C.
+    g_eeprom.InitBeforeRtos();  // Использует шину I2C.
     
     g_heatingTimeLeft = HeatingTimeLeft(g_properties.WaterTankVolumeLitre, g_properties.WaterHeaterPowerKWatt);
     

@@ -249,22 +249,25 @@ public:
     float WaterHeaterPowerKWatt;
     
     // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
-    uint8_t WaterLevel_Measure_IntervalMsec;
+    uint8_t WaterLevelMeasureIntervalMsec;
         
     // Размер буфера медианного фильтра для сырых показаний датчика уровня воды.
-    uint8_t WaterLevel_Median_Buffer_Size;
+    uint8_t WaterLevelMedianFilterSize;
         
     // Размер буфера для усреднения показаний после медианного фильтра.
-    uint8_t WaterLevel_Avg_Buffer_Size;
+    uint8_t WaterLevelAvgFilterSize;
         
     // Порог отключения клапана набора воды.
-    uint8_t WaterValve_Cut_Off_Percent;
+    uint8_t WaterValveCutOffPercent;
         
     // Размер скользящего окна для температуры внутри бака.
-    uint8_t InternalTemp_Avg_Size;
+    uint8_t InternalTempAvgFilterSize;
         
     // Максимальное время набора воды, если выше уровня 'Cut-Off' в секундах.
-    uint8_t WaterValve_TimeoutSec;
+    uint8_t WaterValveTimeoutSec;
+    
+    // Число ошибок определения уровня воды, при достижении которого, на LED дисплее должны отобразиться прочерки.
+    uint8_t WaterLevelErrorThreshhold;
     
     void SelfFix()
     {
@@ -326,34 +329,39 @@ public:
             WaterHeaterPowerKWatt = 1.247616; // Полтора-киловатный ТЭН с учётом КПД.
         }
         
-        if (WaterLevel_Measure_IntervalMsec < 10 || WaterLevel_Measure_IntervalMsec > 200)
+        if (WaterLevelMeasureIntervalMsec < 10 || WaterLevelMeasureIntervalMsec > 200)
         {
-            WaterLevel_Measure_IntervalMsec = 60;
+            WaterLevelMeasureIntervalMsec = 60;
         }
         
-        if (WaterLevel_Median_Buffer_Size == 0 || WaterLevel_Median_Buffer_Size > kWaterLevelMedianMaxSize)
+        if (WaterLevelMedianFilterSize == 0 || WaterLevelMedianFilterSize > kWaterLevelMedianMaxSize)
         {
-            WaterLevel_Median_Buffer_Size = 191;  // Лучше не чётное число.
+            WaterLevelMedianFilterSize = 191;  // Лучше не чётное число.
         }
             
-        if (WaterLevel_Avg_Buffer_Size == 0 || WaterLevel_Avg_Buffer_Size > kWaterLevelAvgFilterMaxSize)
+        if (WaterLevelAvgFilterSize == 0 || WaterLevelAvgFilterSize > kWaterLevelAvgFilterMaxSize)
         {
-            WaterLevel_Avg_Buffer_Size = 32;
+            WaterLevelAvgFilterSize = 32;
         }
             
-        if (WaterValve_Cut_Off_Percent < 90 || WaterValve_Cut_Off_Percent > 99)
+        if (WaterValveCutOffPercent < 90 || WaterValveCutOffPercent > 99)
         {
-            WaterValve_Cut_Off_Percent = 90;
+            WaterValveCutOffPercent = 90;
         }
             
-        if (InternalTemp_Avg_Size == 0 || InternalTemp_Avg_Size > kInternalTempAvgFilterSize)
+        if (InternalTempAvgFilterSize == 0 || InternalTempAvgFilterSize > kInternalTempAvgFilterSize)
         {
-            InternalTemp_Avg_Size = 4;
+            InternalTempAvgFilterSize = 4;
         }
             
-        if (WaterValve_TimeoutSec < 5)
+        if (WaterValveTimeoutSec < 5)
         {
-            WaterValve_TimeoutSec = 5;	
+            WaterValveTimeoutSec = 5;	
+        }
+        
+        if (WaterLevelErrorThreshhold == 0)
+        {
+            WaterLevelErrorThreshhold = 255;
         }
         
         Chart.SelfFix();

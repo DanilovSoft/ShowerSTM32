@@ -18,9 +18,9 @@ class WiFiTask final : public iActiveTask
 {
 private:
     
-    static const uint8_t kWiFiTryInitLimit = 3;
+    static constexpr uint8_t kWiFiTryInitLimit = 3;
     Request m_request;
-    uint8_t m_requestData[256] = { }; // Буфер для данных входного запроса.
+    uint8_t m_requestData[256] = {0}; // Буфер для данных входного запроса.
     
     bool InitWiFi()
     {
@@ -76,7 +76,7 @@ private:
         }
         
         char rf_power[] = "AT+RFPOWER=\0\0\0\0";
-        Common::itoa(g_properties.WiFiPower, rf_power + 11);
+        Common::NumberToString(g_properties.WiFiPower, rf_power + 11);
         strcat(rf_power, "\r\n");
     
         g_uartStream.WriteLine(rf_power); 		// 40..82, unit:0.25dBm
@@ -370,7 +370,7 @@ private:
             }
         case ShowerCode::kGetHeaterEnabled:
             {
-                bool enabled = Common::GetIsHeaterEnabled();
+                bool enabled = Common::HeaterIsOn();
                 m_request.SendResponse(enabled);
                 break;
             }
@@ -456,32 +456,32 @@ private:
             }
         case ShowerCode::kGetWaterLevelMeasureInterval:
             {
-                m_request.SendResponse(g_writeProperties.WaterLevel_Measure_IntervalMsec);
+                m_request.SendResponse(g_writeProperties.WaterLevelMeasureIntervalMsec);
                 break;
             }
         case ShowerCode::kSetWaterLevelMeasureInterval:
             {
                 if (request_length == 1)
                 {
-                    g_writeProperties.WaterLevel_Measure_IntervalMsec = *m_requestData;
+                    g_writeProperties.WaterLevelMeasureIntervalMsec = *m_requestData;
                     m_request.SendResponse(kOK);
                 }
                 break;
             }
         case ShowerCode::kGetWaterValveCutOffPercent:
             {
-                m_request.SendResponse(g_writeProperties.WaterValve_Cut_Off_Percent);
+                m_request.SendResponse(g_writeProperties.WaterValveCutOffPercent);
                 break;
             }
         case ShowerCode::kSetWaterValveCutOffPercent:
             {
-                g_writeProperties.WaterValve_Cut_Off_Percent = *m_requestData;
+                g_writeProperties.WaterValveCutOffPercent = *m_requestData;
                 m_request.SendResponse(kOK);
                 break;
             }
         case ShowerCode::kGetWaterLevelMedianBufferSize:
             {
-                m_request.SendResponse(g_writeProperties.WaterLevel_Median_Buffer_Size);
+                m_request.SendResponse(g_writeProperties.WaterLevelMedianFilterSize);
                 break;
             }
         case ShowerCode::kSetWaterLevelMedianBufferSize:
@@ -489,14 +489,14 @@ private:
                 if (request_length == 1)
                 {
                     auto value = *m_requestData;
-                    g_writeProperties.WaterLevel_Median_Buffer_Size = value;
+                    g_writeProperties.WaterLevelMedianFilterSize = value;
                     m_request.SendResponse(kOK);
                 }
                 break;
             }
         case ShowerCode::kGetWaterLevelAverageBufferSize:
             {
-                m_request.SendResponse(g_writeProperties.WaterLevel_Avg_Buffer_Size);
+                m_request.SendResponse(g_writeProperties.WaterLevelAvgFilterSize);
                 break;
             }
         case ShowerCode::kSetWaterLevelAverageBufferSize:
@@ -504,21 +504,21 @@ private:
                 if (request_length == 1)
                 {
                     auto value = *m_requestData;
-                    g_writeProperties.WaterLevel_Avg_Buffer_Size = value;
+                    g_writeProperties.WaterLevelAvgFilterSize = value;
                     m_request.SendResponse(kOK);
                 }
                 break;
             }
         case ShowerCode::kGetTempSensorInternalTempAverageSize:
             {
-                m_request.SendResponse(g_writeProperties.InternalTemp_Avg_Size);
+                m_request.SendResponse(g_writeProperties.InternalTempAvgFilterSize);
                 break;
             }
         case ShowerCode::kSetTempSensorInternalTempAverageSize:
             {
                 if (request_length == 1)
                 {
-                    g_writeProperties.InternalTemp_Avg_Size = *m_requestData;
+                    g_writeProperties.InternalTempAvgFilterSize = *m_requestData;
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -539,14 +539,14 @@ private:
             }
         case ShowerCode::kGetWaterValveTimeoutSec:
             {
-                m_request.SendResponse(g_writeProperties.WaterValve_TimeoutSec);	
+                m_request.SendResponse(g_writeProperties.WaterValveTimeoutSec);	
                 break;
             }
         case ShowerCode::kSetWaterValveTimeoutSec:
             {
-                if (request_length == sizeof(g_writeProperties.WaterValve_TimeoutSec))
+                if (request_length == sizeof(g_writeProperties.WaterValveTimeoutSec))
                 {
-                    g_writeProperties.WaterValve_TimeoutSec = *m_requestData;
+                    g_writeProperties.WaterValveTimeoutSec = *m_requestData;
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -613,6 +613,20 @@ private:
                 if (request_length == sizeof(g_writeProperties.WaterHeaterPowerKWatt))
                 {
                     g_writeProperties.WaterHeaterPowerKWatt = *(float*)m_requestData;
+                    m_request.SendResponse(kOK);
+                }
+                break;	
+            }
+        case ShowerCode::kGetWaterLevelErrorThreshhold:
+            {
+                m_request.SendResponse(g_writeProperties.WaterLevelErrorThreshhold);
+                break;	
+            }
+        case ShowerCode::kSetWaterLevelErrorThreshhold:
+            {
+                if (request_length == sizeof(g_writeProperties.WaterLevelErrorThreshhold))
+                {
+                    g_writeProperties.WaterLevelErrorThreshhold = *m_requestData;
                     m_request.SendResponse(kOK);
                 }
                 break;	

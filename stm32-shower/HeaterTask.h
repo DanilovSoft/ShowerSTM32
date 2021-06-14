@@ -332,7 +332,7 @@ private:
             else if (g_waterLevelTask.GetIsInitialized())
             {
                 // Если уровень воды больше допустимого минимума И температура в баке меньше необходимой.
-                if(internalTemp < targetTemp && !g_waterLevelTask.SensorIsBlocked && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
+                if(internalTemp < targetTemp && !g_waterLevelTask.GetIsError() && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
                 {
                     TurnOnHeaterWithSound();
                 }

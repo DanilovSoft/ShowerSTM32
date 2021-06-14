@@ -6,6 +6,7 @@ class WaterLevelAnimTask final : public iActiveTask
 {
 public:
     
+    // По очереди меняет символы ['\', '|', '/', '-'].
     char GetChar()
     {
         return m_cur;

@@ -39,28 +39,28 @@ public:
 		DisableGPIO();
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 		
-		TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct = 
+		TIM_TimeBaseInitTypeDef tim_time_base_init_struct = 
 		{
-			.TIM_Prescaler = (uint16_t)(SystemCoreClock / 100000 - 1),  // 100 KHz timebase
+			.TIM_Prescaler = (uint16_t)(SystemCoreClock / 100000 - 1),  // 100 KHz timebase.
 			.TIM_CounterMode = TIM_CounterMode_Up,
-			.TIM_Period = (uint16_t)(SystemCoreClock / 10000 - 1),      // Arbitary placeholder 100 Hz
-			.TIM_ClockDivision = TIM_CKD_DIV1,       // без  делителя.
+			.TIM_Period = (uint16_t)(SystemCoreClock / 10000 - 1),      // Arbitary placeholder 100 Hz.
+			.TIM_ClockDivision = TIM_CKD_DIV1,							// Без  делителя.
 			.TIM_RepetitionCounter = 0
 		};
-		TIM_TimeBaseInit(Buzzer_TIM, &TIM_TimeBaseInitStruct);
+		TIM_TimeBaseInit(Buzzer_TIM, &tim_time_base_init_struct);
 
-		TIM_OCInitTypeDef TIM_OCInitStruct = 
+		TIM_OCInitTypeDef tim_oc_init_struct = 
 		{
 			.TIM_OCMode = TIM_OCMode_PWM1,
 			.TIM_OutputState = TIM_OutputState_Enable,
 			.TIM_OutputNState = TIM_OutputNState_Disable,
-			.TIM_Pulse = (uint16_t)((TIM_TimeBaseInitStruct.TIM_Period + 1) / 2),       // 50% Duty.
+			.TIM_Pulse = (uint16_t)((tim_time_base_init_struct.TIM_Period + 1) / 2),       // 50% Duty.
 			.TIM_OCPolarity = TIM_OCPolarity_High,
 			.TIM_OCNPolarity = TIM_OCPolarity_High,
 			.TIM_OCIdleState = TIM_OCIdleState_Reset,
 			.TIM_OCNIdleState = TIM_OCNIdleState_Reset
 		};
-		TIM_OC1Init(Buzzer_TIM, &TIM_OCInitStruct);
+		TIM_OC1Init(Buzzer_TIM, &tim_oc_init_struct);
 		
 		TIM_OC1PreloadConfig(Buzzer_TIM, TIM_OCPreload_Enable);
 		TIM_ARRPreloadConfig(Buzzer_TIM, ENABLE);

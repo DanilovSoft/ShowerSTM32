@@ -14,7 +14,7 @@ class LcdTask final : public iActiveTask
 {
 private:
 
-    LiquidCrystal m_lc;
+    LiquidCrystal m_liquidCrystal;
 
     void Init()
     {
@@ -35,14 +35,14 @@ private:
             first_char = '-';
         }
 
-        char tmp = Common::itoa(temp / 10);
+        char tmp = Common::DigitToChar(temp / 10);
         buf[0] = tmp == '0' ? first_char : tmp;
-        buf[1] = Common::itoa(temp % 10);
+        buf[1] = Common::DigitToChar(temp % 10);
     }
     
     void Run()
     {
-        if (!m_lc.Setup(16, 2))
+        if (!m_liquidCrystal.Setup(16, 2))
         {
             return;
         }
@@ -52,64 +52,71 @@ private:
         char line_water_ready[17] = "  \x42o\xE3\x61 \xBD\x61\xB4pe\xBF\x61  ";  // Вода нагрета
         char line_water_level[17] = "\xA9po\xB3\x65\xBD\xC4 \xB3o\xE3\xC3 -- ";   // Уровень воды --%
 
-        m_lc.Clear();
+        m_liquidCrystal.Clear();
 
         while (true)
         {
             uint8_t target_temp = 0;
+            
             bool got_target_temp = g_heaterTempLimit.TryGetTargetTemperature(target_temp);
-            bool heater_enabled = Common::GetIsHeaterEnabled();
-            bool heater_switch_enabled = Common::CircuitBreakerIsOn();     // Включен ли автомат.
-            bool valve_is_open = Common::ValveIsOpen();
+            bool circuit_breaker_is_on = Common::CircuitBreakerIsOn();  // Включен ли автомат.
+            bool heater_is_on = Common::HeaterIsOn();  // Включен ли ТЭН.
+            bool valve_is_open = Common::ValveIsOpen(); // Набирается ли вода.
             
-            m_lc.SetCursor(0, 0);
+            m_liquidCrystal.SetCursor(0, 0);
             
-            if (valve_is_open && heater_enabled)
+            if (valve_is_open && heater_is_on)
             {
-                   // уровень воды в 1 строке
-                if(g_waterLevelTask.SensorIsBlocked)
+                // Набирается вода, включен автомат и включен ТЭН.
+                
+                // Уровень воды в первой строке.
+                if(!g_waterLevelTask.GetIsError())
                 {
-                    line_water_level[13] = ' ';
-                    line_water_level[14] = '?';
-                    line_water_level[15] = ' ';
+                    uint8_t water_level = g_waterLevelTask.DisplayingPercent;
+                    
+                    char tmp = Common::DigitToChar(water_level / 10);
+                    line_water_level[13] = tmp == '0' ? ' ' : tmp;
+                    line_water_level[14] = Common::DigitToChar(water_level % 10);
+                    line_water_level[15] = '%';
                 }
                 else
                 {
-                    uint8_t water_level = g_waterLevelTask.DisplayingPercent;
-                    char tmp = Common::itoa(water_level / 10);
-                    line_water_level[13] = tmp == '0' ? ' ' : tmp;
-                    line_water_level[14] = Common::itoa(water_level % 10);
+                    line_water_level[13] = '-';
+                    line_water_level[14] = '-';
                     line_water_level[15] = '%';
                 }
-                m_lc.WriteString(line_water_level);
+                
+                m_liquidCrystal.WriteString(line_water_level);
             }
             else
             {
                 if (g_tempSensorTask.InternalSensorInitialized)
                 {
-                    // Записывает 2 символа в lineTemperatureBuf в положение "Температура в баке"
+                    // Записывает 2 символа в line_temperature_buf в положение "Температура в баке".
                     DisplayTemp(line_temperature_buf + 9, round(g_tempSensorTask.AverageInternalTemp));
                 }
             
                 if (g_tempSensorTask.ExternalSensorInitialized)
                 {
-                    // Записывает 2 символа в lineTemperatureBuf в положение "Температура на улице"
+                    // Записывает 2 символа в line_temperature_buf в положение "Температура на улице".
                     DisplayTemp(line_temperature_buf, round(g_tempSensorTask.AverageExternalTemp));
                 }
             
                 if (got_target_temp)
-                {
-                    // Записать 2 символа до скольки нужно нагреть
-                    line_temperature_buf[13] = Common::itoa(target_temp / 10);
-                    line_temperature_buf[14] = Common::itoa(target_temp % 10);
+                {   
+                    // Записать 2 символа до скольки нужно нагреть.
+                    line_temperature_buf[13] = Common::DigitToChar(target_temp / 10);
+                    line_temperature_buf[14] = Common::DigitToChar(target_temp % 10);
                 }
             }
             
-            m_lc.WriteString(line_temperature_buf);
+            m_liquidCrystal.WriteString(line_temperature_buf);
+            m_liquidCrystal.SetCursor(0, 1);
             
-            m_lc.SetCursor(0, 1);	
-            if (heater_enabled)
+            if (heater_is_on)
             {
+                // ТЭН включен.
+                
                 float time_left_min = g_heatingTimeLeft.GetTimeLeftMin();
             
                 // Округляем до целых.
@@ -117,7 +124,7 @@ private:
             
                 if (time_left_min_int > 99)
                 {
-                    time_left_min_int = 99;  // Дисплей не может отображать больше 2 разрядов.
+                    time_left_min_int = 99;  // Дисплей не может отображать больше двух разрядов.
                 }
             
                 if (time_left_min_int == 0)
@@ -125,50 +132,64 @@ private:
                     time_left_min_int = 1;  // Нет смысла отображать 0 минут.
                 }
             
-                char tmp = Common::itoa(time_left_min_int / 10);
-                line_time_left[9] = tmp == '0' ? ' ' : tmp;
-                line_time_left[10] = Common::itoa(time_left_min_int % 10);
+                char first_digit = Common::DigitToChar(time_left_min_int / 10);
+                line_time_left[9] = first_digit == '0' ? ' ' : first_digit;
+                line_time_left[10] = Common::DigitToChar(time_left_min_int % 10);
             
-                m_lc.WriteString(line_time_left);
+                m_liquidCrystal.WriteString(line_time_left);
             }
             else
             {
                 bool water_heated = false;
+                
                 if (got_target_temp && g_tempSensorTask.InternalSensorInitialized)
                 {
                     water_heated = (round(g_tempSensorTask.AverageInternalTemp) >= target_temp);
                 }
                 
-                if (heater_switch_enabled && water_heated && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
+                if (circuit_breaker_is_on && water_heated && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
                 {
-                      // 'Вода нагрета'
-                    m_lc.WriteString(line_water_ready);
+                    // 'Вода нагрета'.
+                    m_liquidCrystal.WriteString(line_water_ready);
                 }
                 else
                 {
-                      // Уровень воды во 2 строке.
-                    if(g_waterLevelTask.Preinitialized)
+                    // Уровень воды во второй строке.
+                    if(g_waterLevelTask.PreInitialized)
                     {
-                        if (g_waterLevelTask.SensorIsBlocked)
+                        if (!g_waterLevelTask.GetIsError())
                         {
-                            line_water_level[13] = ' ';
-                            line_water_level[14] = '?';
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? ' ' : g_waterLevelAnimTask.GetChar();
+                            uint8_t water_level = g_waterLevelTask.DisplayingPercent;
+                            char first_digit = Common::DigitToChar(water_level / 10);
+                            line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
+                            line_water_level[14] = Common::DigitToChar(water_level % 10);
+                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? '%' : g_waterLevelAnimTask.GetChar();
                         }
                         else
                         {
-                            uint8_t water_level = g_waterLevelTask.DisplayingPercent;
-                            char tmp = Common::itoa(water_level / 10);
-                            line_water_level[13] = tmp == '0' ? ' ' : tmp;
-                            line_water_level[14] = Common::itoa(water_level % 10);
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? '%' : g_waterLevelAnimTask.GetChar();
+                            line_water_level[13] = '-';
+                            line_water_level[14] = '-';
+                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? ' ' : g_waterLevelAnimTask.GetChar();
                         }
                     }
                     else
                     {
-                        line_water_level[15] = g_waterLevelAnimTask.GetChar();
+                        // У датчика уровня ещё нет ни одного показания.
+                        
+                        if(!g_waterLevelTask.GetIsError())
+                        {
+                            // Анимация загрузки.
+                            line_water_level[15] = g_waterLevelAnimTask.GetChar();
+                        }
+                        else
+                        {
+                            line_water_level[13] = '-';
+                            line_water_level[14] = '-';
+                            line_water_level[15] = '%';
+                        }
                     }
-                    m_lc.WriteString(line_water_level);
+                    
+                    m_liquidCrystal.WriteString(line_water_level);
                 }
             }
             taskYIELD();

@@ -2,6 +2,7 @@
 #include "stdint.h"
 #include "ShowerCode.h"
 
+// '+IPD' = Получение сетевых данных.
 class IpdBuffer final
 {
 public:
@@ -21,7 +22,7 @@ public:
         }
     }
 
-    ShowerCode Take(uint8_t* buf)
+    ShowerCode Take(uint8_t* buffer)
     {
         if (m_count > 0)
         {
@@ -34,7 +35,7 @@ public:
             length -= 2;  // Учесть размер хедера.
             for(uint8_t i = 0 ; i < length ; i++)
             {
-                buf[i] = m_buf[m_head];
+                buffer[i] = m_buf[m_head];
                 m_head = (m_head + 1) % kBufSize;
             }
             m_count -= (length + 2);
@@ -49,7 +50,7 @@ public:
         {
             uint8_t payload_length = m_buf[m_head];  // В первом байте записан размер Payload.
             
-            // Payload не может быть меньше 2
+            // Payload не может быть меньше 2.
             if(payload_length < 2)
             {
                 m_count--;
@@ -71,7 +72,7 @@ public:
 private:
 
     static const uint8_t kBufSize = 200;
-    uint8_t m_buf[kBufSize] = { };
+    uint8_t m_buf[kBufSize] = {0};
     uint8_t m_count = 0;
     uint8_t m_head = 0;
     uint8_t m_tail = 0;

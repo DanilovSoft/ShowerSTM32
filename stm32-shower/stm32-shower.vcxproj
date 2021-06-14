@@ -130,7 +130,7 @@
     <ClInclude Include="HeaterTempLimit.h" />
     <ClInclude Include="HeaterWatchdog.h" />
     <ClInclude Include="HeatingTimeLeft.h" />
-    <ClInclude Include="I2C.h" />
+    <ClInclude Include="I2CHelper.h" />
     <ClInclude Include="iActiveTask.h" />
     <ClInclude Include="Interlocked.h" />
     <ClInclude Include="IpdBuffer.h" />

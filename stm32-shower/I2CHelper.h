@@ -25,10 +25,11 @@ constexpr auto EE_FLASH_PAGESIZE =      16;      // 16-byte Page.
 constexpr auto EE_BlockSize =           256;
 constexpr auto EE_DataAddr1 =           0x0000 + 16;
 constexpr auto EE_DataAddr2 =           0x0000 + 128;
-constexpr auto EE_AvailableDataSize = EE_BlockSize / 2 - EE_FLASH_PAGESIZE;   // 112 байт
+constexpr auto EE_AvailableDataSize = EE_BlockSize / 2 - EE_FLASH_PAGESIZE;   // 112 байт.
 static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of PropertyStruct struct greater than available in eeprom");
 
-class I2C final
+// Синхронизирует доступ к Eeprom и LCD устройствами.
+class I2CHelper final
 {
 public:
 
@@ -636,4 +637,4 @@ private:
     }  
 };
 
-extern I2C g_i2c;
+extern I2CHelper g_i2c;
