@@ -1,5 +1,4 @@
 #pragma once
-#include "stdint.h"
 #include "math.h"
 #include "Common.h"
 
@@ -267,7 +266,7 @@ public:
     uint8_t WaterValveTimeoutSec;
     
     // Число ошибок определения уровня воды, при достижении которого, на LED дисплее должны отобразиться прочерки.
-    uint8_t WaterLevelErrorThreshhold;
+    uint8_t WaterLevelErrorThreshold;
     
     void SelfFix()
     {
@@ -359,9 +358,9 @@ public:
             WaterValveTimeoutSec = 5;	
         }
         
-        if (WaterLevelErrorThreshhold == 0)
+        if (WaterLevelErrorThreshold == 0)
         {
-            WaterLevelErrorThreshhold = 255;
+            WaterLevelErrorThreshold = 255;
         }
         
         Chart.SelfFix();

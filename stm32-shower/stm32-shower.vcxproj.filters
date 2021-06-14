@@ -145,6 +145,12 @@
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
       <Filter>Source files\Device-specific files</Filter>
     </ClCompile>
+    <ClCompile Include="InitializationTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="WaterLevelTask.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="stm32-shower-Debug.vgdbsettings">
@@ -258,10 +264,7 @@
     <ClInclude Include="FreeRTOSConfig.h">
       <Filter>Header files\FreeRTOS</Filter>
     </ClInclude>
-    <ClInclude Include="TaskHelper.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="iActiveTask.h">
+    <ClInclude Include="TaskBase.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="WiFiTask.h">
@@ -285,10 +288,7 @@
     <ClInclude Include="ConnectionsBuffer.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="Eeprom.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="EepromTask.h">
+    <ClInclude Include="EepromHelper.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="HeaterTask.h">
@@ -330,13 +330,13 @@
     <ClInclude Include="RealTimeClockStopwatch.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="RTOSwrapper.h">
+    <ClInclude Include="RtosHelper.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="ShowerCode.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="TempSensor.h">
+    <ClInclude Include="TempSensorTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="Stopwatch.h">
@@ -357,7 +357,7 @@
     <ClInclude Include="WatchDogTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="WaterLevelAnimTask.h">
+    <ClInclude Include="InitializationTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="WaterLevelTask.h">

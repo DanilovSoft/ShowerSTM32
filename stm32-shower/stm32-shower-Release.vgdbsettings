@@ -73,7 +73,7 @@
   <UserDefinedVariables />
   <ImportedPropertySheets />
   <CodeSense>
-    <Enabled>Unknown</Enabled>
+    <Enabled>True</Enabled>
     <ExtraSettings>
       <HideErrorsInSystemHeaders>true</HideErrorsInSystemHeaders>
       <SupportLightweightReferenceAnalysis>false</SupportLightweightReferenceAnalysis>

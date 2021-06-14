@@ -59,6 +59,7 @@
 #define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
+//#define configCHECK_FOR_STACK_OVERFLOW 1 // Для отладки
 
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION					1

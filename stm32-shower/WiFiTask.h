@@ -1,24 +1,50 @@
 #pragma once
 #include "Request.h"
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "Common.h"
-#include "iActiveTask.h"
 #include "Buzzer.h"
 #include "Properties.h"
 #include "HeaterTask.h"
-#include "Eeprom.h"
+#include "EepromHelper.h"
 #include "stm32f10x_iwdg.h"
 #include "WatchDogTask.h"
 #include "string.h"
 #include "WaterLevelTask.h"
 #include "HeatingTimeLeft.h"
-#include "TempSensor.h"
+#include "TempSensorTask.h"
+#include "InitializationTask.h"
 
-class WiFiTask final : public iActiveTask
+class WiFiTask final : public TaskBase
 {
+public:
+    
+    void Init()
+    {
+        // Кнопка WPS.
+        GPIO_InitTypeDef gpio_init = 
+        {
+            .GPIO_Pin = GPIO_WPS_Pin,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_IPU
+        };
+        
+        GPIO_Init(GPIO_WPS, &gpio_init);
+        GPIO_SetBits(GPIO_WPS, GPIO_WPS_Pin);
+        
+        // CH_PD
+        gpio_init = 
+        {
+            .GPIO_Pin = WIFI_GPIO_CH_PD_Pin,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_Out_PP
+        };
+    
+        GPIO_Init(WIFI_GPIO, &gpio_init);
+        GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
+    }
+    
 private:
     
-    static constexpr uint8_t kWiFiTryInitLimit = 3;
     Request m_request;
     uint8_t m_requestData[256] = {0}; // Буфер для данных входного запроса.
     
@@ -26,7 +52,7 @@ private:
     {
         bool wps_button_pressed = GPIO_ReadInputDataBit(GPIO_WPS, GPIO_WPS_Pin) == RESET;
         
-        for (int8_t i = 0; i <= kWiFiTryInitLimit; i++)
+        for (auto i = 0; i <= kWiFiTryInitLimit; i++)
         {
             vTaskDelay(100 / portTICK_PERIOD_MS);
             GPIO_SetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
@@ -51,10 +77,11 @@ private:
     
     bool TryInitWiFi()
     {
-        if (!g_uartStream.WaitLine("ready", 1000))     // Ожидание инициализации WiFi.
-            {
-                return false;
-            }
+        // Ожидание инициализации WiFi.
+        if (!g_uartStream.WaitLine("ready", 1000))
+        {
+            return false;
+        }
         
         //    	uartStream.WriteLine("AT+UART_DEF=57600,8,1,0,0\r\n");
         //		if (!uartStream.WaitLine("OK", 200))
@@ -133,31 +160,6 @@ private:
         return true;
     }
     
-    void Init()
-    {
-        // Кнопка WPS.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = GPIO_WPS_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_IPU
-        };
-        
-        GPIO_Init(GPIO_WPS, &gpio_init);
-        GPIO_SetBits(GPIO_WPS, GPIO_WPS_Pin);
-        
-        // CH_PD
-        gpio_init = 
-        {
-            .GPIO_Pin = WIFI_GPIO_CH_PD_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-    
-        GPIO_Init(WIFI_GPIO, &gpio_init);
-        GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
-    }
-    
     void SetAP(const char* pref, uint8_t pref_size, uint8_t* data, uint8_t length)
     {
         pref_size -= 1;   // Не учитываем нуль-терминатор.
@@ -175,18 +177,20 @@ private:
     
     void InnerSetCurAP(uint8_t* data, uint8_t length)
     {
-        const char pref[] = "AT+CWJAP_CUR=";
+        static constexpr char pref[] = "AT+CWJAP_CUR=";
         SetAP(pref, sizeof(pref), data, length);
     }
     
     void InnerSetDefAP(uint8_t* data, uint8_t length)
     {
-        const char pref[] = "AT+CWJAP_DEF=";
+        static constexpr char pref[] = "AT+CWJAP_DEF=";
         SetAP(pref, sizeof(pref), data, length);
     }
     
     void Run()
     {
+        g_initializationTask.WaitForPropertiesInitialization();
+        
         if (InitWiFi())
         {
             while (true)
@@ -271,7 +275,7 @@ private:
             }
         case ShowerCode::kSave:
             {
-                g_eeprom.Save();
+                g_eepromHelper.Save();
                 m_request.SendResponse(kOK);
                 break;
             }
@@ -352,7 +356,7 @@ private:
             }
         case ShowerCode::kGetTimeLeft:
             {
-                uint8_t value = g_heatingTimeLeft.GetTimeLeftMin();
+                uint8_t value = g_heatingTimeLeft->GetTimeLeftMin();
                 m_request.SendResponse(value);
                 break;
             }
@@ -444,7 +448,7 @@ private:
             }
         case ShowerCode::kGetHeatingProgress:
             {
-                uint8_t value = g_heatingTimeLeft.GetProgress();
+                uint8_t value = g_heatingTimeLeft->GetProgress();
                 m_request.SendResponse(value);
                 break;
             }
@@ -619,14 +623,14 @@ private:
             }
         case ShowerCode::kGetWaterLevelErrorThreshhold:
             {
-                m_request.SendResponse(g_writeProperties.WaterLevelErrorThreshhold);
+                m_request.SendResponse(g_writeProperties.WaterLevelErrorThreshold);
                 break;	
             }
         case ShowerCode::kSetWaterLevelErrorThreshhold:
             {
-                if (request_length == sizeof(g_writeProperties.WaterLevelErrorThreshhold))
+                if (request_length == sizeof(g_writeProperties.WaterLevelErrorThreshold))
                 {
-                    g_writeProperties.WaterLevelErrorThreshhold = *m_requestData;
+                    g_writeProperties.WaterLevelErrorThreshold = *m_requestData;
                     m_request.SendResponse(kOK);
                 }
                 break;	

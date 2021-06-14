@@ -23,8 +23,8 @@ constexpr auto EE_HW_ADDRESS =          0xA0;   // b3 = b2 = b1 = 0
 constexpr auto LCD_HW_ADDRESS =         0x7E;
 constexpr auto EE_FLASH_PAGESIZE =      16;      // 16-byte Page.
 constexpr auto EE_BlockSize =           256;
-constexpr auto EE_DataAddr1 =           0x0000 + 16;
-constexpr auto EE_DataAddr2 =           0x0000 + 128;
+constexpr auto EE_DataAddr1 =           0x0000 + 16; // Адрес блока в EEPROM где храняться параметры PropertyStruct.
+constexpr auto EE_DataAddr2 =           0x0000 + 128;  // Адрес блока в EEPROM где храняться параметры PropertyStruct.
 constexpr auto EE_AvailableDataSize = EE_BlockSize / 2 - EE_FLASH_PAGESIZE;   // 112 байт.
 static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of PropertyStruct struct greater than available in eeprom");
 
@@ -33,20 +33,20 @@ class I2CHelper final
 {
 public:
 
-    void vTaskInit()
+    void InitI2C()
     {
         // http://www.freertos.org/xSemaphoreCreateBinaryStatic.html
         m_xLockSemaphore = xSemaphoreCreateBinaryStatic(&m_xLockSemaphoreBuffer);
         xSemaphoreGive(m_xLockSemaphore);
         
-        InitGPIO();
+        InitGpio();
         GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
         
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
         
         I2C_DeInit(I2C_EE_LCD);
-        InitI2C();
+        InitI2cPeriph();
         
         // Включить i2c.
         I2C_Cmd(I2C_EE_LCD, ENABLE);
@@ -56,21 +56,6 @@ public:
         {
             ResetBus();
         }
-    }
-    
-    void InitI2C()
-    {   
-        I2C_InitTypeDef i2c_init_struct = 
-        {
-            .I2C_ClockSpeed = 100000, // 100kHz.
-            .I2C_Mode = I2C_Mode_I2C,
-            .I2C_DutyCycle = I2C_DutyCycle_2,
-            .I2C_OwnAddress1 = 0x15,
-            .I2C_Ack = I2C_Ack_Enable,
-            .I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit
-        };
-
-        I2C_Init(I2C_EE_LCD, &i2c_init_struct);
     }
     
     bool EE_BufferWrite(uint8_t* pBuffer, uint8_t write_addr, uint8_t num_bytes_to_write)
@@ -100,10 +85,10 @@ public:
         return result;
     }
     
-    bool LCD_expanderWrite(uint8_t data) 
+    bool LCD_ExpanderWrite(uint8_t data) 
     {
         LockI2c();
-        bool result = LCD_ExpanderWriteInternal(data);
+        bool result = LCD_InnerExpanderWrite(data);
         WaitWhileBusy();
         UnlockI2c();
         return result;
@@ -114,6 +99,22 @@ private:
     static constexpr uint16_t kI2CTimeoutMsec = 2000;
     StaticSemaphore_t m_xLockSemaphoreBuffer;
     SemaphoreHandle_t m_xLockSemaphore;
+    
+    void InitI2cPeriph()
+    {   
+        I2C_InitTypeDef i2c_init_struct = 
+        {
+            // 100kHz.
+            .I2C_ClockSpeed = 100000, 
+            .I2C_Mode = I2C_Mode_I2C,
+            .I2C_DutyCycle = I2C_DutyCycle_2,
+            .I2C_OwnAddress1 = 0x15,
+            .I2C_Ack = I2C_Ack_Enable,
+            .I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit
+        };
+
+        I2C_Init(I2C_EE_LCD, &i2c_init_struct);
+    }
     
     void LockI2c()
     {
@@ -157,7 +158,7 @@ private:
         return true;
     }
     
-    void InitGPIO()
+    void InitGpio()
     {
         GPIO_InitTypeDef  GPIO_InitStructure = 
         {
@@ -268,7 +269,7 @@ private:
         return true;
     }
     
-    bool LCD_ExpanderWriteInternal(uint8_t data) 
+    bool LCD_InnerExpanderWrite(uint8_t data) 
     {
         if (!StartTransmission(LCD_HW_ADDRESS))
         {
@@ -627,14 +628,14 @@ private:
         // Bus status is now : FREE.
         
         // Return to power up mode.
-        InitGPIO();
+        InitGpio();
     
         I2C_Cmd(I2C_EE_LCD, DISABLE);
         I2C_DeInit(I2C_EE_LCD);
-        InitI2C();
+        InitI2cPeriph();
         I2C_Cmd(I2C_EE_LCD, ENABLE);
         I2C_AcknowledgeConfig(I2C1, DISABLE);
     }  
 };
 
-extern I2CHelper g_i2c;
+extern I2CHelper g_i2cHelper;

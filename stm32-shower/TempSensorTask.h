@@ -82,7 +82,7 @@
 */
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "Properties.h"
 #include "stm32f10x.h"
 #include "stm32f10x_rcc.h"
@@ -93,9 +93,10 @@
 #include "Properties.h"
 #include "Common.h"
 #include "string.h"
-#include "Eeprom.h"
+#include "EepromHelper.h"
+#include "InitializationTask.h"
 
-class TempSensorTask final : public iActiveTask
+class TempSensorTask final : public TaskBase
 {
 public:
 
@@ -111,6 +112,36 @@ public:
     // Последнее показание с датчика.
     volatile float ExternalTemp = 0;
     
+    void Init()
+    {
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+        GPIO_PinRemapConfig(GPIO_Remap_USART1, ENABLE);
+        
+        // USART Tx.
+        GPIO_InitTypeDef gpio_init_struct = 
+        {
+            .GPIO_Pin = OW_GPIO_Pin_Tx,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_AF_OD,
+        };
+    
+        GPIO_Init(OneWire_GPIO, &gpio_init_struct);
+
+        USART_InitTypeDef usart_init_struct = 
+        {
+            .USART_BaudRate = 115200,
+            .USART_WordLength = USART_WordLength_8b,
+            .USART_StopBits = USART_StopBits_1,
+            .USART_Parity = USART_Parity_No,
+            .USART_Mode = USART_Mode_Tx | USART_Mode_Rx,
+            .USART_HardwareFlowControl = USART_HardwareFlowControl_None,
+        };
+
+        USART_Init(OneWire_USART, &usart_init_struct);
+        USART_Cmd(OneWire_USART, ENABLE);
+        USART_HalfDuplexCmd(OneWire_USART, ENABLE);
+    }
+    
     void WaitFirstConversion()
     {
         while (!InternalSensorInitialized || !ExternalSensorInitialized) 
@@ -120,7 +151,6 @@ public:
     }
 
 private:
-    
     
     typedef enum 
     {
@@ -197,7 +227,7 @@ private:
         return ow_byte;
     }
     
-    static float Decode(uint8_t* scratchPad)
+    static float Decode(uint8_t* scratch_pad)
     {
         // Температуру мы получаем из двух байт: 0-3 биты это значения после запятой,
         // 4-12 собственно значение температуры, 12-16 знак. Если разрешение 12бит, 
@@ -208,8 +238,8 @@ private:
         const uint8_t TEMP_LSB = 0;
         const uint8_t TEMP_MSB = 1;
     
-        uint8_t LSB = scratchPad[TEMP_LSB];
-        uint8_t MSB = scratchPad[TEMP_MSB];
+        uint8_t LSB = scratch_pad[TEMP_LSB];
+        uint8_t MSB = scratch_pad[TEMP_MSB];
     
         float data;
         uint16_t temperature;
@@ -225,39 +255,11 @@ private:
         data = temperature * 0.0625;
         return data;
     }
-    
-    void Init()
-    {
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-        GPIO_PinRemapConfig(GPIO_Remap_USART1, ENABLE);
-        
-        // USART Tx
-        GPIO_InitTypeDef gpioInitStruct = 
-        {
-            .GPIO_Pin = OW_GPIO_Pin_Tx,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_AF_OD,
-        };
-    
-        GPIO_Init(OneWire_GPIO, &gpioInitStruct);
-
-        USART_InitTypeDef usartInitStructure = 
-        {
-            .USART_BaudRate = 115200,
-            .USART_WordLength = USART_WordLength_8b,
-            .USART_StopBits = USART_StopBits_1,
-            .USART_Parity = USART_Parity_No,
-            .USART_Mode = USART_Mode_Tx | USART_Mode_Rx,
-            .USART_HardwareFlowControl = USART_HardwareFlowControl_None,
-        };
-
-        USART_Init(OneWire_USART, &usartInitStructure);
-        USART_Cmd(OneWire_USART, ENABLE);
-        USART_HalfDuplexCmd(OneWire_USART, ENABLE);
-    }
 
     void Run()
     {
+        g_initializationTask.WaitForPropertiesInitialization();
+        
         // Дать немного времени на инициализацию.
         vTaskDelay(10 / portTICK_PERIOD_MS);
     
@@ -482,7 +484,7 @@ repeat:
                         }
                     
                         // Перезаписываем идентификатор датчика.
-                        g_eeprom.Save();
+                        g_eepromHelper.Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
                         memcpy(g_properties.InternalTempSensorId, newInternalDevice, 8);
@@ -540,7 +542,7 @@ repeat:
                         memcpy(g_writeProperties.ExternalTempSensorId, newExternalDevice, 8);
                 
                         // Перезаписываем идентификатор датчика.
-                        g_eeprom.Save();
+                        g_eepromHelper.Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
                         memcpy(g_properties.ExternalTempSensorId, newExternalDevice, 8);
@@ -553,8 +555,7 @@ repeat:
     // Отправляет команду 0xF0.
     bool OneWire_Reset() 
     {
-        uint8_t ow_presence;
-        USART_InitTypeDef initStructure =
+        USART_InitTypeDef init_struct =
         {
             .USART_BaudRate = 9600,
             .USART_WordLength = USART_WordLength_8b,
@@ -563,8 +564,7 @@ repeat:
             .USART_Mode = USART_Mode_Tx | USART_Mode_Rx,
             .USART_HardwareFlowControl = USART_HardwareFlowControl_None
         };
-
-        USART_Init(OneWire_USART, &initStructure);
+        USART_Init(OneWire_USART, &init_struct);
 
         // Отправляем 0xF0 на скорости 9600
         USART_ClearFlag(OneWire_USART, USART_FLAG_TC);
@@ -575,9 +575,9 @@ repeat:
             taskYIELD();
         }
 
-        ow_presence = USART_ReceiveData(OneWire_USART);
+        uint8_t ow_presence = USART_ReceiveData(OneWire_USART);
 
-        initStructure = 
+        init_struct = 
         {
             .USART_BaudRate = 115200,
             .USART_WordLength = USART_WordLength_8b,
@@ -586,8 +586,7 @@ repeat:
             .USART_Mode = USART_Mode_Tx | USART_Mode_Rx,
             .USART_HardwareFlowControl = USART_HardwareFlowControl_None
         };
-    
-        USART_Init(OneWire_USART, &initStructure);
+        USART_Init(OneWire_USART, &init_struct);
 
         if (ow_presence != 0xF0) 
         {

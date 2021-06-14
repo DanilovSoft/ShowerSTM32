@@ -1,19 +1,19 @@
 #pragma once
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "stm32f10x_gpio.h"
 #include "Buzzer.h"
 #include "HeaterTask.h"
-#include "Eeprom.h"
+#include "EepromHelper.h"
 #include "Properties.h"
-#include "TempSensor.h"
+#include "TempSensorTask.h"
 #include "HeaterTempLimit.h"
 #include "ValveTask.h"
 #include "ButtonDebounce.h"
 #include "WaterSensorButton.h"
 
-class ButtonsTask final : public iActiveTask
+class ButtonsTask final : public TaskBase
 {
-private:
+public:
     
     void Init()
     {
@@ -25,6 +25,8 @@ private:
         };
         GPIO_Init(Button_GPIO, &gpio_init);
     }
+    
+private:
     
     void PressSound()
     {
@@ -39,21 +41,23 @@ private:
         g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
     }
 
-    void LongPressSound()
-    {
-        static const BeepSound samples[]
-        {
-            BeepSound(2000, 500),
-            BeepSound(50)
-        }
-        ;
-        
-        g_heaterTask.ResetBeepInterval();
-        g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
-    }
+//    void LongPressSound()
+//    {
+//        static const BeepSound samples[]
+//        {
+//            BeepSound(2000, 500),
+//            BeepSound(50)
+//        }
+//        ;
+//        
+//        g_heaterTask.ResetBeepInterval();
+//        g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
+//    }
 
     void Run()
     {
+        g_initializationTask.WaitForPropertiesInitialization();
+        
         ButtonDebounce debounce_temp_plus(Button_GPIO, Button_Temp_Plus, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         ButtonDebounce debounce_temp_minus(Button_GPIO, Button_Temp_Minus, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         ButtonDebounce debounce_valve(Button_GPIO, Button_Water_Pin, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
@@ -108,7 +112,7 @@ private:
         {
             if (g_writeProperties.Chart.TempPlus(externalTemp))
             {
-                g_eeprom.Save();
+                g_eepromHelper.Save();
                 g_properties.Chart.TempPlus(externalTemp);
             }
         }
@@ -121,7 +125,7 @@ private:
         {
             if (g_writeProperties.Chart.TempMinus(air_temp))
             {
-                g_eeprom.Save();
+                g_eepromHelper.Save();
                 g_properties.Chart.TempMinus(air_temp);
             }
         }

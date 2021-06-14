@@ -1,25 +1,26 @@
 #pragma once
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "LiquidCrystal.h"
 #include "HeatingTimeLeft.h"
-#include "WaterLevelAnimTask.h"
-#include "TempSensor.h"
+#include "InitializationTask.h"
+#include "TempSensorTask.h"
 #include "WaterLevelTask.h"
 #include "HeaterTempLimit.h"
 #include "HeaterTask.h"
 #include "ValveTask.h"
 #include "Common.h"
 
-class LcdTask final : public iActiveTask
+class LcdTask final : public TaskBase
 {
+public:
+    
+    void Init()
+    {
+    }
+    
 private:
 
     LiquidCrystal m_liquidCrystal;
-
-    void Init()
-    {
-
-    }
     
     void DisplayTemp(char* buf, int16_t temp)
     {
@@ -42,6 +43,8 @@ private:
     
     void Run()
     {
+        g_initializationTask.WaitForPropertiesInitialization();
+        
         if (!m_liquidCrystal.Setup(16, 2))
         {
             return;
@@ -117,7 +120,7 @@ private:
             {
                 // ТЭН включен.
                 
-                float time_left_min = g_heatingTimeLeft.GetTimeLeftMin();
+                float time_left_min = g_heatingTimeLeft->GetTimeLeftMin();
             
                 // Округляем до целых.
                 uint8_t time_left_min_int = roundf(time_left_min);
@@ -163,13 +166,13 @@ private:
                             char first_digit = Common::DigitToChar(water_level / 10);
                             line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
                             line_water_level[14] = Common::DigitToChar(water_level % 10);
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? '%' : g_waterLevelAnimTask.GetChar();
+                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? '%' : g_initializationTask.GetWaterLevelAnimChar();
                         }
                         else
                         {
                             line_water_level[13] = '-';
                             line_water_level[14] = '-';
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? ' ' : g_waterLevelAnimTask.GetChar();
+                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? ' ' : g_initializationTask.GetWaterLevelAnimChar();
                         }
                     }
                     else
@@ -179,7 +182,7 @@ private:
                         if(!g_waterLevelTask.GetIsError())
                         {
                             // Анимация загрузки.
-                            line_water_level[15] = g_waterLevelAnimTask.GetChar();
+                            line_water_level[15] = g_initializationTask.GetWaterLevelAnimChar();
                         }
                         else
                         {

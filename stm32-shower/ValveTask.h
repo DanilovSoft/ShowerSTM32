@@ -1,13 +1,14 @@
 #pragma once
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "semphr.h"
 #include "stm32f10x_gpio.h"
 #include "WaterLevelTask.h"
 #include "HeaterTask.h"
 #include "FreeRTOS.h"
 #include "Interlocked.h"
+#include "InitializationTask.h"
 
-class ValveTask final : public iActiveTask
+class ValveTask final : public TaskBase
 {	
 public:
     
@@ -16,6 +17,35 @@ public:
         m_sensorSwitchIsOnLastState = false;
         m_openValveAllowed = ValveState::PendingOpen;
         m_stopRequired = false;
+    }
+    
+    void Init()
+    {
+        // Клапан.
+        GPIO_InitTypeDef gpio_init = 
+        {
+            .GPIO_Pin = Valve_Pin,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_Out_PP
+        };
+        GPIO_Init(Valve_GPIO, &gpio_init);
+        
+        // Закрыть клапан.
+        GPIO_ResetBits(Valve_GPIO, Valve_Pin);
+        
+        // Питающий вывод сенсора.
+        gpio_init = 
+        {
+            .GPIO_Pin = SensorSwitch_Power_Pin,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_Out_PP
+        };
+        GPIO_Init(SensorSwitch_Power_GPIO, &gpio_init);
+
+        // Выключить питание сенсора до окончания инициали датчика уровня воды.
+        GpioTurnOffSensorSwitch();
+
+        m_xValveSemaphore = xSemaphoreCreateBinaryStatic(&m_xValveSemaphoreBuffer);	
     }
     
     // Вызывается каждый раз, после OnButtonPushed().
@@ -91,35 +121,6 @@ private:
     // пока другой поток обрабатывает первый запрос (троттлинг).
     volatile ValveState m_openValveAllowed;
     
-    void Init()
-    {
-        // Клапан.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = Valve_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-        GPIO_Init(Valve_GPIO, &gpio_init);
-        
-        // Закрыть клапан.
-        GPIO_ResetBits(Valve_GPIO, Valve_Pin);
-        
-        // Питающий вывод сенсора.
-        gpio_init = 
-        {
-            .GPIO_Pin = SensorSwitch_Power_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-        GPIO_Init(SensorSwitch_Power_GPIO, &gpio_init);
-
-        // Выключить питание сенсора до окончания инициали датчика уровня воды.
-        GpioTurnOffSensorSwitch();
-
-        m_xValveSemaphore = xSemaphoreCreateBinaryStatic(&m_xValveSemaphoreBuffer);	
-    }
-    
     // Включает питание сенсора.
     void GpioTurnOnSensorSwitch()
     {
@@ -161,8 +162,7 @@ private:
     
     void Run()
     {
-        // Ожидание инициализации датчика уровня воды.
-        //g_waterLevelTask.WaitInitialization();
+        g_initializationTask.WaitForPropertiesInitialization();
         
         // Нужно включить флаг перед включением сенсора.
         m_openValveAllowed = ValveTask::WaitingRequest;

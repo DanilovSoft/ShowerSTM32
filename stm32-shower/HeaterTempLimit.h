@@ -1,9 +1,9 @@
 #pragma once
 #include "stdint.h"
-#include "TempSensor.h"
 #include "Properties.h"
 #include "math.h"
 #include "Common.h"
+#include "TempSensorTask.h"
 
 class HeaterTempLimit final
 {

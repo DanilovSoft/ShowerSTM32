@@ -5,14 +5,10 @@ class HeaterWatchdog final
 {
 public:
 
-    HeaterWatchdog()
-    {
-    }
-    
     HeaterWatchdog(uint32_t interval_sec, uint32_t absolute_interval_sec)
+        : m_intervalSec(interval_sec)
+        , m_absoluteIntervalSec(absolute_interval_sec)
     {
-        m_intervalSec = interval_sec;
-        m_absoluteIntervalSec = absolute_interval_sec;
         m_timeoutStopwatch.Reset();
         m_absoluteTimeoutStopwatch.Reset();
         m_sessionTimeoutOccurred = false;
@@ -76,8 +72,8 @@ public:
     
 private:
     
-    uint32_t m_intervalSec;
-    uint32_t m_absoluteIntervalSec;	
+    const uint32_t m_intervalSec;
+    const uint32_t m_absoluteIntervalSec;	
     RealTimeClockStopwatch m_timeoutStopwatch;
     RealTimeClockStopwatch m_absoluteTimeoutStopwatch;
     volatile bool m_sessionTimeoutOccurred;

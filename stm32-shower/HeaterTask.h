@@ -1,21 +1,49 @@
 #pragma once
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "Stopwatch.h"
 #include "HeaterWatchdog.h"
 #include "HeatingTimeLeft.h"
 #include "HeaterTempLimit.h"
 #include "WaterLevelTask.h"
 #include "Buzzer.h"
-#include "TempSensor.h"
+#include "TempSensorTask.h"
 #include "Common.h"
+#include "InitializationTask.h"
 
-class HeaterTask final : public iActiveTask
+class HeaterTask final : public TaskBase
 {
 public:
     
     HeaterTask()
     {
         
+    }
+    
+    void Init()
+    {
+        // Нагреватель.
+        GPIO_InitTypeDef gpio_init = 
+        {
+            .GPIO_Pin = GPIO_Pin_Heater,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_Out_PP,
+        };
+        
+        GPIO_Init(GPIO_Heater, &gpio_init);
+        
+        // Светодиод нагревателя.
+        gpio_init = 
+        {
+            .GPIO_Pin = GPIO_Heater_Led_Pin,
+            .GPIO_Speed = GPIO_Speed_2MHz,	
+            .GPIO_Mode = GPIO_Mode_Out_PP,
+        };
+    
+        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+        GPIO_Init(GPIO_Heater_Led, &gpio_init);
+        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+        
+        TurnOff();
     }
     
     // True если вода нагрета до нужного уровня.
@@ -41,12 +69,12 @@ public:
     
     bool GetTimeoutOccured()
     {
-        return m_heaterWatchdog.IsSessionTimeoutOccurred();
+        return m_heaterWatchdog->IsSessionTimeoutOccurred();
     }
     
     bool GetAbsoluteTimeoutOccured()
     {
-        return m_heaterWatchdog.IsAbsoluteTimeoutOccured();
+        return m_heaterWatchdog->IsAbsoluteTimeoutOccured();
     }
     
     // Сбрасывает время периодического звукового сигнала на начало.
@@ -67,35 +95,10 @@ private:
     bool m_circuitBreakerIsOn; // Для запоминания состояния переключателя автомата.
     bool m_heaterEnabled; // Для запоминания состояния нагревателя (включено реле или нет).
     Stopwatch m_beepStopwatch; // Для периодического звукового сигнала.
-    HeaterWatchdog m_heaterWatchdog; // Для защиты от слишком долгого нагрева.
+    HeaterWatchdog* m_heaterWatchdog; // Для защиты от слишком долгого нагрева.
     volatile bool m_forcedSessionRequired; // Для принудительного включения нагрева игнорируя датчик уровня воды.
     
-    void Init()
-    {
-        // Нагреватель.
-         GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = GPIO_Pin_Heater,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP,
-        };
-        
-        GPIO_Init(GPIO_Heater, &gpio_init);
-        
-        // Светодиод нагревателя.
-        gpio_init = 
-        {
-            .GPIO_Pin = GPIO_Heater_Led_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,	
-            .GPIO_Mode = GPIO_Mode_Out_PP,
-        };
     
-        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-        GPIO_Init(GPIO_Heater_Led, &gpio_init);
-        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-        
-        TurnOff();
-    }
     
     // Выключает питание ТЭНа и тушит светодиод.
     void TurnOff()
@@ -213,7 +216,9 @@ private:
 
     void Run()
     {
-        m_heaterWatchdog = HeaterWatchdog(g_properties.HeatingTimeLimitMin * 60, g_properties.AbsoluteHeatingTimeLimitHours * 60 * 60);
+        g_initializationTask.WaitForPropertiesInitialization();
+        
+        m_heaterWatchdog = new HeaterWatchdog(g_properties.HeatingTimeLimitMin * 60, g_properties.AbsoluteHeatingTimeLimitHours * 60 * 60);
         m_beepStopwatch.Reset();
         g_tempSensorTask.WaitFirstConversion();
     
@@ -227,12 +232,12 @@ private:
                     // Запомним что автомат теперь включен.
                     m_circuitBreakerIsOn = true;
                 
-                    m_heaterWatchdog.ResetSession();
-                    m_heaterWatchdog.ResetAbsolute(); 	// Абсолютный таймаут можно сбросить только отключив автомат нагревателя.
+                    m_heaterWatchdog->ResetSession();
+                    m_heaterWatchdog->ResetAbsolute();  	// Абсолютный таймаут можно сбросить только отключив автомат нагревателя.
                     m_beepStopwatch.Reset();
                 }
                 
-                if (!m_heaterWatchdog.AbsoluteTimeout())
+                if (!m_heaterWatchdog->AbsoluteTimeout())
                 {
                     // Аварии нет - можно продолжать.
                 
@@ -244,11 +249,11 @@ private:
                         {
                             // Запомним что нагреватель теперь включен.
                             m_heaterEnabled = true;
-                            m_heaterWatchdog.ResetSession();  // Сброс таймаута сессии.
+                            m_heaterWatchdog->ResetSession();   // Сброс таймаута сессии.
                         }
                         
                         // Таймаут нагрева.
-                        if(!m_heaterWatchdog.TimeOut())
+                        if(!m_heaterWatchdog->TimeOut())
                         {
                             PeriodicBeepHeating();
                             ControlTurnOff();
@@ -264,7 +269,7 @@ private:
                         m_heaterEnabled = false;
                         
                         // Сбросить таймаут можно только отключив автомат нагревателя.
-                        if(m_heaterWatchdog.IsSessionTimeoutOccurred())
+                        if(m_heaterWatchdog->IsSessionTimeoutOccurred())
                         {
                             PeriodicBeepTimeout();
                         }
@@ -310,7 +315,7 @@ private:
     void TurnOnHeaterWithSound()
     {
         BeepTurnOn();
-        g_heatingTimeLeft.OnStartHeating();
+        g_heatingTimeLeft->OnStartHeating();
         TurnOn();
     }
 
@@ -360,7 +365,7 @@ private:
                 if (internalTemp >= targetTemp)
                 {
                     TurnOffHeaterWithSound();     
-                    m_heaterWatchdog.ResetSession();
+                    m_heaterWatchdog->ResetSession();
                 }
             }
             else if (g_waterLevelTask.GetIsInitialized())
@@ -369,7 +374,7 @@ private:
                 if((internalTemp >= targetTemp) || g_waterLevelTask.DisplayingPercent < g_properties.MinimumWaterHeatingPercent)
                 {
                     TurnOffHeaterWithSound();       // Безусловное отключение ТЭНа.
-                    m_heaterWatchdog.ResetSession();
+                    m_heaterWatchdog->ResetSession();
                 }
             }
         }

@@ -1,5 +1,5 @@
 #pragma once
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "MedianFilter.h"
 #include "MovingAverageFilter.h"
 #include "stm32f10x.h"
@@ -10,11 +10,8 @@
 #include "Common.h"
 #include "misc.h"
 #include "Properties.h"
-#include "TempSensor.h"
-
-#define WL_SUCCESS                  (0b10000000)
-#define WL_RISING_EDGE              (0b01000000)
-#define WL_OVERFLOW                 (0b00100000)
+#include "TempSensorTask.h"
+#include "InitializationTask.h"
 
 // PS. При повышении температуры воздуха на 1 °C скорость звука в нем увеличивается на 0.57 м/с 
 // 1% на каждые 5 °С => 0.2% на 1 °С
@@ -26,7 +23,7 @@ extern "C"
     extern volatile uint16_t TIM_CAPTURE_VAL;
 }
 
-class WaterLevelTask final : public iActiveTask
+class WaterLevelTask final : public TaskBase
 {	
 public:
     
@@ -52,6 +49,86 @@ public:
     
     // True если было получено хоть одно показание с датчика уровня.
     volatile bool PreInitialized = false;
+    
+    void Init()
+    {
+        m_medianFilter = new MedianFilter(g_properties.WaterLevelMedianFilterSize);
+        m_movingAverageFilter = new MovingAverageFilter(g_properties.WaterLevelAvgFilterSize);
+        
+        m_usecRange = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull);
+        float usec_per_percent = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull) / 99.0;
+        
+        // Trig.
+        GPIO_InitTypeDef gpio_init = 
+        {
+            .GPIO_Pin = WL_GPIO_Trig_Pin,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_Out_PP
+        };
+    
+        GPIO_Init(WL_GPIO_Trig, &gpio_init);
+        GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
+        
+        // Input Capture.
+        gpio_init = 
+        {
+            .GPIO_Pin = WL_GPIO_TIM_Pin,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_IPD
+        };
+    
+        GPIO_Init(WL_GPIO_TIM, &gpio_init);
+        GPIO_ResetBits(WL_GPIO_TIM, WL_GPIO_TIM_Pin);
+    
+        uint16_t prescaler = SystemCoreClock / 1000000 - 1;     // 1 микросекунда.
+        uint16_t period = g_properties.WaterLevelEmpty + (usec_per_percent * 10);     // Диаппазон таймера с запасом на пару процентов.
+    
+        TIM_TimeBaseInitTypeDef base_timer =
+        {
+            .TIM_Prescaler = prescaler,
+            .TIM_CounterMode = TIM_CounterMode_Up,
+            .TIM_Period = period,
+            .TIM_ClockDivision = TIM_CKD_DIV1,
+            .TIM_RepetitionCounter = 0
+        };
+    
+        TIM_TimeBaseInit(WL_TIM, &base_timer);
+        TIM_ClearITPendingBit(WL_TIM, TIM_IT_Update);
+    
+        TIM_ICInitTypeDef tim_ic_init_struct = 
+        {
+            .TIM_Channel = TIM_Channel_1,
+            .TIM_ICPolarity = TIM_ICPolarity_Rising,
+            .TIM_ICSelection = TIM_ICSelection_DirectTI,
+            .TIM_ICPrescaler = TIM_ICPSC_DIV1,
+            .TIM_ICFilter = 15     // Максимальное значение 15 или 0b1111.
+        };
+    
+        TIM_ICInit(WL_TIM, &tim_ic_init_struct);
+        
+        NVIC_InitTypeDef nvic_init_struct = 
+        { 
+            .NVIC_IRQChannel = TIM1_UP_IRQn,
+            .NVIC_IRQChannelPreemptionPriority = 2,
+            .NVIC_IRQChannelSubPriority = 0,
+            .NVIC_IRQChannelCmd = ENABLE    
+        };
+    
+        NVIC_Init(&nvic_init_struct);
+    
+        nvic_init_struct = 
+        {
+            .NVIC_IRQChannel = TIM1_CC_IRQn,
+            .NVIC_IRQChannelPreemptionPriority = 2,
+            .NVIC_IRQChannelSubPriority = 0,
+            .NVIC_IRQChannelCmd = ENABLE
+        };
+    
+        NVIC_Init(&nvic_init_struct);
+        
+        TIM_ITConfig(WL_TIM, TIM_IT_Update, ENABLE);
+        TIM_ITConfig(WL_TIM, TIM_IT_CC1, ENABLE);
+    }
     
     bool GetIsInitialized() volatile
     {
@@ -114,7 +191,7 @@ public:
     // Возвращает True если датчик, за последнее время, получил слишком много не валидных показаний.
     bool GetIsError() volatile
     {
-        return m_errorCounter >= g_properties.WaterLevelErrorThreshhold;
+        return m_errorCounter >= g_properties.WaterLevelErrorThreshold;
     }
     
 private:
@@ -127,94 +204,16 @@ private:
     // Показания датчика меньше этого значения будут считаться не валидными 
     // (например когда датчик заслонён или ловит своё эхо от зеркала).
     uint16_t m_minimumAllowedUsec;
-    MovingAverageFilter m_movingAverageFilter = {0};
-    MedianFilter m_medianFilter = {0};
+    MovingAverageFilter* m_movingAverageFilter;
+    MedianFilter* m_medianFilter;
     bool m_waterIsRising;
     volatile bool m_isInitialized;
     volatile uint8_t m_errorCounter;
-    
-    void Init()
-    {
-        m_medianFilter = MedianFilter(g_properties.WaterLevelMedianFilterSize);
-        m_movingAverageFilter = MovingAverageFilter(g_properties.WaterLevelAvgFilterSize);
-        
-        m_usecRange = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull);
-        float usec_per_percent = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull) / 99.0;
-        
-        // Trig.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = WL_GPIO_Trig_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-    
-        GPIO_Init(WL_GPIO_Trig, &gpio_init);
-        GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
-        
-        // Input Capture.
-        gpio_init = 
-        {
-            .GPIO_Pin = WL_GPIO_TIM_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_IPD
-        };
-    
-        GPIO_Init(WL_GPIO_TIM, &gpio_init);
-        GPIO_ResetBits(WL_GPIO_TIM, WL_GPIO_TIM_Pin);
-    
-        uint16_t prescaler = SystemCoreClock / 1000000 - 1;  // 1 микросекунда.
-        uint16_t period = g_properties.WaterLevelEmpty + (usec_per_percent * 10);  // Диаппазон таймера с запасом на пару процентов.
-    
-        TIM_TimeBaseInitTypeDef base_timer =
-        {
-            .TIM_Prescaler = prescaler,
-            .TIM_CounterMode = TIM_CounterMode_Up,
-            .TIM_Period = period,
-            .TIM_ClockDivision = TIM_CKD_DIV1,
-            .TIM_RepetitionCounter = 0
-        };
-    
-        TIM_TimeBaseInit(WL_TIM, &base_timer);
-        TIM_ClearITPendingBit(WL_TIM, TIM_IT_Update);
-    
-        TIM_ICInitTypeDef tim_ic_init_struct = 
-        {
-            .TIM_Channel = TIM_Channel_1,
-            .TIM_ICPolarity = TIM_ICPolarity_Rising,
-            .TIM_ICSelection = TIM_ICSelection_DirectTI,
-            .TIM_ICPrescaler = TIM_ICPSC_DIV1,
-            .TIM_ICFilter = 15     // Максимальное значение 15 или 0b1111
-        };
-    
-        TIM_ICInit(WL_TIM, &tim_ic_init_struct);
-        
-        NVIC_InitTypeDef nvic_init_struct = 
-        { 
-            .NVIC_IRQChannel = TIM1_UP_IRQn,
-            .NVIC_IRQChannelPreemptionPriority = 2,
-            .NVIC_IRQChannelSubPriority = 0,
-            .NVIC_IRQChannelCmd = ENABLE    
-        };
-    
-        NVIC_Init(&nvic_init_struct);
-    
-        nvic_init_struct = 
-        {
-            .NVIC_IRQChannel = TIM1_CC_IRQn,
-            .NVIC_IRQChannelPreemptionPriority = 2,
-            .NVIC_IRQChannelSubPriority = 0,
-            .NVIC_IRQChannelCmd = ENABLE
-        };
-    
-        NVIC_Init(&nvic_init_struct);
-        
-        TIM_ITConfig(WL_TIM, TIM_IT_Update, ENABLE);
-        TIM_ITConfig(WL_TIM, TIM_IT_CC1, ENABLE);
-    }
 
     void Run()
     {
+        g_initializationTask.WaitForPropertiesInitialization();
+        
         m_intervalPauseMsec = g_properties.WaterLevelMeasureIntervalMsec / portTICK_PERIOD_MS;
         m_minimumAllowedUsec = g_properties.WaterLevelFull * 0.8; // На 20% меньше минимально допустимого значения.
         
@@ -242,10 +241,10 @@ private:
                 if (!SensorIsBlocked(usec_raw))
                 {
                     // Медианный фильтр.
-                    uint16_t median = m_medianFilter.AddValue(usec_raw);
+                    uint16_t median = m_medianFilter->AddValue(usec_raw);
 
                     // Скользящее среднее.
-                    uint16_t avg = m_movingAverageFilter.AddValue(median);
+                    uint16_t avg = m_movingAverageFilter->AddValue(median);
 
                     // Скопировать фильтрованное значение микросекунд в публичную переменную.
                     AvgUsec = avg;
@@ -296,7 +295,7 @@ private:
 
     void IncrementError()
     {
-        if (m_errorCounter < g_properties.WaterLevelErrorThreshhold)
+        if (m_errorCounter < g_properties.WaterLevelErrorThreshold)
         {
             m_errorCounter++;
         }
@@ -347,15 +346,15 @@ private:
                 if(!SensorIsBlocked(usec_raw))
                 {
                     // Медианный фильтр.
-                    uint16_t median = m_medianFilter.AddValue(usec_raw);
+                    uint16_t median = m_medianFilter->AddValue(usec_raw);
 
                     // Добавить значение в буффер скользящего среднего.
-                    uint16_t avg = m_movingAverageFilter.AddValue(median);
+                    uint16_t avg = m_movingAverageFilter->AddValue(median);
             
                     if (i < g_properties.WaterLevelAvgFilterSize)
                     {
                         // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполненности.
-                        avg = m_movingAverageFilter.GetAverage() / (i + 1);     // Точность с кажной итерацией будет увеличиваться.
+                        avg = m_movingAverageFilter->GetAverage() / (i + 1);      // Точность с кажной итерацией будет увеличиваться.
                     }
             
                     // Инициализировать глобальную переменную.
@@ -465,7 +464,7 @@ private:
         return point;
     }
     
-    static inline uint8_t GetPercent(uint8_t point)
+    static uint8_t GetPercent(uint8_t point)
     {
         if (point > 99)
         {
@@ -475,7 +474,7 @@ private:
         return point;
     }
 
-    inline uint16_t ClampRange(uint16_t usec)
+    static uint16_t ClampRange(uint16_t usec)
     {
         if (usec < g_properties.WaterLevelFull)
         {
@@ -554,7 +553,7 @@ private:
         return point;
     }
 
-    inline uint8_t GetIntPoint(float pointf)
+    inline static uint8_t GetIntPoint(float pointf)
     {
         uint8_t point = roundf(pointf);
         return point;
@@ -577,7 +576,7 @@ private:
         return point;
     }
     
-    inline void TaskDisplayPercent(uint8_t percent)
+    inline static void TaskDisplayPercent(uint8_t percent)
     {   
         static constexpr uint8_t a0 = 0b10100000;
         static constexpr uint8_t a1 = 0b11111100;
@@ -602,28 +601,28 @@ private:
         static constexpr uint8_t abBlank = 0b11111111;
         static constexpr uint8_t aA[] { abBlank, a1, a2, a3, a4, a5, a6, a7, a8, a9 }
         ;
-        const static uint8_t bB[] { b0, b1, b2, b3, b4, b5, b6, b7, b8, b9 }
+        const constexpr uint8_t bB[] { b0, b1, b2, b3, b4, b5, b6, b7, b8, b9 }
         ;
         
         TaskDisplayLED(aA[percent / 10], bB[percent % 10]);
     }
     
     // Отправка данных в SPI в контексте RTOS.
-    inline void TaskDisplayLED(uint8_t a_value, uint8_t b_value)
+    static void TaskDisplayLED(uint8_t a_value, uint8_t b_value)
     {
         uint16_t value = ((a_value << 8) | b_value);
         TaskDisplayLED(value);
     }
 
     // Отправка данных в SPI НЕ в контексте RTOS.
-    inline void DisplayLED(uint8_t a_value, uint8_t b_value)
+    static void DisplayLED(uint8_t a_value, uint8_t b_value)
     {
         uint16_t value = ((a_value << 8) | b_value);
         DisplayLED(value);
     }
     
     // Отправка данных в SPI НЕ в контексте RTOS.
-    void DisplayLED(uint16_t value)
+    static void DisplayLED(uint16_t value)
     {
         SPISend(value);
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_BSY) == SET)
@@ -638,7 +637,7 @@ private:
     }
 
     // Отправка данных в SPI в контексте RTOS.
-    void TaskDisplayLED(uint16_t value)
+    static void TaskDisplayLED(uint16_t value)
     {
         TaskSPISend(value);
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_BSY) == SET)
@@ -653,7 +652,7 @@ private:
     }
     
     // Отправка данных в SPI НЕ в контексте RTOS.
-    void SPISend(uint16_t data)
+    static void SPISend(uint16_t data)
     {
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_TXE) == RESET)
         {
@@ -664,7 +663,7 @@ private:
     }
     
     // Отправка данных в SPI в контексте RTOS.
-    void TaskSPISend(uint16_t data)
+    static void TaskSPISend(uint16_t data)
     {
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_TXE) == RESET)
         {

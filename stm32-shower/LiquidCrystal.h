@@ -5,13 +5,13 @@
 
 typedef struct
 {
-    uint8_t displayfunction;
-    uint8_t displaycontrol;
-    uint8_t displaymode;
-    uint8_t numlines;
-    uint8_t cols;
-    uint8_t rows;
-    uint8_t backlightval;
+    uint8_t DisplayFunction;
+    uint8_t DisplayControl;
+    uint8_t DisplayMode;
+    uint8_t NumLines;
+    uint8_t Columns;
+    uint8_t Rows;
+    uint8_t BacklightVal;
 } LiquidCrystal_I2C_Def;
 
 // Кастомный символ градуса цельсия.
@@ -86,10 +86,10 @@ public:
     LiquidCrystal constructor is called).*/
     bool Setup(uint8_t lcd_cols, uint8_t lcd_rows)
     {
-        m_lcdI2c.cols = lcd_cols;
-        m_lcdI2c.rows = lcd_rows;
-        m_lcdI2c.backlightval = LCD_BACKLIGHT;
-        m_lcdI2c.displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
+        m_lcdI2c.Columns = lcd_cols;
+        m_lcdI2c.Rows = lcd_rows;
+        m_lcdI2c.BacklightVal = LCD_BACKLIGHT;
+        m_lcdI2c.DisplayFunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 
         // set up number of columns and rows
         if(!Begin(lcd_cols, lcd_rows))
@@ -133,70 +133,74 @@ public:
     {
         int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
     
-        if (row > m_lcdI2c.numlines) 
+        if (row > m_lcdI2c.NumLines) 
         {
-            row = m_lcdI2c.numlines - 1;     // we count rows starting w/0
+            row = m_lcdI2c.NumLines - 1;     // we count rows starting w/0
         }
         Command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
     }
     
-    void WriteString(const char* str) 
+    bool WriteString(const char* str) 
     {
-        for (uint8_t i = 0; i < m_lcdI2c.cols; i++)
+        for (uint8_t i = 0; i < m_lcdI2c.Columns; i++)
         {
-            Write(str[i]);
+            if (!Write(str[i]))
+            {
+                return false;
+            }
         }
+        return true;
     }
     
 private:
     
     // commands.
-    static constexpr auto LCD_CLEARDISPLAY = 0x01;
-    static constexpr auto LCD_RETURNHOME = 0x02;
-    static constexpr auto LCD_ENTRYMODESET = 0x04;
-    static constexpr auto LCD_DISPLAYCONTROL = 0x08;
-    static constexpr auto LCD_CURSORSHIFT = 0x10;
-    static constexpr auto LCD_FUNCTIONSET = 0x20;
-    static constexpr auto LCD_SETCGRAMADDR = 0x40;
-    static constexpr auto LCD_SETDDRAMADDR = 0x80;
+    static constexpr uint8_t LCD_CLEARDISPLAY = 0x01;
+    static constexpr uint8_t LCD_RETURNHOME = 0x02;
+    static constexpr uint8_t LCD_ENTRYMODESET = 0x04;
+    static constexpr uint8_t LCD_DISPLAYCONTROL = 0x08;
+    static constexpr uint8_t LCD_CURSORSHIFT = 0x10;
+    static constexpr uint8_t LCD_FUNCTIONSET = 0x20;
+    static constexpr uint8_t LCD_SETCGRAMADDR = 0x40;
+    static constexpr uint8_t LCD_SETDDRAMADDR = 0x80;
 
     // flags for display entry mode.
-    static constexpr auto LCD_ENTRYRIGHT = 0x00;
-    static constexpr auto LCD_ENTRYLEFT = 0x02;
-    static constexpr auto LCD_ENTRYSHIFTINCREMENT = 0x01;
-    static constexpr auto LCD_ENTRYSHIFTDECREMENT = 0x00;
+    static constexpr uint8_t LCD_ENTRYRIGHT = 0x00;
+    static constexpr uint8_t LCD_ENTRYLEFT = 0x02;
+    static constexpr uint8_t LCD_ENTRYSHIFTINCREMENT = 0x01;
+    static constexpr uint8_t LCD_ENTRYSHIFTDECREMENT = 0x00;
 
     // flags for display on/off control.
-    static constexpr auto LCD_DISPLAYON = 0x04;
-    static constexpr auto LCD_DISPLAYOFF = 0x00;
-    static constexpr auto LCD_CURSORON = 0x02;
-    static constexpr auto LCD_CURSOROFF = 0x00;
-    static constexpr auto LCD_BLINKON = 0x01;
-    static constexpr auto LCD_BLINKOFF = 0x00;
+    static constexpr uint8_t LCD_DISPLAYON = 0x04;
+    static constexpr uint8_t LCD_DISPLAYOFF = 0x00;
+    static constexpr uint8_t LCD_CURSORON = 0x02;
+    static constexpr uint8_t LCD_CURSOROFF = 0x00;
+    static constexpr uint8_t LCD_BLINKON = 0x01;
+    static constexpr uint8_t LCD_BLINKOFF = 0x00;
 
     // flags for display/cursor shift.
-    static constexpr auto LCD_DISPLAYMOVE = 0x08;
-    static constexpr auto LCD_CURSORMOVE = 0x00;
-    static constexpr auto LCD_MOVERIGHT = 0x04;
-    static constexpr auto LCD_MOVELEFT = 0x00;
+    static constexpr uint8_t LCD_DISPLAYMOVE = 0x08;
+    static constexpr uint8_t LCD_CURSORMOVE = 0x00;
+    static constexpr uint8_t LCD_MOVERIGHT = 0x04;
+    static constexpr uint8_t LCD_MOVELEFT = 0x00;
 
     // flags for function set.
-    static constexpr auto LCD_8BITMODE = 0x10;
-    static constexpr auto LCD_4BITMODE = 0x00;
-    static constexpr auto LCD_2LINE = 0x08;
-    static constexpr auto LCD_1LINE = 0x00;
-    static constexpr auto LCD_5x10DOTS = 0x04;
-    static constexpr auto LCD_5x8DOTS = 0x00;
+    static constexpr uint8_t LCD_8BITMODE = 0x10;
+    static constexpr uint8_t LCD_4BITMODE = 0x00;
+    static constexpr uint8_t LCD_2LINE = 0x08;
+    static constexpr uint8_t LCD_1LINE = 0x00;
+    static constexpr uint8_t LCD_5x10DOTS = 0x04;
+    static constexpr uint8_t LCD_5x8DOTS = 0x00;
 
     // flags for backlight control.
-    static constexpr auto LCD_BACKLIGHT = 0x08;
-    static constexpr auto LCD_NOBACKLIGHT = 0x00;
+    static constexpr uint8_t LCD_BACKLIGHT = 0x08;
+    static constexpr uint8_t LCD_NOBACKLIGHT = 0x00;
 
-    static constexpr auto En = 0x04;  		// Enable bit.
-    static constexpr auto Rw = 0x02;  		// Read/Write bit.
-    static constexpr auto Rs = 0x01;  		// Register select bit.
+    static constexpr uint8_t En = 0x04;   		// Enable bit.
+    static constexpr uint8_t Rw = 0x02;   		// Read/Write bit.
+    static constexpr uint8_t Rs = 0x01;   		// Register select bit.
     
-    LiquidCrystal_I2C_Def m_lcdI2c;
+    LiquidCrystal_I2C_Def m_lcdI2c = { 0 };
     
     bool Write(uint8_t value) 
     {
@@ -207,29 +211,29 @@ private:
     {
         if (lines > 1)
         {
-            m_lcdI2c.displayfunction |= LCD_2LINE;
+            m_lcdI2c.DisplayFunction |= LCD_2LINE;
         }
         
-        m_lcdI2c.numlines = lines;
+        m_lcdI2c.NumLines = lines;
 
         // for some 1 line displays you can select a 10 pixel high font
         /*	if ((dotsize != 0) && (lines == 1)) {
                 _displayfunction |= LCD_5x10DOTS;
         }*/
 
-    // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
-    // according to datasheet, we need at least 40ms after power rises above 2.7V
-    // before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+        // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
+        // according to datasheet, we need at least 40ms after power rises above 2.7V
+        // before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50
+        vTaskDelay(50 / portTICK_PERIOD_MS);
 
         // Now we pull both RS and R/W low to begin commands
-        if(!ExpanderWrite(m_lcdI2c.backlightval))	// reset expanderand turn backlight off (Bit 8 =1)
+        if(!ExpanderWrite(m_lcdI2c.BacklightVal))	// reset expanderand turn backlight off (Bit 8 =1)
         {
             return false;
         }
         
         //vTaskDelay(1000 / portTICK_PERIOD_MS); // Было
-        vTaskDelay(1 / portTICK_PERIOD_MS);  // Проверить
+        vTaskDelay(1 / portTICK_PERIOD_MS);   // Проверить
 
         //put the LCD into 4 bit mode
         // this is according to the hitachi HD44780 datasheet
@@ -241,7 +245,7 @@ private:
             return false;
         }
             
-        vTaskDelay(5 / portTICK_PERIOD_MS);  // wait min 4.1ms
+        vTaskDelay(5 / portTICK_PERIOD_MS);   // wait min 4.1ms
 
         // second try
         if(!Write4bits(0x03 << 4))
@@ -249,7 +253,7 @@ private:
             return false;
         }
         
-        vTaskDelay(5 / portTICK_PERIOD_MS);  // wait min 4.1ms
+        vTaskDelay(5 / portTICK_PERIOD_MS);   // wait min 4.1ms
 
         // third go!
         if(!Write4bits(0x03 << 4))
@@ -266,13 +270,13 @@ private:
         }
 
         // set # lines, font size, etc.
-        if(!Command(LCD_FUNCTIONSET | m_lcdI2c.displayfunction))
+        if(!Command(LCD_FUNCTIONSET | m_lcdI2c.DisplayFunction))
         {
             return false;
         }
 
         // turn the display on with no cursor or blinking default
-        m_lcdI2c.displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
+        m_lcdI2c.DisplayControl = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
         if (!Display())
         {
             return false;
@@ -285,10 +289,10 @@ private:
         }
         
         // Initialize to default text direction (for roman languages)
-        m_lcdI2c.displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
+        m_lcdI2c.DisplayMode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
 
         // set the entry mode
-        if(!Command(LCD_ENTRYMODESET | m_lcdI2c.displaymode))
+        if(!Command(LCD_ENTRYMODESET | m_lcdI2c.DisplayMode))
         {
             return false;
         }
@@ -311,82 +315,84 @@ private:
     // Turn the display on/off (quickly).
     bool NoDisplay() 
     {
-        m_lcdI2c.displaycontrol &= ~LCD_DISPLAYON;
-        return Command(LCD_DISPLAYCONTROL | m_lcdI2c.displaycontrol);
+        m_lcdI2c.DisplayControl &= ~LCD_DISPLAYON;
+        return Command(LCD_DISPLAYCONTROL | m_lcdI2c.DisplayControl);
     }
 
     bool Display() 
     {
-        m_lcdI2c.displaycontrol |= LCD_DISPLAYON;
-        if (!Command(LCD_DISPLAYCONTROL | m_lcdI2c.displaycontrol))
+        m_lcdI2c.DisplayControl |= LCD_DISPLAYON;
+        if (!Command(LCD_DISPLAYCONTROL | m_lcdI2c.DisplayControl))
+        {
             return false;
+        }
         
         return true;
     }
 
     // Turns the underline cursor on/off.
-    void NoCursor() 
+    bool NoCursor() 
     {
-        m_lcdI2c.displaycontrol &= ~LCD_CURSORON;
-        Command(LCD_DISPLAYCONTROL | m_lcdI2c.displaycontrol);
+        m_lcdI2c.DisplayControl &= ~LCD_CURSORON;
+        return Command(LCD_DISPLAYCONTROL | m_lcdI2c.DisplayControl);
     }
 
-    void Cursor() 
+    bool Cursor() 
     {
-        m_lcdI2c.displaycontrol |= LCD_CURSORON;
-        Command(LCD_DISPLAYCONTROL | m_lcdI2c.displaycontrol);
+        m_lcdI2c.DisplayControl |= LCD_CURSORON;
+        return Command(LCD_DISPLAYCONTROL | m_lcdI2c.DisplayControl);
     }
 
     // Turn on and off the blinking cursor.
-    void NoBlink() 
+    bool NoBlink() 
     {
-        m_lcdI2c.displaycontrol &= ~LCD_BLINKON;
-        Command(LCD_DISPLAYCONTROL | m_lcdI2c.displaycontrol);
+        m_lcdI2c.DisplayControl &= ~LCD_BLINKON;
+        return Command(LCD_DISPLAYCONTROL | m_lcdI2c.DisplayControl);
     }
 
-    void Blink() 
+    bool Blink() 
     {
-        m_lcdI2c.displaycontrol |= LCD_BLINKON;
-        Command(LCD_DISPLAYCONTROL | m_lcdI2c.displaycontrol);
+        m_lcdI2c.DisplayControl |= LCD_BLINKON;
+        return Command(LCD_DISPLAYCONTROL | m_lcdI2c.DisplayControl);
     }
 
     // These commands scroll the display without changing the RAM.
-    void ScrollDisplayLeft() 
+    bool ScrollDisplayLeft() 
     {
-        Command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
+        return Command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
     }
 
-    void ScrollDisplayRight() 
+    bool ScrollDisplayRight() 
     {
-        Command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
+        return Command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
     }
 
     // This is for text that flows Left to Right.
-    void LeftToRight() 
+    bool LeftToRight() 
     {
-        m_lcdI2c.displaymode |= LCD_ENTRYLEFT;
-        Command(LCD_ENTRYMODESET | m_lcdI2c.displaymode);
+        m_lcdI2c.DisplayMode |= LCD_ENTRYLEFT;
+        return Command(LCD_ENTRYMODESET | m_lcdI2c.DisplayMode);
     }
 
     // This is for text that flows Right to Left.
-    void RightToLeft() 
+    bool RightToLeft() 
     {
-        m_lcdI2c.displaymode &= ~LCD_ENTRYLEFT;
-        Command(LCD_ENTRYMODESET | m_lcdI2c.displaymode);
+        m_lcdI2c.DisplayMode &= ~LCD_ENTRYLEFT;
+        return Command(LCD_ENTRYMODESET | m_lcdI2c.DisplayMode);
     }
 
     // This will 'right justify' text from the cursor.
-    void AutoScroll() 
+    bool AutoScroll() 
     {
-        m_lcdI2c.displaymode |= LCD_ENTRYSHIFTINCREMENT;
-        Command(LCD_ENTRYMODESET | m_lcdI2c.displaymode);
+        m_lcdI2c.DisplayMode |= LCD_ENTRYSHIFTINCREMENT;
+        return Command(LCD_ENTRYMODESET | m_lcdI2c.DisplayMode);
     }
 
     // This will 'left justify' text from the cursor.
-    void NoAutoscroll() 
+    bool NoAutoscroll() 
     {
-        m_lcdI2c.displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
-        Command(LCD_ENTRYMODESET | m_lcdI2c.displaymode);
+        m_lcdI2c.DisplayMode &= ~LCD_ENTRYSHIFTINCREMENT;
+        return Command(LCD_ENTRYMODESET | m_lcdI2c.DisplayMode);
     }
 
     // Allows us to fill the first 8 CGRAM locations
@@ -394,7 +400,12 @@ private:
     bool CreateChar(uint8_t location, const uint8_t charmap[]) 
     {
         location &= 0x7;  // we only have 8 locations 0-7
-        Command(LCD_SETCGRAMADDR | (location << 3));
+        
+        if(!Command(LCD_SETCGRAMADDR | (location << 3)))
+        {
+            return false;
+        }
+        
         int i;
         for (i = 0; i < 8; i++) 
         {
@@ -407,16 +418,16 @@ private:
     }
 
     // Turn the (optional) backlight off/on.
-    void NoBacklight() 
+    bool NoBacklight() 
     {
-        m_lcdI2c.backlightval = LCD_NOBACKLIGHT;
-        ExpanderWrite(0);
+        m_lcdI2c.BacklightVal = LCD_NOBACKLIGHT;
+        return ExpanderWrite(0);
     }
 
-    void Backlight() 
+    bool Backlight() 
     {
-        m_lcdI2c.backlightval = LCD_BACKLIGHT;
-        ExpanderWrite(0);
+        m_lcdI2c.BacklightVal = LCD_BACKLIGHT;
+        return ExpanderWrite(0);
     }
 
     /*********** mid level commands, for sending data/cmds */
@@ -429,15 +440,15 @@ private:
     // write either command or data.
     bool Send(uint8_t value, uint8_t mode) 
     {
-        uint8_t highnib = value & 0xF0;
-        uint8_t lownib = (value << 4) & 0xF0;
+        uint8_t high_nib = value & 0xF0;
+        uint8_t low_nib = (value << 4) & 0xF0;
         
-        if (!Write4bits((highnib) | mode))
+        if (!Write4bits((high_nib) | mode))
         {
             return false;
         }
         
-        if (!Write4bits((lownib) | mode))
+        if (!Write4bits((low_nib) | mode))
         {
             return false;
         }
@@ -462,32 +473,29 @@ private:
 
     bool ExpanderWrite(uint8_t data) 
     {
-        return g_i2c.LCD_expanderWrite(data | m_lcdI2c.backlightval);
+        return g_i2cHelper.LCD_ExpanderWrite(data | m_lcdI2c.BacklightVal);
     }
 
     bool PulseEnable(uint8_t data) 
     {
-        if (!ExpanderWrite(data | En))	// En high.
-            {
-                return false;
-            }
+        // En high.
+        if (!ExpanderWrite(data | En))	
+        {
+            return false;
+        }
         
         // Enable pulse must be >450ns.
         DELAY_US(1);
 
-        if (!ExpanderWrite(data & ~En))	// En low.
-            {
-                return false;
-            }
+        // En low.
+        if (!ExpanderWrite(data & ~En))
+        {
+            return false;
+        }
         
         // commands need > 37us to settle.
         DELAY_US(50);
 
         return true;
-    }
-
-    void LoadCustomCharacter(uint8_t char_num, uint8_t *rows) 
-    {
-        CreateChar(char_num, rows);
     }
 };

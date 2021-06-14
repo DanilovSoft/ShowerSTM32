@@ -58,6 +58,8 @@
     <ClCompile>
       <AdditionalIncludeDirectories>StdPeriph/Inc;FreeRTOS/Source/include;FreeRTOS/Source/portable/GCC/ARM_CM3;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG=1;RELEASE=1;STM32F10X_MD;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>Og</Optimization>
+      <CPPLanguageStandard>GNUPP14</CPPLanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLinkerInputs>;%(Link.AdditionalLinkerInputs)</AdditionalLinkerInputs>
@@ -76,6 +78,8 @@
     <ClCompile Include="FreeRTOS\Source\stream_buffer.c" />
     <ClCompile Include="FreeRTOS\Source\tasks.c" />
     <ClCompile Include="FreeRTOS\Source\timers.c" />
+    <ClCompile Include="InitializationTask.cpp" />
+    <ClCompile Include="WaterLevelTask.cpp" />
     <ClCompile Include="WaterLevel_IRQ.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="StdPeriph\Src\misc.c" />
@@ -120,8 +124,7 @@
     <ClInclude Include="Buzzer.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="ConnectionsBuffer.h" />
-    <ClInclude Include="Eeprom.h" />
-    <ClInclude Include="EepromTask.h" />
+    <ClInclude Include="EepromHelper.h" />
     <ClInclude Include="FreeRTOSConfig.h" />
     <ClInclude Include="FreeRTOS\Source\include\task.h" />
     <ClInclude Include="FreeRTOS\Source\portable\GCC\ARM_CM3\portmacro.h" />
@@ -131,7 +134,7 @@
     <ClInclude Include="HeaterWatchdog.h" />
     <ClInclude Include="HeatingTimeLeft.h" />
     <ClInclude Include="I2CHelper.h" />
-    <ClInclude Include="iActiveTask.h" />
+    <ClInclude Include="TaskBase.h" />
     <ClInclude Include="Interlocked.h" />
     <ClInclude Include="IpdBuffer.h" />
     <ClInclude Include="LcdTask.h" />
@@ -142,7 +145,7 @@
     <ClInclude Include="Properties.h" />
     <ClInclude Include="Request.h" />
     <ClInclude Include="RealTimeClockStopwatch.h" />
-    <ClInclude Include="RTOSwrapper.h" />
+    <ClInclude Include="RtosHelper.h" />
     <ClInclude Include="WaterSensorButton.h" />
     <ClInclude Include="ShowerCode.h" />
     <ClInclude Include="StdPeriph\Inc\core_cm3.h" />
@@ -174,15 +177,14 @@
     <ClInclude Include="StdPeriph\Inc\stm32f10x_usart.h" />
     <ClInclude Include="StdPeriph\Inc\stm32f10x_wwdg.h" />
     <ClInclude Include="StdPeriph\Inc\system_stm32f10x.h" />
-    <ClInclude Include="TaskHelper.h" />
-    <ClInclude Include="TempSensor.h" />
+    <ClInclude Include="TempSensorTask.h" />
     <ClInclude Include="Stopwatch.h" />
     <ClInclude Include="TaskTimeout.h" />
     <ClInclude Include="UartBuffer.h" />
     <ClInclude Include="UartStream.h" />
     <ClInclude Include="ValveTask.h" />
     <ClInclude Include="WatchDogTask.h" />
-    <ClInclude Include="WaterLevelAnimTask.h" />
+    <ClInclude Include="InitializationTask.h" />
     <ClInclude Include="WaterLevelTask.h" />
     <ClInclude Include="WiFiTask.h" />
   </ItemGroup>

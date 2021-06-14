@@ -1,17 +1,16 @@
 #pragma once
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_tim.h"
 #include "stm32f10x_rcc.h"
 #include "Common.h"
 #include "Properties.h"
 #include "HeaterTask.h"
+#include "InitializationTask.h"
 
-class LedLightTask final : public iActiveTask
+class LedLightTask final : public TaskBase
 {
-private:
-    
-    bool m_lightIsOn;
+public:
     
     void Init()
     {
@@ -35,7 +34,7 @@ private:
             .TIM_CounterMode = TIM_CounterMode_Up,
             .TIM_Period = 100 - 1,
             .TIM_ClockDivision = TIM_CKD_DIV1, 
-              // без  делителя.
+            // без  делителя.
             .TIM_RepetitionCounter = 0,
         };
         TIM_TimeBaseInit(LED_TIM, &tim_time_base_init_struct);
@@ -59,9 +58,15 @@ private:
         // Включаем таймер.
         TIM_Cmd(LED_TIM, ENABLE);
     }
+    
+private:
+    
+    bool m_lightIsOn;
 
     void Run()
     {
+        g_initializationTask.WaitForPropertiesInitialization();
+        
         while (true)
         {	
             if (Common::CircuitBreakerIsOn())

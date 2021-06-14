@@ -1,9 +1,10 @@
 #pragma once
-#include "iActiveTask.h"
+#include "TaskBase.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_iwdg.h"
+#include "InitializationTask.h"
 
-class WatchDogTask final : public iActiveTask
+class WatchDogTask final : public TaskBase
 {
 public:
     
@@ -11,10 +12,6 @@ public:
     {
         return m_wasReset;
     }
-    
-private:
-    
-    bool m_wasReset = false;
     
     void Init()
     {
@@ -27,14 +24,18 @@ private:
             RCC_ClearFlag();
         }
     
-        ////////// Watchdog на 4 секунды ////////////////////
+        ////////// Watchdog на 4 секунды ////////////////
         IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
-        IWDG_SetPrescaler(IWDG_Prescaler_32); 	// 1кгц.
-        IWDG_SetReload(4000); 	// Не более 0xFFF
+        IWDG_SetPrescaler(IWDG_Prescaler_32);  	// 1кгц.
+        IWDG_SetReload(4000);  	// Не более 0xFFF (4095).
         IWDG_WriteAccessCmd(IWDG_WriteAccess_Disable);
-        IWDG_ReloadCounter();  // Сброс счетчика.
+        IWDG_ReloadCounter();   // Сброс счетчика.
         IWDG_Enable();
     }
+    
+private:
+    
+    bool m_wasReset = false;
     
     void Run()
     {

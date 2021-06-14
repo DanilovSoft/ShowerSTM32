@@ -5,11 +5,9 @@ class MedianFilter final
 {
 public:
 
-    // Размер должен быть не чётным.
     MedianFilter(const uint8_t filter_size)
         : m_medianFilterSize(filter_size)
     {
-        
     }
     
     uint16_t AddValue(uint16_t datum)
@@ -98,25 +96,25 @@ private:
     struct Pair
     {
         // Pointers forming list linked in sorted order.
-        struct Pair *Point;
+        struct Pair* Point;
         
         // Values to sort.
         uint16_t Value;
     };
 
-    const static uint16_t kStopper = 0;     // Smaller than any datum.
+    const static uint16_t kStopper = 0; // Smaller than any datum.
+    
+    const uint8_t m_medianFilterSize;
     
     // Buffer of nwidth pairs.
     struct Pair m_buffer[kWaterLevelMedianMaxSize] = { 0 };
 
     // Pointer into circular buffer of data.
-    struct Pair *m_datpoint = m_buffer;
+    struct Pair* m_datpoint = m_buffer;
 
     // Chain stopper.
     struct Pair m_small = { NULL, kStopper };
     
     // Pointer to head (largest) of linked list.
     struct Pair m_big = { &m_small, 0 };
-    
-    uint8_t m_medianFilterSize;
 };

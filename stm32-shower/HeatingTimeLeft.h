@@ -1,16 +1,10 @@
 #pragma once
 #include "HeaterTempLimit.h"
-#include "TempSensor.h"
 #include "WaterLevelTask.h"
 
 class HeatingTimeLeft final
 {
 public:
-    
-    HeatingTimeLeft()
-    {
-        
-    }
     
     HeatingTimeLeft(const float tank_volume_litre, const float heater_power_kWatt)
         : m_tankVolumeLitre(tank_volume_litre)
@@ -68,13 +62,13 @@ public:
     
 private:
     
-    static constexpr float kQ = 0.00117;
+    static constexpr double kQ = 0.00117;
     
     // Объём воды полного бака в литрах.
-    float m_tankVolumeLitre;
+    const float m_tankVolumeLitre;
 
     // Электрическая мощность нагревательного элемента — ТЭНа с учётом его КПД, кВТ.
-    float m_heaterPowerKWatt;
+    const float m_heaterPowerKWatt;
     
     // Время до окончания нагрева в минутах.
     // "internalTemp" - Текущая температура воды в баке.
@@ -93,7 +87,7 @@ private:
         //  tн – начальная температура воды, °С
         //  W – электрическая мощность нагревательного элемента — ТЭНа, кВТ
 
-        float timeH = kQ * m_tankVolumeLitre * (targetTemp - internalTemp) / m_heaterPowerKWatt;
+        double timeH = kQ * m_tankVolumeLitre * (targetTemp - internalTemp) / m_heaterPowerKWatt;
 
         // В минутах.
         float minutes = timeH * 60;
@@ -102,4 +96,4 @@ private:
     }
 };
 
-extern HeatingTimeLeft g_heatingTimeLeft;
+extern HeatingTimeLeft* g_heatingTimeLeft;

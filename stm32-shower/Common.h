@@ -1,6 +1,8 @@
 #pragma once
 #include "stm32f10x_gpio.h"
 #include "string.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define GPIO_MainPower				(GPIOA)
 #define GPIO_Pin_MainPower			(GPIO_Pin_1)
@@ -59,15 +61,20 @@
 #define GPIO_Pin_LED				(GPIO_Pin_7)
 #define LED_TIM						(TIM4)
 
+#define WL_SUCCESS                  (0b10000000)
+#define WL_RISING_EDGE              (0b01000000)
+#define WL_OVERFLOW                 (0b00100000)
+
 #define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
 
+static constexpr uint8_t kWiFiTryInitLimit = 3;
 static constexpr auto kUartRxFifoSize = 1024;                   // Размер кольцевого буфера UART.
 static constexpr auto kUartMaxStrLen = 200;                     // Максимальная длина строки получаемая через UART.
 static constexpr auto kWiFiUartSpeed = 115200;                  // Скорость на которую настроен ESP8266 модуль.
 static constexpr uint8_t kWaterLevelAvgFilterMaxSize = 129;     // Максимально допустимый размер фильтра 'скользящее среднее' для уровня воды.
 static constexpr uint8_t kInternalTempLimit = 42;               // Максимальная температура воды в баке.
-static constexpr auto kWaterLevelMedianMaxSize = 255;           // Максимально допустимый размер медианного фильтра для уровня воды.
+static constexpr uint8_t kWaterLevelMedianMaxSize = 255;        // Максимально допустимый размер медианного фильтра для уровня воды.
 static constexpr uint8_t kAirTempLowerBound = 15;               // Минимальная температура на улице.
 static constexpr uint8_t kAirTempUpperBound = 40;               // Максимальная температура на улице.
 static constexpr uint8_t kInternalTempAvgFilterSize = 16;       // Максимально допустимый размер фильтра 'скользящее среднее' для температуры в баке.
@@ -88,7 +95,7 @@ inline void _delay_loops(unsigned int loops)
 
 #define DELAY_US( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
 
-class Common
+class Common final
 {
 public:
 
@@ -110,15 +117,10 @@ public:
         return GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin);
     }
     
-//    inline static bool GetIsHeaterEnabled()
+//    inline static void DelayUs(uint16_t usec)
 //    {
-//        return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
+//        _delay_loops((unsigned int)((double)usec * (SystemCoreClock / 3000000.0)));
 //    }
-    
-    inline static void DelayUs(uint16_t usec)
-    {
-        _delay_loops((unsigned int)((double)usec * (SystemCoreClock / 3000000.0)));
-    }
     
     static uint8_t DigitsCount(uint16_t value)
     {
@@ -199,9 +201,9 @@ public:
         return ch - 48;
     }
 
-    static bool ArrayEquals(uint8_t* array1, uint8_t arr1Size, uint8_t* array2, uint8_t arr2Size)
+    static bool ArrayEquals(uint8_t* array1, uint8_t arr1Size, uint8_t* array2, uint8_t arr2_size)
     {
-        if (arr1Size != arr2Size) 
+        if (arr1Size != arr2_size) 
         {
             return false;
         }
@@ -235,6 +237,9 @@ public:
         }
         return false;
     }
+
+private:
+    
 };
 
 // http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/
@@ -248,10 +253,10 @@ public:
 // (8*us) // Может быть более точным значением но меандр выглядит не пропорциональным
 
 //#define Delay_us(us) do {\
-//	asm volatile (	"MOV R0,%[loops]\n\t"\
-//			"1: \n\t"\
-//			"SUB R0, #1\n\t"\
-//			"CMP R0, #0\n\t"\
-//			"BNE 1b \n\t" : : [loops] "r" (10*us) : "memory"\
-//		      );\
+//    asm volatile (	"MOV R0,%[loops]\n\t"\
+//            "1: \n\t"\
+//            "SUB R0, #1\n\t"\
+//            "CMP R0, #0\n\t"\
+//            "BNE 1b \n\t" : : [loops] "r" (10*us) : "memory"\
+//              );\
 //} while(0)
