@@ -91,9 +91,7 @@ static constexpr uint16_t kTempSensorPauseMsec = 2000;          // Пауза м
 static_assert(kAirTempUpperBound > kAirTempLowerBound, "kAirTempLowerBound should be lower than kAirTempUpperBound");
 
 
-
-
-
+// http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/
 inline void _delay_loops(unsigned int loops)
 {
      asm volatile (
@@ -318,22 +316,3 @@ public:
 private:
     
 };
-
-// http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/
-// If you want full control among compiler optimizations, the best 1µs delay can be reached using this macro fully written in assembler.
-// Doing tests with the scope, I found that 1µs delay can be obtained when the MCU execute this loop 16 times at 84MHZ. 
-// However, this macro has to be rearranged if you processor speed is lower, and keep in mind 
-// that being a macro, it is "expanded" every time you use it, causing the increase of firmware size.
-// These are the best solution to obtain 1µs delay with the STM32 platform.
-//
-// (10*us) // Установлено экспериментальным путем с помощью осцилографа где SystemCoreClock = 72мгц
-// (8*us) // Может быть более точным значением но меандр выглядит не пропорциональным
-
-//#define Delay_us(us) do {\
-//    asm volatile (	"MOV R0,%[loops]\n\t"\
-//            "1: \n\t"\
-//            "SUB R0, #1\n\t"\
-//            "CMP R0, #0\n\t"\
-//            "BNE 1b \n\t" : : [loops] "r" (10*us) : "memory"\
-//              );\
-//} while(0)

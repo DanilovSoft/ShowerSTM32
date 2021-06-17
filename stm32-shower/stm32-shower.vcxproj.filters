@@ -172,11 +172,6 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <LinkerScript Include="STM32F103R8_flash.lds">
-      <Filter>Source files</Filter>
-    </LinkerScript>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="StdPeriph\Inc\core_cm3.h">
       <Filter>Header files\StdPeriph</Filter>
     </ClInclude>
@@ -378,10 +373,5 @@
     <ClInclude Include="WaterLevelAnimationTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="stm32-shower.rc">
-      <Filter>Resource files</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>

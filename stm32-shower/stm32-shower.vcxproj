@@ -58,7 +58,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>StdPeriph/Inc;FreeRTOS/Source/include;FreeRTOS/Source/portable/GCC/ARM_CM3;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG=1;RELEASE=1;STM32F10X_MD;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
-      <Optimization>O3</Optimization>
+      <Optimization>Og</Optimization>
       <CPPLanguageStandard>GNUPP14</CPPLanguageStandard>
     </ClCompile>
     <Link>
@@ -116,9 +116,6 @@
   </ItemGroup>
   <ItemGroup>
     <Xml Include="stm32.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <LinkerScript Include="STM32F103R8_flash.lds" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ButtonsTask.h" />
@@ -188,9 +185,6 @@
     <ClInclude Include="InitializationTask.h" />
     <ClInclude Include="WaterLevelTask.h" />
     <ClInclude Include="WiFiTask.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="stm32-shower.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
