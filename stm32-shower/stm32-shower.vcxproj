@@ -58,7 +58,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>StdPeriph/Inc;FreeRTOS/Source/include;FreeRTOS/Source/portable/GCC/ARM_CM3;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG=1;RELEASE=1;STM32F10X_MD;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
-      <Optimization>Og</Optimization>
+      <Optimization>O3</Optimization>
       <CPPLanguageStandard>GNUPP14</CPPLanguageStandard>
     </ClCompile>
     <Link>

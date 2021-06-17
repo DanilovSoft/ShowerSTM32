@@ -41,7 +41,7 @@ WatchDogTask g_watchDogTask;
 Buzzer g_buzzer;
 EepromHelper g_eepromHelper;
 HeaterTempLimit g_heaterTempLimit;
-HeatingTimeLeft* g_heatingTimeLeft;
+HeatingTimeLeft* g_heatingTimeLeft; // TODO попробовать убрать все new инициализации и проверить размер FLASH.
 UartStream g_uartStream;
 I2CHelper g_i2cHelper;
 
@@ -53,7 +53,7 @@ void Init()
     __enable_irq();
     
     // Включаем тактирование портов.
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);		// часы
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);		// Часы.
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC, ENABLE);
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
     
