@@ -197,6 +197,20 @@ public:
         GPIO_Init(GPIO_LED, &gpio_init_struct);
     }
     
+    // Включает питание ТЭНа и зажигает светодиод.
+    static void TurnOnHeater()
+    {
+        GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
+        GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+    }
+    
+    // Выключает питание ТЭНа и тушит светодиод.
+    static void TurnOffHeater()
+    {
+        GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
+        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+    }
+    
     static uint8_t DigitsCount(uint16_t value)
     {
         uint8_t count = 0;

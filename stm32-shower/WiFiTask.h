@@ -268,7 +268,7 @@ private:
                 if (request_length == sizeof(g_writeProperties.Chart))
                 {
                     g_writeProperties.Chart.Parse(m_requestData);
-                    g_properties.Chart.Parse(m_requestData);  // установить значения в ОЗУ
+                    g_properties.Chart.Parse(m_requestData);  // Установить значения в ОЗУ.
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -484,10 +484,9 @@ private:
             }
         case ShowerCode::kSetWaterLevelMedianBufferSize:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.WaterLevelMedianFilterSize))
                 {
-                    auto value = *m_requestData;
-                    g_writeProperties.WaterLevelMedianFilterSize = value;
+                    g_writeProperties.WaterLevelMedianFilterSize = *m_requestData;
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -499,10 +498,9 @@ private:
             }
         case ShowerCode::kSetWaterLevelAverageBufferSize:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.WaterLevelAvgFilterSize))
                 {
-                    auto value = *m_requestData;
-                    g_writeProperties.WaterLevelAvgFilterSize = value;
+                    g_writeProperties.WaterLevelAvgFilterSize = *m_requestData;
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -514,7 +512,7 @@ private:
             }
         case ShowerCode::kSetTempSensorInternalTempAverageSize:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.InternalTempAvgFilterSize))
                 {
                     g_writeProperties.InternalTempAvgFilterSize = *m_requestData;
                     m_request.SendResponse(kOK);

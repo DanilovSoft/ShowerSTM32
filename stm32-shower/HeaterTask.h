@@ -43,7 +43,7 @@ public:
         GPIO_Init(GPIO_Heater_Led, &gpio_init);
         GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
         
-        TurnOff();
+        Common::TurnOffHeater();
     }
     
     // True если вода нагрета до нужного уровня.
@@ -99,26 +99,25 @@ private:
     volatile bool m_forcedSessionRequired; // Для принудительного включения нагрева игнорируя датчик уровня воды.
     
     
-    
-    // Выключает питание ТЭНа и тушит светодиод.
-    void TurnOff()
-    {
-        GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
-        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-    }
+//    // Выключает питание ТЭНа и тушит светодиод.
+//    static void TurnOff()
+//    {
+//        GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
+//        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+//    }
 
-    // Включает питание ТЭНа и зажигает светодиод.
-    void TurnOn()
-    {
-        GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
-        GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-    }
+//    // Включает питание ТЭНа и зажигает светодиод.
+//    void TurnOn()
+//    {
+//        GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
+//        GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+//    }
 
     // Воспроизводит звук отключения питания ТЭНа.
     // Блокирует поток на время воспроизведения.
     void BeepTurnOff()
     {
-        static const BeepSound samples[]
+        BeepSound samples[]
         {
             BeepSound(3000, 140),
             BeepSound(30),
@@ -135,7 +134,7 @@ private:
     // Блокирует поток на время воспроизведения.
     void BeepTurnOn()
     {
-        static const BeepSound samples[]
+        BeepSound samples[]
         {
             BeepSound(2400, 140),
             BeepSound(30),
@@ -153,7 +152,7 @@ private:
     // Блокирует поток на время воспроизведения.
     void PeriodicBeepHeating()
     {
-        static const BeepSound samples[]
+        BeepSound samples[]
         {
             BeepSound(4000, 100),
             BeepSound(30),
@@ -172,7 +171,7 @@ private:
     // Блокирует поток на время воспроизведения.
     void PeriodicBeepIfWaterHeated()
     {
-        static const BeepSound samples[]
+        BeepSound samples[]
         {
             BeepSound(4000, 80),
             BeepSound(100),
@@ -196,7 +195,7 @@ private:
     // Блокирует поток на время воспроизведения.
     void PeriodicBeepTimeout()
     {
-        static const BeepSound samples[]
+        BeepSound samples[]
         {
             BeepSound(4000, 300),
             BeepSound(100),
@@ -316,7 +315,7 @@ private:
     {
         BeepTurnOn();
         g_heatingTimeLeft->OnStartHeating();
-        TurnOn();
+        Common::TurnOnHeater();
     }
 
     void ControlTurnOn()
@@ -348,7 +347,7 @@ private:
     // Безусловное отключение ТЭНа.
     void TurnOffHeaterWithSound()
     {
-        TurnOff();
+        Common::TurnOffHeater();
         BeepTurnOff();	
     }
 

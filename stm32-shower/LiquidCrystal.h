@@ -14,53 +14,7 @@ typedef struct
     uint8_t BacklightVal;
 } LiquidCrystal_I2C_Def;
 
-// Кастомный символ градуса цельсия.
-static constexpr uint8_t kCelsius[8] = {
-    0b01100,
-    0b10010,
-    0b10010,
-    0b01100,
-    0b00000,
-    0b00000,
-    0b00000,
-    0b00000
-};
 
-// Кастомный символ косой черты.
-static constexpr uint8_t kBackslash[8] = { 
-    0b00000,
-    0b10000,
-    0b01000,
-    0b00100,
-    0b00010,
-    0b00001,
-    0b00000,
-    0b00000
-};
-
-// Кастомный символ - вертикальная черта.
-static constexpr uint8_t kVerticalBar[8] = { 
-    0b00100,
-    0b00100,
-    0b00100,
-    0b00100,
-    0b00100,
-    0b00100,
-    0b00100,
-    0b00000      
-};
-    
-// Кастомный символ - стрелка вправо.
-static constexpr uint8_t kRightArrow[8] = { 
-    0B00000,
-    0B00100,
-    0B00010,
-    0B11111,
-    0B00010,
-    0B00100,
-    0B00000,
-    0B00000   
-};
 
 class LiquidCrystal final
 {
@@ -153,6 +107,54 @@ public:
     }
     
 private:
+    
+    // Кастомный символ градуса цельсия.
+    const uint8_t kCelsius[8] = {
+        0b01100,
+        0b10010,
+        0b10010,
+        0b01100,
+        0b00000,
+        0b00000,
+        0b00000,
+        0b00000
+    };
+
+    // Кастомный символ косой черты.
+    const uint8_t kBackslash[8] = { 
+        0b00000,
+        0b10000,
+        0b01000,
+        0b00100,
+        0b00010,
+        0b00001,
+        0b00000,
+        0b00000
+    };
+
+    // Кастомный символ - вертикальная черта.
+    const uint8_t kVerticalBar[8] = { 
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00000      
+    };
+    
+    // Кастомный символ - стрелка вправо.
+    const uint8_t kRightArrow[8] = { 
+        0B00000,
+        0B00100,
+        0B00010,
+        0B11111,
+        0B00010,
+        0B00100,
+        0B00000,
+        0B00000   
+    };
     
     // commands.
     static constexpr uint8_t LCD_CLEARDISPLAY = 0x01;

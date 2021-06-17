@@ -143,7 +143,7 @@ int main(void)
     
     g_initializationTask.CreateTask("Initialization");      // Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.
     g_waterLevelTask.CreateTask("WaterLevel");              // Снимает показания датчика расстояния.
-    g_wlAnimationTask.CreateTask("WaterLevelAnimation");    // Крутит анимацию символа '%' когда датчик уровня не может получить данные.
+    g_wlAnimationTask.CreateTask("WaterLevelAnim");    // Крутит анимацию символа '%' когда датчик уровня не может получить данные.
     g_wifiTask.CreateTask("WiFi");                          // Принимает команды по WiFi и выполняет их.
     g_lcdTask.CreateTask("LCD");                            // Отображает информацию на LCD дисплее.
     g_tempSensorTask.CreateTask("TempSensor");              // Снимает показания с температурных датчиков.

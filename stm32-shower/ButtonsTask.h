@@ -28,9 +28,9 @@ public:
     
 private:
     
-    void PressSound()
+    static void PressSound()
     {
-        static const BeepSound samples[]
+        BeepSound samples[]
         {
             BeepSound(2000, 150),
             BeepSound(50)
