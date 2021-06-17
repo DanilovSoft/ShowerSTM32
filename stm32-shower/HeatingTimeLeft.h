@@ -36,6 +36,32 @@ public:
         return minutes;
     }
     
+    // Возвращает примерный прогресс нагрева воды от 0 до 100%.
+    uint8_t GetProgress()
+    {
+        float internal_temp = g_tempSensorTask.AverageInternalTemp;
+    
+        // Узнаём желаемую температуру воды в баке.
+        uint8_t limit_temp;
+        g_heaterTempLimit.TryGetTargetTemperature(limit_temp);
+        
+        if (internal_temp > limit_temp)
+        {
+            internal_temp = limit_temp;
+        }
+            
+        float percent = 100.0 / (limit_temp - kAirTempLowerBound) * (internal_temp - kAirTempLowerBound);
+        
+        percent = round(percent);
+        
+        if (percent > 100)
+        {
+            percent = 100;
+        }
+            
+        return percent;
+    }
+    
 private:
     
     static constexpr double kQ = 0.00117;

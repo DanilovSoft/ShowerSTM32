@@ -109,19 +109,19 @@ class Common final
 public:
 
     // Включен ли автомат нагревателя.
-    inline static bool CircuitBreakerIsOn()
+    static bool CircuitBreakerIsOn()
     {
         return GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET;
     }
 
     // Включен ли ТЭН (реле).
-    inline static bool HeaterIsOn()
+    static bool HeaterIsOn()
     {
         return GPIO_ReadInputDataBit(GPIO_Heater, GPIO_Pin_Heater) == SET;
     }
 
     // Открыт ли водяной клапан.
-    inline static bool ValveIsOpen()
+    static bool ValveIsOpen()
     {
         return GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin);
     }

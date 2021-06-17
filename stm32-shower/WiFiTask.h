@@ -446,6 +446,12 @@ private:
                 }
                 break;
             }
+        case ShowerCode::kGetHeatingProgress:
+            {
+                uint8_t value = g_heatingTimeLeft->GetProgress();
+                m_request.SendResponse(value);
+                break;
+            }
         case ShowerCode::kGetWaterHeated:
             {
                 bool value = g_heaterTask.WaterHeated();

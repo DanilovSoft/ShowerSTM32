@@ -23,7 +23,7 @@ private:
 
     LiquidCrystal m_liquidCrystal;
     
-    void DisplayTemp(char* buf, int16_t temp)
+    static void DisplayTemp(char* buf, int16_t temp)
     {
         char first_char = ' ';
         if (temp < 0)
@@ -73,21 +73,25 @@ private:
             {
                 // Набирается вода, включен автомат и включен ТЭН.
                 
-                // Уровень воды в первой строке.
-                if(!g_waterLevelTask.GetIsError())
+                if(g_waterLevelTask.PreInitialized)
                 {
-                    uint8_t water_level = g_waterLevelTask.Percent;
-                    
-                    char tmp = Common::DigitToChar(water_level / 10);
-                    line_water_level[13] = tmp == '0' ? ' ' : tmp;
-                    line_water_level[14] = Common::DigitToChar(water_level % 10);
-                    line_water_level[15] = '%';
+                    CopyPercent(line_water_level);
+                
+                    // Уровень воды в первой строке.
+                    if(g_waterLevelTask.GetIsError() || !g_waterLevelTask.GetIsInitialized())
+                    {
+                        line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
+                    }
+                    else
+                    {
+                        line_water_level[15] = '%';
+                    }
                 }
                 else
                 {
                     line_water_level[13] = '-';
                     line_water_level[14] = '-';
-                    line_water_level[15] = '%';
+                    line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
                 }
                 
                 m_liquidCrystal.WriteString(line_water_level);
@@ -161,37 +165,26 @@ private:
                     // Уровень воды во второй строке.
                     if(g_waterLevelTask.PreInitialized)
                     {
-                        // У таска есть показание.
+                        // У датчика есть показание.
                         
-                        uint8_t water_level = g_waterLevelTask.Percent;
-                        char first_digit = Common::DigitToChar(water_level / 10);
-                        line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
-                        line_water_level[14] = Common::DigitToChar(water_level % 10);
+                        CopyPercent(line_water_level);
                         
-                        if (!g_waterLevelTask.GetIsError())
+                        if (g_waterLevelTask.GetIsError() || !g_waterLevelTask.GetIsInitialized())
                         {
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? '%' : g_wlAnimationTask.GetWaterLevelAnimChar();
+                            line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
                         }
                         else
                         {
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? ' ' : g_wlAnimationTask.GetWaterLevelAnimChar();
+                            line_water_level[15] = '%';
                         }
                     }
                     else
                     {
                         // У датчика уровня ещё нет ни одного показания.
                         
-                        if(!g_waterLevelTask.GetIsError())
-                        {
-                            // Анимация загрузки.
-                            line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
-                        }
-                        else
-                        {
-                            line_water_level[13] = '-';
-                            line_water_level[14] = '-';
-                            line_water_level[15] = '%';
-                        }
+                        line_water_level[13] = '-';
+                        line_water_level[14] = '-';
+                        line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
                     }
                     
                     m_liquidCrystal.WriteString(line_water_level);
@@ -199,6 +192,14 @@ private:
             }
             taskYIELD();
         }
+    }
+    
+    static void CopyPercent(char* line_water_level)
+    {
+        uint8_t water_level = g_waterLevelTask.Percent;
+        char first_digit = Common::DigitToChar(water_level / 10);
+        line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
+        line_water_level[14] = Common::DigitToChar(water_level % 10);
     }
 };
 
