@@ -4,7 +4,6 @@
 #include "LedLightTask.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "RtosHelper.h"
 #include "stm32f10x_bkp.h"
 #include "EepromHelper.h"
 #include "ButtonsTask.h"
@@ -19,6 +18,7 @@
 #include "stm32f10x_rtc.h"
 #include "TempSensorTask.h"
 #include "MedianFilter.h"
+#include "WaterLevelAnimationTask.h"
 
 // Эта структура существует только для чтения, потому что с ней 
 // работают несколько потоков, а запись ничем не синхронизирована.
@@ -38,6 +38,7 @@ LedLightTask g_ledLightTask;
 ButtonsTask g_buttonsTask;
 ValveTask g_valveTask;
 WatchDogTask g_watchDogTask;
+WaterLevelAnimationTask g_wlAnimationTask;
 Buzzer g_buzzer;
 EepromHelper g_eepromHelper;
 HeaterTempLimit g_heaterTempLimit;
@@ -66,13 +67,13 @@ void Init()
     RCC_ADCCLKConfig(RCC_PCLK2_Div6);   // 72 / 6 = 12 мгц. Не должно превышать 14 мгц.
     
     // Наличие 230в для нагревателя.
-    GPIO_InitTypeDef gpioInit =
+    GPIO_InitTypeDef gpio_init =
     {
         GPIO_Pin_MainPower,
         GPIO_Speed_2MHz,
         GPIO_Mode_IPU
     };
-    GPIO_Init(GPIO_MainPower, &gpioInit);
+    GPIO_Init(GPIO_MainPower, &gpio_init);
     
 #pragma endregion	
     
@@ -140,18 +141,19 @@ int main(void)
 {
     Init();
     
-    g_watchDogTask.Init();
+    g_initializationTask.CreateTask("Initialization");      // Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.
+    g_waterLevelTask.CreateTask("WaterLevel");              // Снимает показания датчика расстояния.
+    g_wlAnimationTask.CreateTask("WaterLevelAnimation");    // Крутит анимацию символа '%' когда датчик уровня не может получить данные.
+    g_wifiTask.CreateTask("WiFi");                          // Принимает команды по WiFi и выполняет их.
+    g_lcdTask.CreateTask("LCD");                            // Отображает информацию на LCD дисплее.
+    g_tempSensorTask.CreateTask("TempSensor");              // Снимает показания с температурных датчиков.
+    g_heaterTask.CreateTask("Heater");                      // Включает и выключает ТЭН.
+    g_ledLightTask.CreateTask("LedLight");                  // Включает или выключает свет в соответствии с положением автомата.
+    g_buttonsTask.CreateTask("Buttons");                    // Бесконечно опрашивает кнопки и сенсорную панель.
+    g_valveTask.CreateTask("Valve");                        // По запросу набирает воду в бак.
+    g_watchDogTask.CreateTask("WatchDog");                  // Просто сбрасывает сторожевой таймер каждую секунду.
     
-    RtosHelper::CreateTask(&g_initializationTask, "Initialization");
-    RtosHelper::CreateTask(&g_waterLevelTask, "WaterLevel");
-    RtosHelper::CreateTask(&g_wifiTask, "WI-FI");
-    RtosHelper::CreateTask(&g_lcdTask, "LCD");
-    RtosHelper::CreateTask(&g_tempSensorTask, "TempSensor");
-    RtosHelper::CreateTask(&g_heaterTask, "Heater");
-    RtosHelper::CreateTask(&g_ledLightTask, "LedLight");
-    RtosHelper::CreateTask(&g_buttonsTask, "Buttons");
-    RtosHelper::CreateTask(&g_valveTask, "Valve");
-    RtosHelper::CreateTask(&g_watchDogTask, "WatchDog");
+    g_watchDogTask.Init(); // Запускает сторожевой таймер.
     
     vTaskStartScheduler();
 }

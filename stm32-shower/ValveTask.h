@@ -12,13 +12,6 @@ class ValveTask final : public TaskBase
 {	
 public:
     
-    ValveTask()
-    {
-        m_sensorSwitchIsOnLastState = false;
-        m_openValveAllowed = ValveState::PendingOpen;
-        m_stopRequired = false;
-    }
-    
     void Init()
     {
         // Клапан.
@@ -43,9 +36,9 @@ public:
         GPIO_Init(SensorSwitch_Power_GPIO, &gpio_init);
 
         // Выключить питание сенсора до окончания инициали датчика уровня воды.
-        GpioTurnOffSensorSwitch();
+        Common::TurnOffSensorSwitch();
 
-        m_xValveSemaphore = xSemaphoreCreateBinaryStatic(&m_xValveSemaphoreBuffer);	
+        //m_xValveSemaphore = xSemaphoreCreateBinaryStatic(&m_xValveSemaphoreBuffer);	
     }
     
     // Вызывается каждый раз, после OnButtonPushed().
@@ -97,7 +90,7 @@ public:
             m_openValveAllowed = ValveTask::PendingForceOpen;
             
             // Пробуждаем поток.
-            xSemaphoreGive(m_xValveSemaphore);
+            xTaskNotifyGive(m_taskHandle);
         }
     }
     
@@ -112,34 +105,12 @@ private:
     
     // Пауза для повторного включения клапана.
     static const auto kValveDebounceMsec = 300;
-    SemaphoreHandle_t m_xValveSemaphore;
-    StaticSemaphore_t m_xValveSemaphoreBuffer;
-    bool m_sensorSwitchIsOnLastState;
+    bool m_sensorSwitchIsOnLastState = false;
     // Флаг прекращающий набор воды по запросу пользователя.
-    volatile bool m_stopRequired;
+    volatile bool m_stopRequired = false;
     // Флаг предотвращающий повторные запросы на открытие клапана от пользователя,
     // пока другой поток обрабатывает первый запрос (троттлинг).
-    volatile ValveState m_openValveAllowed;
-    
-    // Включает питание сенсора.
-    void GpioTurnOnSensorSwitch()
-    {
-        GPIO_SetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
-    }
-    
-    // Выключает питание сенсора.
-    void GpioTurnOffSensorSwitch()
-    {
-        // Выключить сенсор.
-        GPIO_ResetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
-    }
-    
-    // Открывает клапан.
-    void OpenValve()
-    {
-        // Включить воду.
-        GPIO_SetBits(Valve_GPIO, Valve_Pin);
-    }
+    volatile ValveState m_openValveAllowed = ValveState::PendingOpen;
     
     // Закрывает клапан.
     // Выключает сенсор и выдерживает небольшую паузу 
@@ -148,16 +119,16 @@ private:
     void CloseValve()
     {
         // Закрыть клапан.
-        GPIO_ResetBits(Valve_GPIO, Valve_Pin);
+        Common::CloseValve();
         
         // Выключить сенсор.
-        GpioTurnOffSensorSwitch();
+        Common::TurnOffSensorSwitch();
         
-        // Выдержать паузу ради антидребезга.
+        // Выдержать паузу для антидребезга.
         vTaskDelay(kValveDebounceMsec / portTICK_PERIOD_MS);
 
         // Включить питание сенсора.
-        GpioTurnOnSensorSwitch();
+        Common::TurnOnSensorSwitch();
     }
     
     void Run()
@@ -168,12 +139,12 @@ private:
         m_openValveAllowed = ValveTask::WaitingRequest;
         
         // Включить сенсор.
-        GpioTurnOnSensorSwitch();
+        Common::TurnOnSensorSwitch();
         
         while (true)
         {
             // Спим пока не поступит запрос на открытие клапана.
-            xSemaphoreTake(m_xValveSemaphore, portMAX_DELAY);
+            ulTaskNotifyTake(pdTRUE, /* Clear the notification value before exiting. */ portMAX_DELAY);
             
             // PS. Текущий поток может устанавливать ТОЛЬКО значение false этому флагу.
             m_stopRequired = false;
@@ -184,7 +155,7 @@ private:
                 if (m_openValveAllowed == ValveTask::PendingForceOpen)
                 {
                     // Включить воду.
-                    OpenValve();	
+                    Common::OpenValve();	
                         
                     // Ожидаем достижение порогового уровня воды или ручной остановки.
                     while (!m_stopRequired)
@@ -196,16 +167,16 @@ private:
                 {
                     if (g_waterLevelTask.GetIsInitialized())
                     {
-                        uint8_t water_percent = g_waterLevelTask.DisplayingPercent;
+                        uint8_t water_percent = g_waterLevelTask.Percent;
                 
                         // Если уровень воды меньше уровень автоматического отключения.
                         if(water_percent < g_properties.WaterValveCutOffPercent)
                         {					
                             // Включить воду.
-                            OpenValve();	
+                            Common::OpenValve();	
                         
                             // Ожидаем достижение порогового уровня воды или ручной остановки.
-                            while(!m_stopRequired && g_waterLevelTask.DisplayingPercent < g_properties.WaterValveCutOffPercent)
+                            while(!m_stopRequired && g_waterLevelTask.Percent < g_properties.WaterValveCutOffPercent)
                             {
                                 taskYIELD();
                             }
@@ -232,7 +203,7 @@ private:
             m_openValveAllowed = ValveTask::PendingOpen;
             
             // Пробуждаем поток.
-            xSemaphoreGive(m_xValveSemaphore);
+            xTaskNotifyGive(m_taskHandle);
         }
     }
 };

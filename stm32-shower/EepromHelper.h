@@ -14,7 +14,7 @@ public:
     {
         while (!TryInitProperties())
         {
-            //taskYIELD();
+            taskYIELD();
         }
         
         g_writeProperties.SelfFix();

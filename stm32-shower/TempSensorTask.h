@@ -182,10 +182,7 @@ private:
     static constexpr uint8_t kOneWireNoRead = 0xFF;
     static constexpr uint8_t kOneWireReadSlot = 0xFF;
     static constexpr uint8_t kCountPerC = 16;
-    
     static constexpr uint16_t kMinimumDelayMsec = 200;
-    // Пауза между измерениями температуры.
-    static constexpr uint16_t kPauseMsec = 2000;
     
     uint8_t m_internalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
     uint8_t m_externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
@@ -265,7 +262,7 @@ private:
     
         TryRegisterNewSensors();
     
-        // Готовим команду - чтение памяти устройства.
+        // Готовим команду — чтение памяти устройства.
         memcpy(m_internalDeviceReadScratchCommand + 1, g_properties.InternalTempSensorId, 8);
         memcpy(m_externalDeviceReadScratchCommand + 1, g_properties.ExternalTempSensorId, 8);
     
@@ -753,7 +750,7 @@ repeat:
 
     void Pause()
     {
-        vTaskDelay(kPauseMsec / portTICK_PERIOD_MS);
+        vTaskDelay(kTempSensorPauseMsec / portTICK_PERIOD_MS);
     }
 
     // Если датчик не подключен к шине UART, scratchpad будет заполнен значениями 0 из-за подтягивающего резистора.
@@ -762,16 +759,16 @@ repeat:
     bool TryUpdateTemp()
     {
         uint8_t scratchpad[9];
-        bool internalSuccess = false;
+        bool internal_success = false;
         
         if (OneWire_Send(AllDevicessStartConvert, 2))
         {
             vTaskDelay(kMinimumDelayMsec / portTICK_PERIOD_MS);	
         
-            float internalTemp;
-            if (TryGetInternalTemp(internalTemp))
+            float internal_temp;
+            if (TryGetInternalTemp(internal_temp))
             {
-                InternalTemp = internalTemp;
+                InternalTemp = internal_temp;
             
                 // Записать в скользящее окно.
                 m_intTempSum -= m_intTempBuf[m_intTempHead];
@@ -781,17 +778,17 @@ repeat:
                 AverageInternalTemp = m_intTempSum / g_properties.InternalTempAvgFilterSize;
             }
         
-            float externalTemp;
-            if (TryGetExternalTemp(externalTemp))
+            float air_temp;
+            if (TryGetExternalTemp(air_temp))
             {
-                ExternalTemp = externalTemp;
+                ExternalTemp = air_temp;
                 // Записать в скользящее окно.
                 m_extTempSum -= m_extTempBuf[m_extTempHead];
                 m_extTempSum += ExternalTemp;
                 m_extTempBuf[m_extTempHead] = ExternalTemp;
                 m_extTempHead = (m_extTempHead + 1) % kAirTempAvgFilterSize;
                 AverageExternalTemp = m_extTempSum / kAirTempAvgFilterSize;
-                return internalSuccess;
+                return internal_success;
             }
         }
         return false;
@@ -829,7 +826,7 @@ repeat:
         return InternalSensorInitialized && ExternalSensorInitialized;
     }
 
-    bool TryGetInternalTemp(float& internalTemp)
+    bool TryGetInternalTemp(float& internal_temp)
     {
         uint8_t scratchpad[9];
         
@@ -840,14 +837,14 @@ repeat:
             uint8_t count_per_c = scratchpad[7];
             if (count_per_c == kCountPerC)
             {
-                internalTemp = Decode(scratchpad);
+                internal_temp = Decode(scratchpad);
                 return true;
             }
         }
         return false;
     }
 
-    bool TryGetExternalTemp(float& externalTemp)
+    bool TryGetExternalTemp(float& air_temp)
     {
         uint8_t scratchpad[9];
     
@@ -856,7 +853,7 @@ repeat:
             uint8_t count_per_c = scratchpad[7];
             if (count_per_c == kCountPerC)
             {
-                externalTemp = Decode(scratchpad);
+                air_temp = Decode(scratchpad);
                 return true;
             }
         }
@@ -864,23 +861,23 @@ repeat:
     }
 
     // Заполняет весь скользящий буфер одним значением.
-    void InitAverageInternalTemp(const float internalTemp)
+    void InitAverageInternalTemp(const float internal_temp)
     {
-        m_intTempSum = internalTemp * g_properties.InternalTempAvgFilterSize;
+        m_intTempSum = internal_temp * g_properties.InternalTempAvgFilterSize;
         for (size_t i = 0; i < g_properties.InternalTempAvgFilterSize; i++)
         {
-            m_intTempBuf[i] = internalTemp;
+            m_intTempBuf[i] = internal_temp;
         }
         m_intTempHead = 0;
     }
 
     // Заполняет весь скользящий буфер одним значением.
-    void InitAverageExternalTemp(const float externalTemp)
+    void InitAverageExternalTemp(const float external_temp)
     {
-        m_extTempSum = externalTemp * kAirTempAvgFilterSize;
+        m_extTempSum = external_temp * kAirTempAvgFilterSize;
         for (size_t i = 0; i < kAirTempAvgFilterSize; i++)
         {
-            m_extTempBuf[i] = externalTemp;
+            m_extTempBuf[i] = external_temp;
         }
         m_extTempHead = 0;
     }

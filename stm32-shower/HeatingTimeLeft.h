@@ -30,34 +30,10 @@ public:
         g_heaterTempLimit.TryGetTargetTemperature(limitTemp);
 
         // Нужно учесть на сколько процентов заполнен бак.
-        uint8_t tankPercent = g_waterLevelTask.DisplayingPercent;
+        uint8_t tankPercent = g_waterLevelTask.Percent;
     
         float minutes = CalcTimeLeft(intTemp, limitTemp, tankPercent);
         return minutes;
-    }
-    
-    // Возвращает прогресс нагрева воды от 0 до 100%.
-    uint8_t GetProgress()
-    {
-        float internalTemp = g_tempSensorTask.AverageInternalTemp;
-    
-        // Узнаём желаемую температуру воды в баке.
-        uint8_t limitTemp;
-        g_heaterTempLimit.TryGetTargetTemperature(limitTemp);
-        
-        if (internalTemp > limitTemp)
-        {
-            internalTemp = limitTemp;
-        }
-            
-        float percent = 100.0 / (limitTemp - kAirTempLowerBound) * (internalTemp - kAirTempLowerBound);
-        percent = round(percent);
-        if (percent > 100)
-        {
-            percent = 100;
-        }
-            
-        return percent;
     }
     
 private:
@@ -73,9 +49,9 @@ private:
     // Время до окончания нагрева в минутах.
     // "internalTemp" - Текущая температура воды в баке.
     // "limitTemp" - Целевая темпаратура.
-    float CalcTimeLeft(float internalTemp, uint8_t targetTemp, uint8_t tankPercent)
+    float CalcTimeLeft(float internal_temp, uint8_t target_temp, uint8_t tank_percent)
     {
-        if (internalTemp >= targetTemp)
+        if (internal_temp >= target_temp)
         {
             return 0;
         }
@@ -87,10 +63,10 @@ private:
         //  tн – начальная температура воды, °С
         //  W – электрическая мощность нагревательного элемента — ТЭНа, кВТ
 
-        double timeH = kQ * m_tankVolumeLitre * (targetTemp - internalTemp) / m_heaterPowerKWatt;
+        double time_H = kQ * m_tankVolumeLitre * (target_temp - internal_temp) / m_heaterPowerKWatt;
 
         // В минутах.
-        float minutes = timeH * 60;
+        float minutes = time_H * 60;
             
         return minutes;
     }

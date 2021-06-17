@@ -79,6 +79,7 @@
     <ClCompile Include="FreeRTOS\Source\tasks.c" />
     <ClCompile Include="FreeRTOS\Source\timers.c" />
     <ClCompile Include="InitializationTask.cpp" />
+    <ClCompile Include="WaterLevelAnimationTask.cpp" />
     <ClCompile Include="WaterLevelTask.cpp" />
     <ClCompile Include="WaterLevel_IRQ.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -145,7 +146,7 @@
     <ClInclude Include="Properties.h" />
     <ClInclude Include="Request.h" />
     <ClInclude Include="RealTimeClockStopwatch.h" />
-    <ClInclude Include="RtosHelper.h" />
+    <ClInclude Include="WaterLevelAnimationTask.h" />
     <ClInclude Include="WaterSensorButton.h" />
     <ClInclude Include="ShowerCode.h" />
     <ClInclude Include="StdPeriph\Inc\core_cm3.h" />
@@ -187,6 +188,9 @@
     <ClInclude Include="InitializationTask.h" />
     <ClInclude Include="WaterLevelTask.h" />
     <ClInclude Include="WiFiTask.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="stm32-shower.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

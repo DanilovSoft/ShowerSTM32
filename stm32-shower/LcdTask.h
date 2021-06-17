@@ -5,6 +5,7 @@
 #include "InitializationTask.h"
 #include "TempSensorTask.h"
 #include "WaterLevelTask.h"
+#include "WaterLevelAnimationTask.h"
 #include "HeaterTempLimit.h"
 #include "HeaterTask.h"
 #include "ValveTask.h"
@@ -75,7 +76,7 @@ private:
                 // Уровень воды в первой строке.
                 if(!g_waterLevelTask.GetIsError())
                 {
-                    uint8_t water_level = g_waterLevelTask.DisplayingPercent;
+                    uint8_t water_level = g_waterLevelTask.Percent;
                     
                     char tmp = Common::DigitToChar(water_level / 10);
                     line_water_level[13] = tmp == '0' ? ' ' : tmp;
@@ -150,7 +151,7 @@ private:
                     water_heated = (round(g_tempSensorTask.AverageInternalTemp) >= target_temp);
                 }
                 
-                if (circuit_breaker_is_on && water_heated && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
+                if (circuit_breaker_is_on && water_heated && g_waterLevelTask.Percent >= g_properties.MinimumWaterHeatingPercent)
                 {
                     // 'Вода нагрета'.
                     m_liquidCrystal.WriteString(line_water_ready);
@@ -160,19 +161,20 @@ private:
                     // Уровень воды во второй строке.
                     if(g_waterLevelTask.PreInitialized)
                     {
+                        // У таска есть показание.
+                        
+                        uint8_t water_level = g_waterLevelTask.Percent;
+                        char first_digit = Common::DigitToChar(water_level / 10);
+                        line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
+                        line_water_level[14] = Common::DigitToChar(water_level % 10);
+                        
                         if (!g_waterLevelTask.GetIsError())
                         {
-                            uint8_t water_level = g_waterLevelTask.DisplayingPercent;
-                            char first_digit = Common::DigitToChar(water_level / 10);
-                            line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
-                            line_water_level[14] = Common::DigitToChar(water_level % 10);
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? '%' : g_initializationTask.GetWaterLevelAnimChar();
+                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? '%' : g_wlAnimationTask.GetWaterLevelAnimChar();
                         }
                         else
                         {
-                            line_water_level[13] = '-';
-                            line_water_level[14] = '-';
-                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? ' ' : g_initializationTask.GetWaterLevelAnimChar();
+                            line_water_level[15] = g_waterLevelTask.GetIsInitialized() ? ' ' : g_wlAnimationTask.GetWaterLevelAnimChar();
                         }
                     }
                     else
@@ -182,7 +184,7 @@ private:
                         if(!g_waterLevelTask.GetIsError())
                         {
                             // Анимация загрузки.
-                            line_water_level[15] = g_initializationTask.GetWaterLevelAnimChar();
+                            line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
                         }
                         else
                         {

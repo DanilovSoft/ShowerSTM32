@@ -294,7 +294,7 @@ private:
             }
         case ShowerCode::kGetWaterPercent:
             {
-                m_request.SendResponse(g_waterLevelTask.DisplayingPercent);
+                m_request.SendResponse(g_waterLevelTask.Percent);
                 break;
             }
         case ShowerCode::kGetExternalTemp:
@@ -446,12 +446,6 @@ private:
                 }
                 break;
             }
-        case ShowerCode::kGetHeatingProgress:
-            {
-                uint8_t value = g_heatingTimeLeft->GetProgress();
-                m_request.SendResponse(value);
-                break;
-            }
         case ShowerCode::kGetWaterHeated:
             {
                 bool value = g_heaterTask.WaterHeated();
@@ -564,7 +558,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.ButtonPressTimeMsec))
                 {
-                    g_writeProperties.ButtonPressTimeMsec = *m_requestData;
+                    g_writeProperties.ButtonPressTimeMsec = PropertyStruct::FixButtonPressTimeMsec(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -578,7 +572,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.ButtonLongPressTimeMsec))
                 {
-                    g_writeProperties.ButtonLongPressTimeMsec = *(uint16_t*)m_requestData;
+                    g_writeProperties.ButtonLongPressTimeMsec = PropertyStruct::FixButtonLongPressTimeMsec(*(uint16_t*)m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;

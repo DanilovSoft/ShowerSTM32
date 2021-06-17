@@ -11,7 +11,7 @@
 #include "misc.h"
 #include "Properties.h"
 #include "TempSensorTask.h"
-#include "InitializationTask.h"
+#include "WaterLevelAnimationTask.h"
 
 // PS. При повышении температуры воздуха на 1 °C скорость звука в нем увеличивается на 0.57 м/с 
 // 1% на каждые 5 °С => 0.2% на 1 °С
@@ -44,8 +44,8 @@ public:
     // Значение -1 означает что последнее измерение не удалось.
     volatile int16_t UsecRaw = -1;
     
-    // Отображаемый уровень воды в баке, %.
-    volatile uint8_t DisplayingPercent = 0;
+    // Уровень воды в баке от 0 до 99, %.
+    volatile uint8_t Percent = 0;
     
     // True если было получено хоть одно показание с датчика уровня.
     volatile bool PreInitialized = false;
@@ -268,7 +268,7 @@ private:
                     uint8_t percent = GetPercent(point);
 
                     // Скопировать уровень воды в процентах в публичную переменную.
-                    DisplayingPercent = percent;
+                    Percent = percent;
 
                     // Отобразить на LED.
                     TaskDisplayPercent(percent);
@@ -279,6 +279,7 @@ private:
                 {
                     // Датчик чем-то заслонён — расстояние слишком короткое.
                     
+                    // Считаем это ошибкой получения уровня воды.
                     IncrementError();
                 }
             }
@@ -298,6 +299,12 @@ private:
         if (m_errorCounter < g_properties.WaterLevelErrorThreshold)
         {
             m_errorCounter++;
+            
+            if (GetIsError())
+            {
+                // Опять запускаем анимацию на LCD.
+                g_wlAnimationTask.ResumeAnimation();
+            }
         }
         else
         {
@@ -373,10 +380,10 @@ private:
                     last_point = point;
             
                     // Инициализировать глобальную переменную.
-                    DisplayingPercent = GetPercent(point);
+                    Percent = GetPercent(point);
 
                     // Отобразить на LED дисплее.
-                    TaskDisplayPercent(DisplayingPercent);
+                    TaskDisplayPercent(Percent);
 
                     PreInitialized = true;
 
@@ -464,6 +471,7 @@ private:
         return point;
     }
     
+    // От 0 до 99.
     static uint8_t GetPercent(uint8_t point)
     {
         if (point > 99)
@@ -576,7 +584,7 @@ private:
         return point;
     }
     
-    inline static void TaskDisplayPercent(uint8_t percent)
+    inline static void TaskDisplayPercent(const uint8_t percent)
     {   
         static constexpr uint8_t a0 = 0b10100000;
         static constexpr uint8_t a1 = 0b11111100;
@@ -603,6 +611,9 @@ private:
         ;
         const constexpr uint8_t bB[] { b0, b1, b2, b3, b4, b5, b6, b7, b8, b9 }
         ;
+        
+        // Индикатор может отображать только 2 разряда.
+        //uint8_t displayPercent = percent == 100 ? 99 : percent;
         
         TaskDisplayLED(aA[percent / 10], bB[percent % 10]);
     }

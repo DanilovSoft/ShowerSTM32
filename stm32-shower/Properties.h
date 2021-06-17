@@ -270,32 +270,11 @@ public:
     
     void SelfFix()
     {
-        // Обычно для антидребезга задают 50 мс.
-        if (ButtonPressTimeMsec < 20 || ButtonPressTimeMsec > 80)
-        {
-            ButtonPressTimeMsec = 40;
-        }
-
-        if (ButtonLongPressTimeMsec > 10000 || ButtonLongPressTimeMsec < 1000)
-        {
-            ButtonLongPressTimeMsec = 4000;
-        }
-        
-        // В одном сантиметре - 58 микросекунд.
-        if (WaterLevelEmpty < (30 * 58) || WaterLevelEmpty > (50 * 58)) // 30..50 сантиметров (1740..2900 мкс)
-        {
-            WaterLevelEmpty = 2618;   // 45 см
-        }
-
-        if (WaterLevelFull < 116 || WaterLevelFull > WaterLevelEmpty)     // 2 сантиметра.
-        {
-            WaterLevelFull = 922;   // 16 см
-        }
-
-        if (MinimumWaterHeatingPercent > 100)
-        {
-            MinimumWaterHeatingPercent = 25;
-        }
+        ButtonPressTimeMsec = FixButtonPressTimeMsec(ButtonPressTimeMsec);
+        ButtonLongPressTimeMsec = FixButtonLongPressTimeMsec(ButtonLongPressTimeMsec);
+        WaterLevelEmpty = FixWaterLevelEmpty(WaterLevelEmpty);
+        WaterLevelFull = FixWaterLevelFull(WaterLevelFull, WaterLevelEmpty); // Минимум 2 сантиметра.
+        MinimumWaterHeatingPercent = FixMinimumWaterHeatingPercent(MinimumWaterHeatingPercent);
         
         if (HeatingTimeLimitMin < 10 || HeatingTimeLimitMin > 180)
         {
@@ -364,6 +343,59 @@ public:
         }
         
         Chart.SelfFix();
+    }
+    
+    // От 20 до 80 мсек.
+    static uint8_t FixButtonPressTimeMsec(const uint8_t timeMsec)
+    {
+        // Обычно для антидребезга задают 50 мс.
+        if(timeMsec < 20 || timeMsec > 80)
+        {
+            return 40;
+        }
+        return timeMsec;
+    }
+    
+    // От 1 до 10 секунд.
+    static uint16_t FixButtonLongPressTimeMsec(const uint16_t timeMsec)
+    {
+        if (timeMsec < 1000 || timeMsec > 10000)
+        {
+            return 4000;
+        }
+        return timeMsec;
+    }
+    
+    static uint16_t FixWaterLevelEmpty(const uint16_t waterLevelEmpty)
+    {
+        // В одном сантиметре - 58 микросекунд.
+        static const auto minimum = kTankMinimumHeightCm * 58;
+        static const auto maximum = kTankMaximumHeightCm * 58;
+        
+        if(waterLevelEmpty < minimum || waterLevelEmpty > maximum) 
+        {
+            return round(kDefaultFullTankDistanceCm * 58);
+        }
+        return waterLevelEmpty;
+    }
+    
+    static uint16_t FixWaterLevelFull(const uint16_t waterLevelFull, const uint16_t waterLevelEmpty)
+    {
+        // 2 сантиметра.
+        if(waterLevelFull < 116 || waterLevelFull > waterLevelEmpty)
+        {
+            return round(kDefaultEmptyTankDistanceCm * 58);
+        }
+        return waterLevelFull;
+    }
+    
+    static uint8_t FixMinimumWaterHeatingPercent(const uint8_t minimumWaterHeatingPercent)
+    {
+        if (minimumWaterHeatingPercent > 100)
+        {
+            return 25;
+        }
+        return minimumWaterHeatingPercent;
     }
     
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.

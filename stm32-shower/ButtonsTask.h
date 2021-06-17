@@ -41,28 +41,15 @@ private:
         g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
     }
 
-//    void LongPressSound()
-//    {
-//        static const BeepSound samples[]
-//        {
-//            BeepSound(2000, 500),
-//            BeepSound(50)
-//        }
-//        ;
-//        
-//        g_heaterTask.ResetBeepInterval();
-//        g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
-//    }
-
     void Run()
     {
         g_initializationTask.WaitForPropertiesInitialization();
         
-        ButtonDebounce debounce_temp_plus(Button_GPIO, Button_Temp_Plus, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        ButtonDebounce debounce_temp_minus(Button_GPIO, Button_Temp_Minus, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        ButtonDebounce debounce_valve(Button_GPIO, Button_Water_Pin, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        ButtonDebounce debounce_long_valve(Button_GPIO, Button_Water_Pin, g_properties.ButtonLongPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        WaterSensorButton sensor_switch(Button_GPIO, Button_SensorSwitch_OUT);
+        ButtonDebounce debounce_temp_plus(&Common::ButtonTempPlussPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        ButtonDebounce debounce_temp_minus(&Common::ButtonTempMinusPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        ButtonDebounce debounce_valve(&Common::ButtonValvePressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        ButtonDebounce debounce_long_valve(&Common::ButtonValvePressed, g_properties.ButtonLongPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        WaterSensorButton sensor_switch(&Common::ButtonSensorSwitchIsOn);
    
         while (true)
         {

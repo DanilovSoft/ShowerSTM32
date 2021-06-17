@@ -68,6 +68,8 @@
 #define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
 
+typedef bool(*ButtonPressedFunc)();
+
 static constexpr uint8_t kWiFiTryInitLimit = 3;
 static constexpr auto kUartRxFifoSize = 1024;                   // Размер кольцевого буфера UART.
 static constexpr auto kUartMaxStrLen = 200;                     // Максимальная длина строки получаемая через UART.
@@ -78,10 +80,19 @@ static constexpr uint8_t kWaterLevelMedianMaxSize = 255;        // Максим�
 static constexpr uint8_t kAirTempLowerBound = 15;               // Минимальная температура на улице.
 static constexpr uint8_t kAirTempUpperBound = 40;               // Максимальная температура на улице.
 static constexpr uint8_t kInternalTempAvgFilterSize = 16;       // Максимально допустимый размер фильтра 'скользящее среднее' для температуры в баке.
-static constexpr uint8_t kAirTempAvgFilterSize = 1;         // Максимально допустимый размер фильтра 'скользящее среднее' для температуры окружающего воздуха.
+static constexpr uint8_t kAirTempAvgFilterSize = 1;             // Максимально допустимый размер фильтра 'скользящее среднее' для температуры окружающего воздуха.
 static constexpr auto kAirTempSteps = kAirTempUpperBound - kAirTempLowerBound;   // Размер таблицы температур делаем исходя из возможных значений температур окружаюшего воздуха.
+static constexpr auto kTankMinimumHeightCm = 30;                // Минимально возможная высота бака, см.
+static constexpr auto kTankMaximumHeightCm = 50;                // Максимально возможная высота бака, см.
+static constexpr auto kDefaultFullTankDistanceCm = 45.1379;               
+static constexpr auto kDefaultEmptyTankDistanceCm = 15.8965;    
+static constexpr uint16_t kTempSensorPauseMsec = 2000;          // Пауза между измерениями температуры.
 
 static_assert(kAirTempUpperBound > kAirTempLowerBound, "kAirTempLowerBound should be lower than kAirTempUpperBound");
+
+
+
+
 
 inline void _delay_loops(unsigned int loops)
 {
@@ -117,10 +128,76 @@ public:
         return GPIO_ReadInputDataBit(Valve_GPIO, Valve_Pin);
     }
     
-//    inline static void DelayUs(uint16_t usec)
-//    {
-//        _delay_loops((unsigned int)((double)usec * (SystemCoreClock / 3000000.0)));
-//    }
+    static bool ButtonTempPlussPressed()
+    {
+        return GPIO_ReadInputDataBit(Button_GPIO, Button_Temp_Plus);
+    }
+    
+    static bool ButtonTempMinusPressed()
+    {
+        return GPIO_ReadInputDataBit(Button_GPIO, Button_Temp_Minus);
+    }
+    
+    static bool ButtonValvePressed()
+    {
+        return GPIO_ReadInputDataBit(Button_GPIO, Button_Water_Pin);
+    }
+    
+    static bool ButtonSensorSwitchIsOn()
+    {
+        return GPIO_ReadInputDataBit(Button_GPIO, Button_SensorSwitch_OUT);
+    }
+    
+    // Включает питание сенсорной кнопки.
+    static void TurnOnSensorSwitch()
+    {
+        GPIO_SetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
+    }
+    
+    // Выключает питание сенсорной кнопки.
+    static void TurnOffSensorSwitch()
+    {
+        // Выключить сенсор.
+        GPIO_ResetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
+    }
+    
+    // Открывает водяной клапан.
+    static void OpenValve()
+    {
+        GPIO_SetBits(Valve_GPIO, Valve_Pin);
+    }
+    
+    // Закрывает водяной клапан.
+    static void CloseValve()
+    {
+        GPIO_ResetBits(Valve_GPIO, Valve_Pin);
+    }
+    
+    // Отключает светодиод освещения.
+    static void TurnOffLight()
+    {
+        // Отключает GPIO от таймера.
+        GPIO_InitTypeDef gpio_init_struct = 
+        {
+            .GPIO_Pin = GPIO_Pin_LED,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_IN_FLOATING
+        };
+        GPIO_Init(GPIO_LED, &gpio_init_struct);
+    }
+    
+    // Включает светодиод освещения.
+    static void TurnOnLight()
+    {
+        // Подключает GPIO к таймеру.
+        GPIO_InitTypeDef gpio_init_struct = 
+        {
+            .GPIO_Pin = GPIO_Pin_LED,
+            .GPIO_Speed = GPIO_Speed_2MHz,
+            .GPIO_Mode = GPIO_Mode_AF_PP
+        };
+        GPIO_Init(GPIO_LED, &gpio_init_struct);
+    }
     
     static uint8_t DigitsCount(uint16_t value)
     {

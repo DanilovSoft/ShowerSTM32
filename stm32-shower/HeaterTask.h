@@ -337,7 +337,7 @@ private:
             else if (g_waterLevelTask.GetIsInitialized())
             {
                 // Если уровень воды больше допустимого минимума И температура в баке меньше необходимой.
-                if(internalTemp < targetTemp && !g_waterLevelTask.GetIsError() && g_waterLevelTask.DisplayingPercent >= g_properties.MinimumWaterHeatingPercent)
+                if(internalTemp < targetTemp && !g_waterLevelTask.GetIsError() && g_waterLevelTask.Percent >= g_properties.MinimumWaterHeatingPercent)
                 {
                     TurnOnHeaterWithSound();
                 }
@@ -371,7 +371,7 @@ private:
             else if (g_waterLevelTask.GetIsInitialized())
             {
                 // Температура в баке выше порога отключения ИЛИ уровень воды меньше допустимого.
-                if((internalTemp >= targetTemp) || g_waterLevelTask.DisplayingPercent < g_properties.MinimumWaterHeatingPercent)
+                if((internalTemp >= targetTemp) || g_waterLevelTask.Percent < g_properties.MinimumWaterHeatingPercent)
                 {
                     TurnOffHeaterWithSound();       // Безусловное отключение ТЭНа.
                     m_heaterWatchdog->ResetSession();

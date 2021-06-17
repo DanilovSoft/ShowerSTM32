@@ -7,10 +7,14 @@
 #include "LcdTask.h"
 #include "LedLightTask.h"
 #include "ButtonsTask.h"
+#include "WaterLevelAnimationTask.h"
 
 void InitializationTask::InitAllTasks()
 {
+    // Все таски должны быть проинициализированы перед запуском, последовательно, а не параллельно.
+    
     g_waterLevelTask.Init();
+    g_wlAnimationTask.Init();
     g_wifiTask.Init();
     g_lcdTask.Init();
     g_tempSensorTask.Init();
@@ -33,40 +37,4 @@ void InitializationTask::Run()
     
     // Разрешаем другим потокам доступ к Property.
     m_propertyInitialized = true;
-        
-    // Initialise the xLastWakeTime variable with the current time.
-    m_xLastWakeTime = xTaskGetTickCount();
-    
-    while (!g_waterLevelTask.GetIsInitialized())
-    {
-        Pause();
-            
-        switch (m_lastAnimPosition)
-        {
-        case 0:
-            {
-                m_lastAnimStep = kAnimStep2;    // '|'
-                m_lastAnimPosition = 1;
-                break;   
-            }
-        case 1:
-            {
-                m_lastAnimStep = kAnimStep3;    // '/'
-                m_lastAnimPosition = 2;
-                break;   
-            }
-        case 2:
-            {
-                m_lastAnimStep = kAnimStep4;    // '–'
-                m_lastAnimPosition = 3;
-                break;   
-            }
-        case 3:
-            {
-                m_lastAnimStep = kAnimStep1;    // '\'
-                m_lastAnimPosition = 0;
-                break;   
-            }
-        }
-    }
 }

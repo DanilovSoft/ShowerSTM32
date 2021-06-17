@@ -5,12 +5,11 @@
 class ButtonDebounce final
 {
 public:
-    
-    ButtonDebounce(GPIO_TypeDef* gpio, uint16_t gpio_pin, uint16_t press_time_msec, uint16_t release_time_msec)
-        : m_gpio(gpio)
-        , m_gpioPin(gpio_pin)
-        , m_pressTimeMsec(press_time_msec)
-        , m_releaseTimeMsec(release_time_msec)
+
+    ButtonDebounce(ButtonPressedFunc button_pressed_func, uint16_t press_time_msec, uint16_t release_time_msec)
+        : m_pressTimeMsec(press_time_msec)
+        , m_releaseTimeMsec(release_time_msec),
+        m_buttonPressedFunc(button_pressed_func)
     {
         m_stopwatch.Reset();
         m_physicallyPressed = false;
@@ -36,10 +35,9 @@ public:
     
 private:
     
+    const ButtonPressedFunc m_buttonPressedFunc;
     const uint16_t m_pressTimeMsec;
     const uint16_t m_releaseTimeMsec;
-    const uint16_t m_gpioPin;
-    GPIO_TypeDef* m_gpio;
     Stopwatch m_stopwatch;
     bool m_physicallyPressed;
     // Для гистерезиса — кнопка не должна срабатывать повторно пока 
@@ -49,8 +47,8 @@ private:
     
     // Возвращает True если разрешено выполнять действие кнопки.
     bool UpdatePressConsider()
-    {
-        if (GPIO_ReadInputDataBit(m_gpio, m_gpioPin))
+    {   
+        if (m_buttonPressedFunc())
         {
             // Кнопка физически зажата.
              

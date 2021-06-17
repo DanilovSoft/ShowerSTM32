@@ -60,55 +60,31 @@ public:
     }
     
 private:
-    
-    bool m_lightIsOn;
 
     void Run()
     {
         g_initializationTask.WaitForPropertiesInitialization();
+     
+        bool light_is_on;
         
         while (true)
         {	
             if (Common::CircuitBreakerIsOn())
             {
-                if (m_lightIsOn)
+                if (light_is_on)
                 {
-                    m_lightIsOn = false;
-                    TurnOffLight();
+                    light_is_on = false;
+                    Common::TurnOffLight();
                 }
             }
-            else if (!m_lightIsOn)
+            else if (!light_is_on)
             {
-                m_lightIsOn = true;
-                TurnOnLight();
+                light_is_on = true;
+                Common::TurnOnLight();
             }
         
             taskYIELD();
         }
-    }
-    
-    // Отключает GPIO от таймера.
-    void TurnOffLight()
-    {
-        GPIO_InitTypeDef gpio_init_struct = 
-        {
-            .GPIO_Pin = GPIO_Pin_LED,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_IN_FLOATING
-        };
-        GPIO_Init(GPIO_LED, &gpio_init_struct);
-    }
-    
-    // Подключает GPIO к таймеру.
-    void TurnOnLight()
-    {
-        GPIO_InitTypeDef gpio_init_struct = 
-        {
-            .GPIO_Pin = GPIO_Pin_LED,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_AF_PP
-        };
-        GPIO_Init(GPIO_LED, &gpio_init_struct);
     }
 };
 

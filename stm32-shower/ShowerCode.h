@@ -24,7 +24,7 @@ enum ShowerCode
     kGetLightBrightness = 20,
     kSetLightBrightness = 21,
     kGetTimeLeft = 22,
-    kGetHeatingProgress = 23,
+    //kGetHeatingProgress = 23,
     kGetWaterHeated = 24,
     kGetHeatingTimeoutState = 25,
     kGetHeaterEnabled = 26,

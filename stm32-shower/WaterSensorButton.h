@@ -6,9 +6,8 @@ class WaterSensorButton final
 {
 public:
     
-    WaterSensorButton(GPIO_TypeDef* gpio, uint16_t gpio_pin)
-        : m_gpio(gpio)
-        , kGpioPin(gpio_pin)
+    WaterSensorButton(ButtonPressedFunc button_pressed_func)
+        : m_buttonPressedFunc(button_pressed_func)
     {
         m_considerIsOn = false;
         m_pendingOn = false;
@@ -29,8 +28,7 @@ public:
 
 private:
     
-    const uint16_t kGpioPin;
-    GPIO_TypeDef* m_gpio;
+    const ButtonPressedFunc m_buttonPressedFunc;
     Stopwatch m_debounce;
     bool m_considerIsOn;
     bool m_pendingOn;
@@ -38,7 +36,7 @@ private:
     
     void UpdateConsiderIsOn()
     {
-        if (GPIO_ReadInputDataBit(m_gpio, kGpioPin))
+        if (m_buttonPressedFunc())
         {
             if (!m_considerIsOn)
             {
