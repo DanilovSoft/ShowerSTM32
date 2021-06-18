@@ -54,8 +54,8 @@ enum ShowerCode
     kGetWaterLevelUsecPerDeg = 49,
     kSetWaterLevelUsecPerDeg = 50,
     
-    kGetWaterValveTimeoutSec = 51,
-    kSetWaterValveTimeoutSec = 52,
+    //kGetWaterValveTimeoutSec = 51,
+    //kSetWaterValveTimeoutSec = 52,
     
     kGetWaterLevelRaw = 53,
     
@@ -77,8 +77,8 @@ enum ShowerCode
     kGetButtonLongPressTimeMsec = 70,
     kSetButtonLongPressTimeMsec = 71,
     
-    kGetWaterLevelErrorThreshhold = 80,
-    kSetWaterLevelErrorThreshhold = 81,
+    kGetWaterLevelErrorThreshold = 80,
+    kSetWaterLevelErrorThreshold = 81,
     
     kOK = 200,
     kUnknownCode = 253,

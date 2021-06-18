@@ -203,16 +203,16 @@ public:
     // Температурная зависимость.
     TempStep Chart;
     
-    // Максимальный уровень воды в микросекундах.
+    // Максимальный уровень воды в микросекундах (полный бак).
     uint16_t WaterLevelFull;
     
-    // Минимальный уровень воды в микросекундах.
+    // Минимальный уровень воды в микросекундах (пустой бак).
     uint16_t WaterLevelEmpty;
     
     // Минимальный уровень воды в баке (%) для включения нагревателя.
     uint8_t MinimumWaterHeatingPercent;
     
-    // Абсолютное время нагрева (ч).
+    // Абсолютное время нагрева, (от 1 до 24ч.)
     // Если на протяжении заданного времени автомат нагревателя не был 
     // физически выключен, то нагрев прекращается и алгоритм переходит в аварийное состояние.
     uint8_t AbsoluteHeatingTimeLimitHours;
@@ -261,9 +261,6 @@ public:
         
     // Размер скользящего окна для температуры внутри бака.
     uint8_t InternalTempAvgFilterSize;
-        
-    // Максимальное время набора воды, если выше уровня 'Cut-Off' в секундах.
-    uint8_t WaterValveTimeoutSec;
     
     // Число ошибок определения уровня воды, при достижении которого, на LED дисплее должны отобразиться прочерки.
     uint8_t WaterLevelErrorThreshold;
@@ -275,37 +272,12 @@ public:
         WaterLevelEmpty = FixWaterLevelEmpty(WaterLevelEmpty);
         WaterLevelFull = FixWaterLevelFull(WaterLevelFull, WaterLevelEmpty); // Минимум 2 сантиметра.
         MinimumWaterHeatingPercent = FixMinimumWaterHeatingPercent(MinimumWaterHeatingPercent);
-        
-        if (HeatingTimeLimitMin < 10 || HeatingTimeLimitMin > 180)
-        {
-            HeatingTimeLimitMin = 70;
-        }
-        
-        if (LightBrightness > 100)
-        {
-            LightBrightness = 100;
-        }
-
-        if (AbsoluteHeatingTimeLimitHours > 24)
-        {
-            AbsoluteHeatingTimeLimitHours = 6;
-        }
-        
-        // от 10 до 20.5 dBm.
-        if (WiFiPower < 40 || WiFiPower > 82)
-        {
-            WiFiPower = 60;   // 60 = 15.0 dBm
-        }
-        
-        if (WaterTankVolumeLitre < 1 || WaterTankVolumeLitre > 100 || isnan(WaterTankVolumeLitre))
-        {
-            WaterTankVolumeLitre = 37.32212;
-        }
-        
-        if (WaterHeaterPowerKWatt < 0.1f || WaterHeaterPowerKWatt > 5 || isnan(WaterHeaterPowerKWatt))
-        {
-            WaterHeaterPowerKWatt = 1.247616; // Полтора-киловатный ТЭН с учётом КПД.
-        }
+        HeatingTimeLimitMin = FixHeatingTimeLimitMin(HeatingTimeLimitMin);
+        LightBrightness = FixLightBrightness(LightBrightness);
+        AbsoluteHeatingTimeLimitHours = FixAbsoluteHeatingTimeLimitHours(AbsoluteHeatingTimeLimitHours);
+        WiFiPower = FixWiFiPower(WiFiPower);
+        WaterTankVolumeLitre = FixWaterTankVolumeLitre(WaterTankVolumeLitre);
+        WaterHeaterPowerKWatt = FixWaterHeaterPowerKWatt(WaterHeaterPowerKWatt);
         
         if (WaterLevelMeasureIntervalMsec < 10 || WaterLevelMeasureIntervalMsec > 200)
         {
@@ -331,71 +303,121 @@ public:
         {
             InternalTempAvgFilterSize = 4;
         }
-            
-        if (WaterValveTimeoutSec < 5)
-        {
-            WaterValveTimeoutSec = 5;	
-        }
         
         if (WaterLevelErrorThreshold == 0)
         {
-            WaterLevelErrorThreshold = 255;
+            WaterLevelErrorThreshold = 50;
         }
         
         Chart.SelfFix();
     }
     
     // От 20 до 80 мсек.
-    static uint8_t FixButtonPressTimeMsec(const uint8_t timeMsec)
+    static uint8_t FixButtonPressTimeMsec(const uint8_t time_msec)
     {
         // Обычно для антидребезга задают 50 мс.
-        if(timeMsec < 20 || timeMsec > 80)
+        if(time_msec < 20 || time_msec > 80)
         {
             return 40;
         }
-        return timeMsec;
+        return time_msec;
     }
     
     // От 1 до 10 секунд.
-    static uint16_t FixButtonLongPressTimeMsec(const uint16_t timeMsec)
+    static uint16_t FixButtonLongPressTimeMsec(const uint16_t time_msec)
     {
-        if (timeMsec < 1000 || timeMsec > 10000)
+        if (time_msec < 1000 || time_msec > 10000)
         {
             return 4000;
         }
-        return timeMsec;
+        return time_msec;
     }
     
-    static uint16_t FixWaterLevelEmpty(const uint16_t waterLevelEmpty)
+    static uint16_t FixWaterLevelEmpty(const uint16_t water_level_empty)
     {
         // В одном сантиметре - 58 микросекунд.
         static const auto minimum = kTankMinimumHeightCm * 58;
         static const auto maximum = kTankMaximumHeightCm * 58;
         
-        if(waterLevelEmpty < minimum || waterLevelEmpty > maximum) 
-        {
-            return round(kDefaultFullTankDistanceCm * 58);
-        }
-        return waterLevelEmpty;
-    }
-    
-    static uint16_t FixWaterLevelFull(const uint16_t waterLevelFull, const uint16_t waterLevelEmpty)
-    {
-        // 2 сантиметра.
-        if(waterLevelFull < 116 || waterLevelFull > waterLevelEmpty)
+        if(water_level_empty < minimum || water_level_empty > maximum) 
         {
             return round(kDefaultEmptyTankDistanceCm * 58);
         }
-        return waterLevelFull;
+        return water_level_empty;
     }
     
-    static uint8_t FixMinimumWaterHeatingPercent(const uint8_t minimumWaterHeatingPercent)
+    static uint16_t FixWaterLevelFull(const uint16_t water_level_full, const uint16_t water_level_empty)
     {
-        if (minimumWaterHeatingPercent > 100)
+        // 2 сантиметра.
+        if(water_level_full < 116 || water_level_full > water_level_empty)
         {
-            return 25;
+            return round(kDefaultFullTankDistanceCm * 58);
         }
-        return minimumWaterHeatingPercent;
+        return water_level_full;
+    }
+    
+    static uint8_t FixMinimumWaterHeatingPercent(const uint8_t minimum_water_heating_percent)
+    {
+        if (minimum_water_heating_percent > 100)
+        {
+            return kDefaultMinimumWaterHeatingPercent;
+        }
+        return minimum_water_heating_percent;
+    }
+    
+    static uint8_t FixHeatingTimeLimitMin(const uint8_t heating_time_limit_min)
+    {
+        if (heating_time_limit_min < 10 || heating_time_limit_min > 180)
+        {
+            return 70;
+        }
+        return heating_time_limit_min;
+    }
+    
+    static uint8_t FixLightBrightness(const uint8_t light_brightness)
+    {
+        if (light_brightness == 0 || light_brightness > 100)
+        {
+            return 100;
+        }
+        return light_brightness;
+    }
+    
+    static uint8_t FixAbsoluteHeatingTimeLimitHours(const uint8_t absolute_heating_time_limit_hours)
+    {
+        if (absolute_heating_time_limit_hours == 0 || absolute_heating_time_limit_hours > 24)
+        {
+            return 6;
+        }
+        return absolute_heating_time_limit_hours;
+    }
+    
+    // от 10 до 20.5 dBm.
+    static uint8_t FixWiFiPower(const uint8_t wifi_power)
+    {
+        if (wifi_power < 40 || wifi_power > 82)
+        {
+            return kDefaultWiFiPower;
+        }
+        return wifi_power;
+    }
+    
+    static float FixWaterTankVolumeLitre(const float water_tank_volume_litre)
+    {
+        if (water_tank_volume_litre < 1 || water_tank_volume_litre > 100 || isnan(water_tank_volume_litre))
+        {
+            return kDefaultWaterTankVolumeLitre;
+        }
+        return water_tank_volume_litre;
+    }
+    
+    static float FixWaterHeaterPowerKWatt(const float water_heater_power_kwatt)
+    {
+        if (water_heater_power_kwatt < 0.1f || water_heater_power_kwatt > 5 || isnan(water_heater_power_kwatt))
+        {
+            return kDefaultWaterHeaterPowerKWatt;
+        }
+        return water_heater_power_kwatt;
     }
     
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.

@@ -68,7 +68,15 @@
 #define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
 
+// Делегат нажатия на кнопку.
 typedef bool(*ButtonPressedFunc)();
+
+static constexpr auto kDefaultEmptyTankDistanceCm = 45.1379;        // Расстояние от датчика до дна пустого бака.
+static constexpr auto kDefaultFullTankDistanceCm = 15.8965;         // Расстояние от датчика до воды при полном баке.
+static constexpr auto kDefaultWaterTankVolumeLitre = 37.32212;    
+static constexpr auto kDefaultWiFiPower = 60;                       // 60 = 15.0 dBm
+static constexpr auto kDefaultWaterHeaterPowerKWatt = 1.247616;     // Полтора-киловатный ТЭН с учётом КПД.
+static constexpr auto kDefaultMinimumWaterHeatingPercent = 25;
 
 static constexpr uint8_t kWiFiTryInitLimit = 3;
 static constexpr auto kUartRxFifoSize = 1024;                   // Размер кольцевого буфера UART.
@@ -84,10 +92,7 @@ static constexpr uint8_t kAirTempAvgFilterSize = 1;             // Максим�
 static constexpr auto kAirTempSteps = kAirTempUpperBound - kAirTempLowerBound;   // Размер таблицы температур делаем исходя из возможных значений температур окружаюшего воздуха.
 static constexpr auto kTankMinimumHeightCm = 30;                // Минимально возможная высота бака, см.
 static constexpr auto kTankMaximumHeightCm = 50;                // Максимально возможная высота бака, см.
-static constexpr auto kDefaultFullTankDistanceCm = 45.1379;               
-static constexpr auto kDefaultEmptyTankDistanceCm = 15.8965;    
 static constexpr uint16_t kTempSensorPauseMsec = 2000;          // Пауза между измерениями температуры.
-
 static_assert(kAirTempUpperBound > kAirTempLowerBound, "kAirTempLowerBound should be lower than kAirTempUpperBound");
 
 
