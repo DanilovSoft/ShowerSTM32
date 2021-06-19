@@ -232,7 +232,7 @@ private:
             }
         case ShowerCode::kSetWaterLevelFull:
             {
-                if (request_length == 2)
+                if (request_length == sizeof(g_writeProperties.WaterLevelFull))
                 {
                     g_writeProperties.WaterLevelFull = *(uint16_t*)m_requestData;
                     m_request.SendResponse(kOK);
@@ -241,7 +241,7 @@ private:
             }
         case ShowerCode::kSetWaterLevelEmpty:
             {
-                if (request_length == 2)
+                if (request_length == sizeof(g_writeProperties.WaterLevelEmpty))
                 {
                     g_writeProperties.WaterLevelEmpty = *(uint16_t*)m_requestData;
                     m_request.SendResponse(kOK);
@@ -319,9 +319,9 @@ private:
             }
         case ShowerCode::kSetMinimumWaterHeatingLevel:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.MinimumWaterHeatingPercent))
                 {
-                    g_writeProperties.MinimumWaterHeatingPercent = *m_requestData;
+                    g_writeProperties.MinimumWaterHeatingPercent = PropertyStruct::FixAbsoluteHeatingTimeLimitHours(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -333,9 +333,9 @@ private:
             }
         case ShowerCode::kSetHeatingTimeLimit:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.HeatingTimeLimitMin))
                 {
-                    g_writeProperties.HeatingTimeLimitMin = *m_requestData;
+                    g_writeProperties.HeatingTimeLimitMin = PropertyStruct::FixAbsoluteHeatingTimeLimitHours(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -347,9 +347,9 @@ private:
             }
         case ShowerCode::kSetLightBrightness:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.LightBrightness))
                 {
-                    g_writeProperties.LightBrightness = *m_requestData;
+                    g_writeProperties.LightBrightness = PropertyStruct::FixLightBrightness(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -385,9 +385,9 @@ private:
             }
         case ShowerCode::kSetAbsoluteHeatingTimeLimit:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.AbsoluteHeatingTimeLimitHours))
                 {
-                    g_writeProperties.AbsoluteHeatingTimeLimitHours = *m_requestData;
+                    g_writeProperties.AbsoluteHeatingTimeLimitHours = PropertyStruct::FixAbsoluteHeatingTimeLimitHours(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -399,9 +399,9 @@ private:
             }
         case ShowerCode::kSetWiFiPower:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.WiFiPower))
                 {
-                    g_writeProperties.WiFiPower = *m_requestData;
+                    g_writeProperties.WiFiPower = PropertyStruct::FixWiFiPower(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -465,9 +465,9 @@ private:
             }
         case ShowerCode::kSetWaterLevelMeasureInterval:
             {
-                if (request_length == 1)
+                if (request_length == sizeof(g_writeProperties.WaterLevelMeasureIntervalMsec))
                 {
-                    g_writeProperties.WaterLevelMeasureIntervalMsec = *m_requestData;
+                    g_writeProperties.WaterLevelMeasureIntervalMsec = PropertyStruct::FixWaterLevelMeasureIntervalMsec(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -479,8 +479,11 @@ private:
             }
         case ShowerCode::kSetWaterValveCutOffPercent:
             {
-                g_writeProperties.WaterValveCutOffPercent = *m_requestData;
-                m_request.SendResponse(kOK);
+                if (request_length == sizeof(g_writeProperties.WaterValveCutOffPercent))
+                {
+                    g_writeProperties.WaterValveCutOffPercent = PropertyStruct::FixWaterValveCutOffPercent(*m_requestData);
+                    m_request.SendResponse(kOK);
+                }
                 break;
             }
         case ShowerCode::kGetWaterLevelMedianBufferSize:
@@ -492,7 +495,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.WaterLevelMedianFilterSize))
                 {
-                    g_writeProperties.WaterLevelMedianFilterSize = *m_requestData;
+                    g_writeProperties.WaterLevelMedianFilterSize = PropertyStruct::FixWaterLevelMedianFilterSize(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -506,7 +509,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.WaterLevelAvgFilterSize))
                 {
-                    g_writeProperties.WaterLevelAvgFilterSize = *m_requestData;
+                    g_writeProperties.WaterLevelAvgFilterSize = PropertyStruct::FixWaterLevelAvgFilterSize(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -520,21 +523,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.InternalTempAvgFilterSize))
                 {
-                    g_writeProperties.InternalTempAvgFilterSize = *m_requestData;
-                    m_request.SendResponse(kOK);
-                }
-                break;
-            }
-        case ShowerCode::kGetWaterLevelUsecPerDeg:
-            {
-                m_request.SendResponse((uint16_t)0);
-                break;
-            }
-        case ShowerCode::kSetWaterLevelUsecPerDeg:
-            {
-                if (request_length == 2)
-                {
-                    //_writeOnlyPropertiesStruct.WaterLevel_Usec_Per_Deg = *(uint16_t*)_data;
+                    g_writeProperties.InternalTempAvgFilterSize = PropertyStruct::FixInternalTempAvgFilterSize(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -586,7 +575,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.WaterTankVolumeLitre))
                 {
-                    g_writeProperties.WaterTankVolumeLitre = *(float*)m_requestData;
+                    g_writeProperties.WaterTankVolumeLitre = PropertyStruct::FixWaterTankVolumeLitre(*(float*)m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;	
@@ -600,7 +589,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.WaterHeaterPowerKWatt))
                 {
-                    g_writeProperties.WaterHeaterPowerKWatt = *(float*)m_requestData;
+                    g_writeProperties.WaterHeaterPowerKWatt = PropertyStruct::FixWaterHeaterPowerKWatt(*(float*)m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;	
@@ -614,7 +603,7 @@ private:
             {
                 if (request_length == sizeof(g_writeProperties.WaterLevelErrorThreshold))
                 {
-                    g_writeProperties.WaterLevelErrorThreshold = *m_requestData;
+                    g_writeProperties.WaterLevelErrorThreshold = PropertyStruct::FixWaterLevelErrorThreshold(*m_requestData);
                     m_request.SendResponse(kOK);
                 }
                 break;	

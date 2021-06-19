@@ -351,6 +351,7 @@ public:
         return heating_time_limit_min;
     }
     
+    // От 1 до 100
     static uint8_t FixLightBrightness(const uint8_t light_brightness)
     {
         if (light_brightness == 0 || light_brightness > 100)
@@ -360,6 +361,7 @@ public:
         return light_brightness;
     }
     
+    // От 1 до 24
     static uint8_t FixAbsoluteHeatingTimeLimitHours(const uint8_t absolute_heating_time_limit_hours)
     {
         if (absolute_heating_time_limit_hours == 0 || absolute_heating_time_limit_hours > 24)
@@ -397,6 +399,7 @@ public:
         return water_heater_power_kwatt;
     }
     
+    // От 10 до 200
     static uint8_t FixWaterLevelMeasureIntervalMsec(const uint8_t water_level_measure_interval_msec)
     {
         if (water_level_measure_interval_msec < 10 || water_level_measure_interval_msec > 200)
@@ -406,6 +409,7 @@ public:
         return water_level_measure_interval_msec;
     }
     
+    // От 1 до kWaterLevelMedianMaxSize
     static uint8_t FixWaterLevelMedianFilterSize(const uint8_t water_level_median_filter_size)
     {
         if (water_level_median_filter_size == 0 || water_level_median_filter_size > kWaterLevelMedianMaxSize)
@@ -424,6 +428,7 @@ public:
         return water_level_avg_filter_size;
     }
     
+    // От 90 до 99
     static uint8_t FixWaterValveCutOffPercent(const uint8_t water_valve_cut_off_percent)
     {
         if (water_valve_cut_off_percent < 90 || water_valve_cut_off_percent > 99)
@@ -442,6 +447,7 @@ public:
         return internal_temp_avg_filter_size;
     }
     
+    // От 1 до 255
     static uint8_t FixWaterLevelErrorThreshold(const uint8_t water_level_error_threshold)
     {
         if (water_level_error_threshold == 0)
