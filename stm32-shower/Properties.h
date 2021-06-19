@@ -19,7 +19,7 @@ public:
     }
 
     // Принимает температуру окружающего воздуха в грудусах, что-бы
-    // увеличить температуру при такой температуре окружающей среды.
+    // увеличить температуру нагрева при такой температуре окружающей среды.
     bool TempPlus(const uint8_t air_temp)
     {
         const uint8_t index = GetIndex(air_temp);
@@ -70,7 +70,7 @@ public:
     }
 
     // Принимает температуру окружающего воздуха в грудусах, что-бы
-    // уменьшить температуру при такой температуре окружающей среды.
+    // уменьшить температуру нагрева при такой температуре окружающей среды.
     bool TempMinus(const uint8_t air_temp)
     {
         const uint8_t index = GetIndex(air_temp);
@@ -146,9 +146,9 @@ public:
 
     void SelfFix()
     {
-        uint8_t prevSpot = m_internal[0];
+        uint8_t prev_spot = m_internal[0];
         
-        for (int i = 0; i < kAirTempSteps; i++)
+        for (auto i = 0; i < kAirTempSteps; i++)
         {
             uint8_t& internal_temp = m_internal[i];
 
@@ -159,13 +159,13 @@ public:
 
             if (i > 0)
             {
-                if (internal_temp > prevSpot)
+                if (internal_temp > prev_spot)
                 {
-                    internal_temp = prevSpot;
+                    internal_temp = prev_spot;
                 }
             }
 
-            prevSpot = internal_temp;
+            prev_spot = internal_temp;
         }
     }
     
@@ -270,7 +270,7 @@ public:
         ButtonPressTimeMsec = FixButtonPressTimeMsec(ButtonPressTimeMsec);
         ButtonLongPressTimeMsec = FixButtonLongPressTimeMsec(ButtonLongPressTimeMsec);
         WaterLevelEmpty = FixWaterLevelEmpty(WaterLevelEmpty);
-        WaterLevelFull = FixWaterLevelFull(WaterLevelFull, WaterLevelEmpty); // Минимум 2 сантиметра.
+        WaterLevelFull = FixWaterLevelFull(WaterLevelFull, WaterLevelEmpty); 
         MinimumWaterHeatingPercent = FixMinimumWaterHeatingPercent(MinimumWaterHeatingPercent);
         HeatingTimeLimitMin = FixHeatingTimeLimitMin(HeatingTimeLimitMin);
         LightBrightness = FixLightBrightness(LightBrightness);
@@ -278,36 +278,12 @@ public:
         WiFiPower = FixWiFiPower(WiFiPower);
         WaterTankVolumeLitre = FixWaterTankVolumeLitre(WaterTankVolumeLitre);
         WaterHeaterPowerKWatt = FixWaterHeaterPowerKWatt(WaterHeaterPowerKWatt);
-        
-        if (WaterLevelMeasureIntervalMsec < 10 || WaterLevelMeasureIntervalMsec > 200)
-        {
-            WaterLevelMeasureIntervalMsec = 60;
-        }
-        
-        if (WaterLevelMedianFilterSize == 0 || WaterLevelMedianFilterSize > kWaterLevelMedianMaxSize)
-        {
-            WaterLevelMedianFilterSize = 191;  // Лучше не чётное число.
-        }
-            
-        if (WaterLevelAvgFilterSize == 0 || WaterLevelAvgFilterSize > kWaterLevelAvgFilterMaxSize)
-        {
-            WaterLevelAvgFilterSize = 32;
-        }
-            
-        if (WaterValveCutOffPercent < 90 || WaterValveCutOffPercent > 99)
-        {
-            WaterValveCutOffPercent = 90;
-        }
-            
-        if (InternalTempAvgFilterSize == 0 || InternalTempAvgFilterSize > kInternalTempAvgFilterSize)
-        {
-            InternalTempAvgFilterSize = 4;
-        }
-        
-        if (WaterLevelErrorThreshold == 0)
-        {
-            WaterLevelErrorThreshold = 50;
-        }
+        WaterLevelMeasureIntervalMsec = FixWaterLevelMeasureIntervalMsec(WaterLevelMeasureIntervalMsec);
+        WaterLevelMedianFilterSize = FixWaterLevelMedianFilterSize(WaterLevelMedianFilterSize);
+        WaterLevelAvgFilterSize = FixWaterLevelAvgFilterSize(WaterLevelAvgFilterSize);
+        WaterValveCutOffPercent = FixWaterValveCutOffPercent(WaterValveCutOffPercent);
+        InternalTempAvgFilterSize = FixInternalTempAvgFilterSize(InternalTempAvgFilterSize);    
+        WaterLevelErrorThreshold = FixWaterLevelErrorThreshold(WaterLevelErrorThreshold);
         
         Chart.SelfFix();
     }
@@ -346,6 +322,7 @@ public:
         return water_level_empty;
     }
     
+    // Минимум 2 сантиметра.
     static uint16_t FixWaterLevelFull(const uint16_t water_level_full, const uint16_t water_level_empty)
     {
         // 2 сантиметра.
@@ -418,6 +395,60 @@ public:
             return kDefaultWaterHeaterPowerKWatt;
         }
         return water_heater_power_kwatt;
+    }
+    
+    static uint8_t FixWaterLevelMeasureIntervalMsec(const uint8_t water_level_measure_interval_msec)
+    {
+        if (water_level_measure_interval_msec < 10 || water_level_measure_interval_msec > 200)
+        {
+            return 60;
+        }
+        return water_level_measure_interval_msec;
+    }
+    
+    static uint8_t FixWaterLevelMedianFilterSize(const uint8_t water_level_median_filter_size)
+    {
+        if (water_level_median_filter_size == 0 || water_level_median_filter_size > kWaterLevelMedianMaxSize)
+        {
+            return 191;   // Лучше не чётное число.
+        }
+        return water_level_median_filter_size;
+    }
+    
+    static uint8_t FixWaterLevelAvgFilterSize(const uint8_t water_level_avg_filter_size)
+    {
+        if (water_level_avg_filter_size == 0 || water_level_avg_filter_size > kWaterLevelAvgFilterMaxSize)
+        {
+            return 30;
+        }
+        return water_level_avg_filter_size;
+    }
+    
+    static uint8_t FixWaterValveCutOffPercent(const uint8_t water_valve_cut_off_percent)
+    {
+        if (water_valve_cut_off_percent < 90 || water_valve_cut_off_percent > 99)
+        {
+            return 90;
+        }
+        return water_valve_cut_off_percent;
+    }
+    
+    static uint8_t FixInternalTempAvgFilterSize(const uint8_t internal_temp_avg_filter_size)
+    {
+        if (internal_temp_avg_filter_size == 0 || internal_temp_avg_filter_size > kInternalTempAvgFilterSize)
+        {
+            return 4;
+        }
+        return internal_temp_avg_filter_size;
+    }
+    
+    static uint8_t FixWaterLevelErrorThreshold(const uint8_t water_level_error_threshold)
+    {
+        if (water_level_error_threshold == 0)
+        {
+            return 50;
+        }
+        return water_level_error_threshold;
     }
     
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.

@@ -539,20 +539,6 @@ private:
                 }
                 break;
             }
-//        case ShowerCode::kGetWaterValveTimeoutSec:
-//            {
-//                m_request.SendResponse(g_writeProperties.WaterValveTimeoutSec);	
-//                break;
-//            }
-//        case ShowerCode::kSetWaterValveTimeoutSec:
-//            {
-//                if (request_length == sizeof(g_writeProperties.WaterValveTimeoutSec))
-//                {
-//                    g_writeProperties.WaterValveTimeoutSec = *m_requestData;
-//                    m_request.SendResponse(kOK);
-//                }
-//                break;
-//            }
         case ShowerCode::kGetButtonTimeMsec:
             {
                 m_request.SendResponse(g_writeProperties.ButtonPressTimeMsec);	
