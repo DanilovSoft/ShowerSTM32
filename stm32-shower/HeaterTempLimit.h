@@ -10,34 +10,34 @@ class HeaterTempLimit final
 public:
 
 	// Если датчик окружающего воздуха был инициализирован то возвращает желаемую температуру воды в баке.
-	bool TryGetTargetTemperature(uint8_t& internal_temp_limit)
+	bool TryGetTargetTemperature(uint8_t& target_temp)
 	{
-		if (g_tempSensorTask.ExternalSensorInitialized)
+		if (g_tempSensorTask->ExternalSensorInitialized)
 		{
-			float air_temp = g_tempSensorTask.AverageExternalTemp;
+			float air_temp = g_tempSensorTask->AverageExternalTemp;
 			uint8_t air_temp_c = round(air_temp);
 		
-			if (Common::abs(air_temp_c, m_lastExternalTemp) > 1)
+			if (Common::abs(air_temp_c, m_airTemp) > 1)
 			{
-				m_lastExternalTemp = air_temp_c;
+				m_airTemp = air_temp_c;
 			}
 			else
 			{
-				air_temp_c = m_lastExternalTemp;
+				air_temp_c = m_airTemp;
 			}
 		
-			internal_temp_limit = g_properties.Chart.GetLimit(air_temp_c);	
+			target_temp = g_properties.Chart.GetLimit(air_temp_c);	
 			return true;
 		}
 		return false;
 	}
 	
 	// Если датчик окружающего воздуха был инициализирован то возвращает температуру окружающего воздуха в градусах.
-	bool TryGetLastAirTemperature(uint8_t& last_external_temp)
+	bool TryGetAirTemperature(uint8_t& air_temp)
 	{
-		if (g_tempSensorTask.ExternalSensorInitialized)
+		if (g_tempSensorTask->ExternalSensorInitialized)
 		{
-			last_external_temp = m_lastExternalTemp;
+			air_temp = m_airTemp;
 			return true;
 		}
 		return false;
@@ -46,7 +46,7 @@ public:
 private:
 
 	// Температура окружающего воздуха в градусах.
-	volatile uint8_t m_lastExternalTemp;
+	volatile uint8_t m_airTemp;
 };
 
 extern HeaterTempLimit g_heaterTempLimit;

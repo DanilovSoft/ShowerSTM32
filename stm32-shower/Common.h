@@ -49,7 +49,7 @@
 #define OW_DMA_CH_TX				(DMA1_Channel4)
 #define OW_DMA_FLAG					(DMA1_FLAG_TC5)
 #define WIFI_GPIO					(GPIOB)
-#define WIFI_GPIO_CH_PD_Pin			(GPIO_Pin_1)
+#define WIFI_GPIO_CH_PD_Pin			(GPIO_Pin_1) // Chip power-down.
 #define GPIO_WPS					(GPIOB)
 #define GPIO_WPS_Pin				(GPIO_Pin_12)
 #define Button_GPIO                 (GPIOA)
@@ -113,6 +113,11 @@ class Common final
 {
 public:
 
+    static void InitPeripheral()
+    {
+        InnerInitPeripheral();
+    }
+    
     // Включен ли автомат нагревателя.
     static bool CircuitBreakerIsOn()
     {
@@ -151,6 +156,23 @@ public:
         return GPIO_ReadInputDataBit(Button_GPIO, Button_SensorSwitch_OUT);
     }
     
+    static bool ButtonWPSPressed()
+    {
+        return GPIO_ReadInputDataBit(GPIO_WPS, GPIO_WPS_Pin) == RESET;
+    }
+    
+    // Включает лог 1 на ногу CH_PD.
+    static void EnableEsp8266()
+    {
+        GPIO_SetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
+    }
+    
+    // Лог 0 на ногу CH_PD.
+    static void DisableEsp8266()
+    {
+        GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
+    }
+    
     // Включает питание сенсорной кнопки.
     static void TurnOnSensorSwitch()
     {
@@ -174,6 +196,18 @@ public:
     static void CloseValve()
     {
         GPIO_ResetBits(Valve_GPIO, Valve_Pin);
+    }
+    
+    // Лог 1 на ноге Trig.
+    static void WaterLevelEnableTrig()
+    {
+        GPIO_SetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
+    }
+    
+    // Лог 0 на ноге Trig.
+    static void WaterLevelDisableTrig()
+    {
+        GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
     }
     
     // Отключает светодиод освещения.
@@ -295,7 +329,7 @@ public:
         return ch - 48;
     }
 
-    static bool ArrayEquals(uint8_t* array1, uint8_t arr1Size, uint8_t* array2, uint8_t arr2_size)
+    static bool ArrayEquals(const uint8_t* array1, const uint8_t arr1Size, const uint8_t* array2, const uint8_t arr2_size)
     {
         if (arr1Size != arr2_size) 
         {
@@ -332,6 +366,26 @@ public:
         return false;
     }
 
+    static void InitWaterLevelPeripheral();
+    
 private:
     
+    static void InnerInitPeripheral()
+    {
+        InitWaterLevel();
+        InitWiFi();
+        InitTempSensor();
+        InitLedLight();
+        InitHeater();
+        InitButtons();
+        InitValve();
+    }
+    
+    static void InitHeater();
+    static void InitWaterLevel();
+    static void InitWiFi();
+    static void InitTempSensor();
+    static void InitLedLight();
+    static void InitButtons();
+    static void InitValve();
 };

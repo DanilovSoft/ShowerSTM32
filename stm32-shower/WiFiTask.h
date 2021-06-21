@@ -18,31 +18,6 @@ class WiFiTask final : public TaskBase
 {
 public:
     
-    void Init()
-    {
-        // Кнопка WPS.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = GPIO_WPS_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_IPU
-        };
-        
-        GPIO_Init(GPIO_WPS, &gpio_init);
-        GPIO_SetBits(GPIO_WPS, GPIO_WPS_Pin);
-        
-        // CH_PD
-        gpio_init = 
-        {
-            .GPIO_Pin = WIFI_GPIO_CH_PD_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-    
-        GPIO_Init(WIFI_GPIO, &gpio_init);
-        GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
-    }
-    
 private:
     
     Request m_request;
@@ -50,12 +25,12 @@ private:
     
     bool InitWiFi()
     {
-        bool wps_button_pressed = GPIO_ReadInputDataBit(GPIO_WPS, GPIO_WPS_Pin) == RESET;
+        bool wps_button_pressed = Common::ButtonWPSPressed();
         
         for (auto i = 0; i <= kWiFiTryInitLimit; i++)
         {
             vTaskDelay(100 / portTICK_PERIOD_MS);
-            GPIO_SetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
+            Common::EnableEsp8266();
         
             if (TryInitWiFi())
             {
@@ -69,7 +44,7 @@ private:
                 return true;
             }
             
-            GPIO_ResetBits(WIFI_GPIO, WIFI_GPIO_CH_PD_Pin);
+            Common::DisableEsp8266();
         }
         
         return false;
@@ -152,6 +127,7 @@ private:
         //				return false;
 
         g_uartStream.WriteLine("AT+WPS=1\r\n");
+        
         if (!g_uartStream.WaitLine("OK", 500))
         {
             return false;
@@ -250,12 +226,12 @@ private:
             }
         case ShowerCode::kGetWaterLevel:
             {
-                m_request.SendResponse(g_waterLevelTask.AvgUsec);
+                m_request.SendResponse(g_waterLevelTask->AvgUsec);
                 break;
             }
         case ShowerCode::kGetWaterLevelRaw:
             {
-                m_request.SendResponse(g_waterLevelTask.UsecRaw);
+                m_request.SendResponse(g_waterLevelTask->UsecRaw);
                 break;
             }
         case ShowerCode::kGetTempChart:
@@ -294,22 +270,22 @@ private:
             }
         case ShowerCode::kGetWaterPercent:
             {
-                m_request.SendResponse(g_waterLevelTask.Percent);
+                m_request.SendResponse(g_waterLevelTask->Percent);
                 break;
             }
         case ShowerCode::kGetExternalTemp:
             {
-                m_request.SendResponse(g_tempSensorTask.ExternalTemp);
+                m_request.SendResponse(g_tempSensorTask->ExternalTemp);
                 break;
             }
         case ShowerCode::kGetAverageExternalTemp:
             {
-                m_request.SendResponse(g_tempSensorTask.AverageExternalTemp);
+                m_request.SendResponse(g_tempSensorTask->AverageExternalTemp);
                 break;
             }
         case ShowerCode::kGetInternalTemp:
             {
-                m_request.SendResponse(g_tempSensorTask.InternalTemp);
+                m_request.SendResponse(g_tempSensorTask->InternalTemp);
                 break;
             }
         case ShowerCode::kGetMinimumWaterHeatingLevel:
@@ -425,7 +401,7 @@ private:
             }
         case ShowerCode::kGetAverageInternalTemp:
             {
-                m_request.SendResponse(g_tempSensorTask.AverageInternalTemp);
+                m_request.SendResponse(g_tempSensorTask->AverageInternalTemp);
                 break;
             }
         case ShowerCode::kSetCurAP:
@@ -454,7 +430,7 @@ private:
             }
         case ShowerCode::kGetWaterHeated:
             {
-                bool value = g_heaterTask.WaterHeated();
+                bool value = g_heaterTask.GetIsWaterHeated();
                 m_request.SendResponse(value);
                 break;
             }

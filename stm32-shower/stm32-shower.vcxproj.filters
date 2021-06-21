@@ -154,6 +154,9 @@
     <ClCompile Include="WaterLevelAnimationTask.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="stm32-shower-Debug.vgdbsettings">

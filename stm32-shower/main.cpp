@@ -29,21 +29,39 @@ PropertyStruct g_properties;
 PropertyStruct g_writeProperties;
 
 InitializationTask g_initializationTask;
+
 WiFiTask g_wifiTask;
+
 LcdTask g_lcdTask;
-WaterLevelTask g_waterLevelTask;
-TempSensorTask g_tempSensorTask;
+
+// Снимает показания датчика расстояния.
+WaterLevelTask* g_waterLevelTask;
+
+// Снимает показания с температурных датчиков.
+TempSensorTask* g_tempSensorTask;
+
 HeaterTask g_heaterTask;
+
 LedLightTask g_ledLightTask;
+
 ButtonsTask g_buttonsTask;
+
 ValveTask g_valveTask;
+
 WatchDogTask g_watchDogTask;
+
 WaterLevelAnimationTask g_wlAnimationTask;
+
 Buzzer g_buzzer;
+
 EepromHelper g_eepromHelper;
+
 HeaterTempLimit g_heaterTempLimit;
+
 HeatingTimeLeft* g_heatingTimeLeft; // TODO попробовать убрать все new инициализации и проверить размер FLASH.
+
 UartStream g_uartStream;
+
 I2CHelper g_i2cHelper;
 
 void Init()
@@ -132,7 +150,8 @@ void Init()
     
     #pragma endregion
     
-    g_waterLevelTask.InitGpioAndClearDisplay();
+    Common::InitWaterLevelPeripheral();
+    WaterLevelTask::ClearDisplay();
     g_buzzer.Init();
     g_uartStream.Init();
 }
@@ -141,17 +160,17 @@ int main(void)
 {
     Init();
     
-    g_initializationTask.CreateTask("Initialization");      // Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.
-    g_waterLevelTask.CreateTask("WaterLevel");              // Снимает показания датчика расстояния.
-    g_wlAnimationTask.CreateTask("WaterLevelAnim");         // Крутит анимацию символа '%' когда датчик уровня не может получить данные.
-    g_wifiTask.CreateTask("WiFi");                          // Принимает команды по WiFi и выполняет их.
-    g_lcdTask.CreateTask("LCD");                            // Отображает информацию на LCD дисплее.
-    g_tempSensorTask.CreateTask("TempSensor");              // Снимает показания с температурных датчиков.
-    g_heaterTask.CreateTask("Heater");                      // Включает и выключает ТЭН.
-    g_ledLightTask.CreateTask("LedLight");                  // Включает или выключает свет в соответствии с положением автомата.
-    g_buttonsTask.CreateTask("Buttons");                    // Бесконечно опрашивает кнопки и сенсорную панель.
-    g_valveTask.CreateTask("Valve");                        // По запросу набирает воду в бак.
-    g_watchDogTask.CreateTask("WatchDog");                  // Просто сбрасывает сторожевой таймер каждую секунду.
+    g_initializationTask.StartTask("Initialization");      // Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.
+    
+    g_wlAnimationTask.StartTask("WaterLevelAnim");         // Крутит анимацию символа '%' когда датчик уровня не может получить данные.
+    g_wifiTask.StartTask("WiFi");                          // Принимает команды по WiFi и выполняет их.
+    g_lcdTask.StartTask("LCD");                            // Отображает информацию на LCD дисплее.
+    
+    g_heaterTask.StartTask("Heater");                      // Включает и выключает ТЭН.
+    g_ledLightTask.StartTask("LedLight");                  // Включает или выключает свет в соответствии с положением автомата.
+    g_buttonsTask.StartTask("Buttons");                    // Бесконечно опрашивает кнопки и сенсорную панель.
+    g_valveTask.StartTask("Valve");                        // По запросу набирает воду в бак.
+    g_watchDogTask.StartTask("WatchDog");                  // Просто сбрасывает сторожевой таймер каждую секунду.
     
     g_watchDogTask.Init(); // Запускает сторожевой таймер.
     

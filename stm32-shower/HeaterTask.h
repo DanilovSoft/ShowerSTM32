@@ -14,45 +14,13 @@ class HeaterTask final : public TaskBase
 {
 public:
     
-    HeaterTask()
-    {
-        
-    }
-    
-    void Init()
-    {
-        // Нагреватель.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = GPIO_Pin_Heater,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP,
-        };
-        
-        GPIO_Init(GPIO_Heater, &gpio_init);
-        
-        // Светодиод нагревателя.
-        gpio_init = 
-        {
-            .GPIO_Pin = GPIO_Heater_Led_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,	
-            .GPIO_Mode = GPIO_Mode_Out_PP,
-        };
-    
-        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-        GPIO_Init(GPIO_Heater_Led, &gpio_init);
-        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-        
-        Common::TurnOffHeater();
-    }
-    
     // True если вода нагрета до нужного уровня.
-    bool WaterHeated()
+    bool GetIsWaterHeated()
     {
         uint8_t targetTemp;
         if (g_heaterTempLimit.TryGetTargetTemperature(targetTemp))
         {
-            return g_tempSensorTask.AverageInternalTemp >= targetTemp;
+            return g_tempSensorTask->AverageInternalTemp >= targetTemp;
         }
         else
         {
@@ -97,21 +65,6 @@ private:
     Stopwatch m_beepStopwatch; // Для периодического звукового сигнала.
     HeaterWatchdog* m_heaterWatchdog; // Для защиты от слишком долгого нагрева.
     volatile bool m_forcedSessionRequired; // Для принудительного включения нагрева игнорируя датчик уровня воды.
-    
-    
-//    // Выключает питание ТЭНа и тушит светодиод.
-//    static void TurnOff()
-//    {
-//        GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
-//        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-//    }
-
-//    // Включает питание ТЭНа и зажигает светодиод.
-//    void TurnOn()
-//    {
-//        GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
-//        GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
-//    }
 
     // Воспроизводит звук отключения питания ТЭНа.
     // Блокирует поток на время воспроизведения.
@@ -182,7 +135,7 @@ private:
         
         if (m_beepStopwatch.TimedOut(4000))
         {
-            if (WaterHeated())
+            if (GetIsWaterHeated())
             {
                 g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
                 m_beepStopwatch.Reset();
@@ -219,7 +172,7 @@ private:
         
         m_heaterWatchdog = new HeaterWatchdog(g_properties.HeatingTimeLimitMin * 60, g_properties.AbsoluteHeatingTimeLimitHours * 60 * 60);
         m_beepStopwatch.Reset();
-        g_tempSensorTask.WaitFirstConversion();
+        g_tempSensorTask->WaitFirstConversion();
     
         while (true)
         {
@@ -323,7 +276,7 @@ private:
         uint8_t targetTemp;
         if (g_heaterTempLimit.TryGetTargetTemperature(targetTemp))
         {
-            float internalTemp = g_tempSensorTask.AverageInternalTemp;
+            float internalTemp = g_tempSensorTask->AverageInternalTemp;
         
             if (m_forcedSessionRequired)
             {
@@ -333,10 +286,10 @@ private:
                     TurnOnHeaterWithSound();
                 }
             }
-            else if (g_waterLevelTask.GetIsInitialized())
+            else if (g_waterLevelTask->GetIsInitialized())
             {
                 // Если уровень воды больше допустимого минимума И температура в баке меньше необходимой.
-                if(internalTemp < targetTemp && !g_waterLevelTask.GetIsError() && g_waterLevelTask.Percent >= g_properties.MinimumWaterHeatingPercent)
+                if(internalTemp < targetTemp && !g_waterLevelTask->GetIsError() && g_waterLevelTask->Percent >= g_properties.MinimumWaterHeatingPercent)
                 {
                     TurnOnHeaterWithSound();
                 }
@@ -354,27 +307,15 @@ private:
     // Определяет пора ли выключить нагрев.
     void ControlTurnOff()
     {	
-        uint8_t targetTemp;
-        if (g_heaterTempLimit.TryGetTargetTemperature(targetTemp))
+        uint8_t target_temp;
+        if (g_heaterTempLimit.TryGetTargetTemperature(target_temp))
         {
-            float internalTemp = g_tempSensorTask.AverageInternalTemp;
+            float internal_temp = g_tempSensorTask->AverageInternalTemp;
         
-            if (m_forcedSessionRequired)
+            if (internal_temp >= target_temp)
             {
-                if (internalTemp >= targetTemp)
-                {
-                    TurnOffHeaterWithSound();     
-                    m_heaterWatchdog->ResetSession();
-                }
-            }
-            else if (g_waterLevelTask.GetIsInitialized())
-            {
-                // Температура в баке выше порога отключения ИЛИ уровень воды меньше допустимого.
-                if((internalTemp >= targetTemp) || g_waterLevelTask.Percent < g_properties.MinimumWaterHeatingPercent)
-                {
-                    TurnOffHeaterWithSound();       // Безусловное отключение ТЭНа.
-                    m_heaterWatchdog->ResetSession();
-                }
+                TurnOffHeaterWithSound();     
+                m_heaterWatchdog->ResetSession();
             }
         }
     }

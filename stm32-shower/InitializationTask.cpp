@@ -9,21 +9,6 @@
 #include "ButtonsTask.h"
 #include "WaterLevelAnimationTask.h"
 
-void InitializationTask::InitAllTasks()
-{
-    // Все таски должны быть проинициализированы перед запуском, последовательно, а не параллельно.
-    
-    g_waterLevelTask.Init();
-    g_wlAnimationTask.Init();
-    g_wifiTask.Init();
-    g_lcdTask.Init();
-    g_tempSensorTask.Init();
-    g_heaterTask.Init();
-    g_ledLightTask.Init();
-    g_buttonsTask.Init();
-    g_valveTask.Init();
-}
-
 void InitializationTask::Run()
 {
     g_i2cHelper.InitI2C();   // Инициализируем шину I2C.
@@ -33,7 +18,13 @@ void InitializationTask::Run()
     // Инициализируем структуру актуальными значениями.
     g_heatingTimeLeft = new HeatingTimeLeft(g_properties.WaterTankVolumeLitre, g_properties.WaterHeaterPowerKWatt);
     
-    InitAllTasks();
+    Common::InitPeripheral();
+    
+    g_waterLevelTask = new WaterLevelTask(&g_properties);
+    g_tempSensorTask = new TempSensorTask(&g_properties);
+    
+    g_waterLevelTask->StartTask("WaterLevel");
+    g_tempSensorTask->StartTask("TempSensor");
     
     // Разрешаем другим потокам доступ к Property.
     m_propertyInitialized = true;

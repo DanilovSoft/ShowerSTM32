@@ -19,7 +19,6 @@ private:
     
     volatile bool m_propertyInitialized = false;
   
-    void InitAllTasks();
     void Run();
 };
 

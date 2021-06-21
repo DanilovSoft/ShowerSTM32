@@ -118,7 +118,7 @@ public:
     }
     
     // Воспроизводит звуковые семплы блокируя поток.
-    void PlaySound(const BeepSound* samples, uint8_t length)
+    void PlaySound(const BeepSound* samples, const uint8_t length)
     {
         xSemaphoreTake(m_xSemaphore, portMAX_DELAY);
         
@@ -141,7 +141,7 @@ private:
     SemaphoreHandle_t m_xSemaphorePause;
     StaticSemaphore_t m_xSemaphorePauseBuffer;
     
-    void Freq(uint16_t freq)
+    void Freq(const uint16_t freq)
     {
         if (freq == 0)
         {
@@ -179,7 +179,7 @@ private:
         GPIO_Init(GPIO_Buzzer, &gpio_init_struct);
     }
     
-    void InnerPlaySound(const BeepSound* samples, uint8_t length)
+    void InnerPlaySound(const BeepSound* samples, const uint8_t length)
     {
         for (uint8_t i = 0; i < length; i++)
         {

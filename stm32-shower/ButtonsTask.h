@@ -15,17 +15,6 @@ class ButtonsTask final : public TaskBase
 {
 public:
     
-    void Init()
-    {
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = Button_Temp_Plus | Button_Temp_Minus | Button_Water_Pin | Button_SensorSwitch_OUT,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_IPD
-        };
-        GPIO_Init(Button_GPIO, &gpio_init);
-    }
-    
 private:
     
     static void PressSound()
@@ -95,7 +84,7 @@ private:
     void TempPlus()
     {
         uint8_t externalTemp;
-        if (g_heaterTempLimit.TryGetLastAirTemperature(externalTemp))
+        if (g_heaterTempLimit.TryGetAirTemperature(externalTemp))
         {
             if (g_writeProperties.Chart.TempPlus(externalTemp))
             {
@@ -108,7 +97,7 @@ private:
     void TempMinus()
     {
         uint8_t air_temp;
-        if (g_heaterTempLimit.TryGetLastAirTemperature(air_temp))
+        if (g_heaterTempLimit.TryGetAirTemperature(air_temp))
         {
             if (g_writeProperties.Chart.TempMinus(air_temp))
             {

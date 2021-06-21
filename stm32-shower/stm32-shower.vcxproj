@@ -81,6 +81,7 @@
     <ClCompile Include="FreeRTOS\Source\tasks.c" />
     <ClCompile Include="FreeRTOS\Source\timers.c" />
     <ClCompile Include="InitializationTask.cpp" />
+    <ClCompile Include="Common.cpp" />
     <ClCompile Include="WaterLevelAnimationTask.cpp" />
     <ClCompile Include="WaterLevelTask.cpp" />
     <ClCompile Include="WaterLevel_IRQ.cpp" />

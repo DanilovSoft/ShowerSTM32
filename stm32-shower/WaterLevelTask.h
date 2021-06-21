@@ -27,15 +27,14 @@ class WaterLevelTask final : public TaskBase
 {	
 public:
     
-    WaterLevelTask()
-    {
-        // По умолчанию для гистерезиса считать что вода подымается.
-        m_waterIsRising = true;
-        m_isInitialized = false;
-        m_usecRange = 0;
-        m_intervalPauseMsec = 0;
-        m_errorCounter = 0;
-        m_minimumAllowedUsec = 0;
+    WaterLevelTask(const PropertyStruct* properties)
+        : m_medianFilter(MedianFilter(properties->WaterLevelMedianFilterSize))
+        , m_movingAverageFilter(MovingAverageFilter(properties->WaterLevelAvgFilterSize))
+        , m_usecRange(properties->WaterLevelEmpty - properties->WaterLevelFull)
+        , m_intervalPauseMsec(properties->WaterLevelMeasureIntervalMsec / portTICK_PERIOD_MS)
+        , m_minimumAllowedUsec(properties->WaterLevelFull * 0.8) // На 20% меньше минимально допустимого значения.
+        , m_properties(properties)
+    {   
     }
     
     // Последнее измеренное значение после усреднений.
@@ -50,133 +49,15 @@ public:
     // True если было получено хоть одно показание с датчика уровня.
     volatile bool PreInitialized = false;
     
-    void Init()
-    {
-        m_medianFilter = new MedianFilter(g_properties.WaterLevelMedianFilterSize);
-        m_movingAverageFilter = new MovingAverageFilter(g_properties.WaterLevelAvgFilterSize);
-        
-        m_usecRange = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull);
-        float usec_per_percent = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull) / 99.0;
-        
-        // Trig.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = WL_GPIO_Trig_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-    
-        GPIO_Init(WL_GPIO_Trig, &gpio_init);
-        GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
-        
-        // Input Capture.
-        gpio_init = 
-        {
-            .GPIO_Pin = WL_GPIO_TIM_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_IPD
-        };
-    
-        GPIO_Init(WL_GPIO_TIM, &gpio_init);
-        GPIO_ResetBits(WL_GPIO_TIM, WL_GPIO_TIM_Pin);
-    
-        uint16_t prescaler = SystemCoreClock / 1000000 - 1;     // 1 микросекунда.
-        uint16_t period = g_properties.WaterLevelEmpty + (usec_per_percent * 10);     // Диаппазон таймера с запасом на пару процентов.
-    
-        TIM_TimeBaseInitTypeDef base_timer =
-        {
-            .TIM_Prescaler = prescaler,
-            .TIM_CounterMode = TIM_CounterMode_Up,
-            .TIM_Period = period,
-            .TIM_ClockDivision = TIM_CKD_DIV1,
-            .TIM_RepetitionCounter = 0
-        };
-    
-        TIM_TimeBaseInit(WL_TIM, &base_timer);
-        TIM_ClearITPendingBit(WL_TIM, TIM_IT_Update);
-    
-        TIM_ICInitTypeDef tim_ic_init_struct = 
-        {
-            .TIM_Channel = TIM_Channel_1,
-            .TIM_ICPolarity = TIM_ICPolarity_Rising,
-            .TIM_ICSelection = TIM_ICSelection_DirectTI,
-            .TIM_ICPrescaler = TIM_ICPSC_DIV1,
-            .TIM_ICFilter = 15     // Максимальное значение 15 или 0b1111.
-        };
-    
-        TIM_ICInit(WL_TIM, &tim_ic_init_struct);
-        
-        NVIC_InitTypeDef nvic_init_struct = 
-        { 
-            .NVIC_IRQChannel = TIM1_UP_IRQn,
-            .NVIC_IRQChannelPreemptionPriority = 2,
-            .NVIC_IRQChannelSubPriority = 0,
-            .NVIC_IRQChannelCmd = ENABLE    
-        };
-    
-        NVIC_Init(&nvic_init_struct);
-    
-        nvic_init_struct = 
-        {
-            .NVIC_IRQChannel = TIM1_CC_IRQn,
-            .NVIC_IRQChannelPreemptionPriority = 2,
-            .NVIC_IRQChannelSubPriority = 0,
-            .NVIC_IRQChannelCmd = ENABLE
-        };
-    
-        NVIC_Init(&nvic_init_struct);
-        
-        TIM_ITConfig(WL_TIM, TIM_IT_Update, ENABLE);
-        TIM_ITConfig(WL_TIM, TIM_IT_CC1, ENABLE);
-    }
-    
     bool GetIsInitialized() volatile
     {
         return m_isInitialized;
     }
     
-    void InitGpioAndClearDisplay()
+    static void ClearDisplay()
     {
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
-
-        SPI_InitTypeDef spi_init_struct = 
-        {
-            .SPI_Direction = SPI_Direction_1Line_Tx,            // Только передача.
-            .SPI_Mode = SPI_Mode_Master,                        // Режим - мастер.
-            .SPI_DataSize = SPI_DataSize_16b,                   // Передаём по 16 бит.
-            .SPI_CPOL = SPI_CPOL_Low,                           // Полярность и
-            .SPI_CPHA = SPI_CPHA_1Edge,                         // фаза тактового сигнала.
-            .SPI_NSS = SPI_NSS_Soft,                            // Управлять состоянием сигнала NSS программно.
-            .SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2,   // Предделитель SCK.
-            .SPI_FirstBit = SPI_FirstBit_MSB,                   // Первым отправляется старший бит.
-            .SPI_CRCPolynomial = 7
-        };
-        SPI_Init(WL_SPI, &spi_init_struct);     // Настраиваем SPI.
-        SPI_Cmd(WL_SPI, ENABLE);                // Включаем модуль SPI.
-        SPI_NSSInternalSoftwareConfig(WL_SPI, SPI_NSSInternalSoft_Set);
-
-        // LED LATCH.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = WL_GPIO_LATCH_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-        GPIO_Init(WL_GPIO_LATCH, &gpio_init);
-        GPIO_ResetBits(WL_GPIO_LATCH, WL_GPIO_LATCH_Pin);
-        
-        // Порты SPI.
-        gpio_init = 
-        {
-            .GPIO_Pin = WL_GPIO_SPI_MOSI_Pin | WL_GPIO_SPI_SCK_Pin,
-            .GPIO_Speed = GPIO_Speed_50MHz,
-            .GPIO_Mode = GPIO_Mode_AF_PP
-        };
-        GPIO_Init(WL_GPIO_SPI, &gpio_init);
-
         // Очищаем  как можно раньше что-бы предотвратить кратковременное отображение мусора на дисплее.
-        // PS. можно будет убрать если использовать LED дисплей обратной полярности.
+        // PS. можно будет убрать если использовать LED дисплей другой полярности.
         DisplayLED(kADash, kBDash);
     }
     
@@ -191,7 +72,7 @@ public:
     // Возвращает True если датчик, за последнее время, получил слишком много не валидных показаний.
     bool GetIsError() volatile
     {
-        return m_errorCounter >= g_properties.WaterLevelErrorThreshold;
+        return m_errorCounter >= m_properties->WaterLevelErrorThreshold;
     }
     
 private:
@@ -199,24 +80,22 @@ private:
     static constexpr uint8_t kADash = 0b11011111; // Горизонтальный прочерк в первом разряде индикатора.
     static constexpr uint8_t kBDash = 0b11111101; // Горизонтальный прочерк во втором разряде индикатора.
     static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
-    uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
-    uint16_t m_usecRange; // Ширина полного диаппазона в микросекундах.
+    
+    const PropertyStruct* m_properties;
+    const uint16_t m_usecRange;  // Ширина полного диаппазона в микросекундах.
+    const uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
     // Показания датчика меньше этого значения будут считаться не валидными 
     // (например когда датчик заслонён или ловит своё эхо от зеркала).
-    uint16_t m_minimumAllowedUsec;
-    MovingAverageFilter* m_movingAverageFilter;
-    MedianFilter* m_medianFilter;
-    bool m_waterIsRising;
-    volatile bool m_isInitialized;
-    volatile uint8_t m_errorCounter;
+    const uint16_t m_minimumAllowedUsec;
+    MovingAverageFilter m_movingAverageFilter;
+    MedianFilter m_medianFilter;
+    
+    bool m_waterIsRising = true; // По умолчанию для гистерезиса считать что вода подымается.
+    volatile bool m_isInitialized = false;
+    volatile uint8_t m_errorCounter = 0;
 
     void Run()
     {
-        g_initializationTask.WaitForPropertiesInitialization();
-        
-        m_intervalPauseMsec = g_properties.WaterLevelMeasureIntervalMsec / portTICK_PERIOD_MS;
-        m_minimumAllowedUsec = g_properties.WaterLevelFull * 0.8; // На 20% меньше минимально допустимого значения.
-        
         // Initialise the xLastWakeTime variable with the current time.
         TickType_t xLastWakeTime = xTaskGetTickCount();
     
@@ -241,10 +120,10 @@ private:
                 if (!SensorIsBlocked(usec_raw))
                 {
                     // Медианный фильтр.
-                    uint16_t median = m_medianFilter->AddValue(usec_raw);
+                    uint16_t median = m_medianFilter.AddValue(usec_raw);
 
                     // Скользящее среднее.
-                    uint16_t avg = m_movingAverageFilter->AddValue(median);
+                    uint16_t avg = m_movingAverageFilter.AddValue(median);
 
                     // Скопировать фильтрованное значение микросекунд в публичную переменную.
                     AvgUsec = avg;
@@ -296,7 +175,7 @@ private:
 
     void IncrementError()
     {
-        if (m_errorCounter < g_properties.WaterLevelErrorThreshold)
+        if (m_errorCounter < m_properties->WaterLevelErrorThreshold)
         {
             m_errorCounter++;
             
@@ -333,13 +212,13 @@ private:
         // Дать датчику эксклюзивное время на инициализацию 
         // И выполнить прогрев. (Почему-то сказывается при включенной оптимизации -O1 и выше).
         vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
-        GPIO_SetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
+        Common::WaterLevelEnableTrig();
         DELAY_US(10);
-        GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
+        Common::WaterLevelDisableTrig();
         vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
         
         // Размер медианного фильтра + буфера скользящее среднее.
-        uint16_t warmup_count = g_properties.WaterLevelMedianFilterSize + g_properties.WaterLevelAvgFilterSize;
+        uint16_t warmup_count = m_properties->WaterLevelMedianFilterSize + m_properties->WaterLevelAvgFilterSize;
     
         uint8_t last_point;
         for (uint16_t i = 0; i < warmup_count;)
@@ -353,15 +232,15 @@ private:
                 if(!SensorIsBlocked(usec_raw))
                 {
                     // Медианный фильтр.
-                    uint16_t median = m_medianFilter->AddValue(usec_raw);
+                    uint16_t median = m_medianFilter.AddValue(usec_raw);
 
                     // Добавить значение в буффер скользящего среднего.
-                    uint16_t avg = m_movingAverageFilter->AddValue(median);
+                    uint16_t avg = m_movingAverageFilter.AddValue(median);
             
-                    if (i < g_properties.WaterLevelAvgFilterSize)
+                    if (i < m_properties->WaterLevelAvgFilterSize)
                     {
                         // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполненности.
-                        avg = m_movingAverageFilter->GetAverage() / (i + 1);      // Точность с кажной итерацией будет увеличиваться.
+                        avg = m_movingAverageFilter.GetAverage() / (i + 1);      // Точность с кажной итерацией будет увеличиваться.
                     }
             
                     // Инициализировать глобальную переменную.
@@ -458,7 +337,7 @@ private:
         usec = ClampRange(usec);
         
         // Смещение.
-        usec -= g_properties.WaterLevelFull;
+        usec -= m_properties->WaterLevelFull;
         
         // Уровень воды в микросекундах.
         usec = m_usecRange - usec;
@@ -472,25 +351,25 @@ private:
     }
     
     // От 0 до 99.
-    static uint8_t GetPercent(uint8_t point)
+    static uint8_t GetPercent(const uint8_t point)
     {
         if (point > 99)
         {
-            point = 99;
+            return 99;
         }
 
         return point;
     }
 
-    static uint16_t ClampRange(uint16_t usec)
+    uint16_t ClampRange(const uint16_t usec)
     {
-        if (usec < g_properties.WaterLevelFull)
+        if (usec < m_properties->WaterLevelFull)
         {
-            return g_properties.WaterLevelFull;
+            return m_properties->WaterLevelFull;
         }
-        else if (usec > g_properties.WaterLevelEmpty)
+        else if (usec > m_properties->WaterLevelEmpty)
         {
-            return g_properties.WaterLevelEmpty;
+            return m_properties->WaterLevelEmpty;
         }
     
         return usec;
@@ -563,15 +442,14 @@ private:
 
     inline static uint8_t GetIntPoint(float pointf)
     {
-        uint8_t point = roundf(pointf);
-        return point;
+        return roundf(pointf);
     }
 
     // От 0 до 99.
-    inline float GetPoint(uint16_t usec)
+    float GetPoint(uint16_t usec)
     {
         // Смещение.
-        usec -= g_properties.WaterLevelFull;
+        usec -= m_properties->WaterLevelFull;
         
         // Уровень воды в микросекундах.
         usec = (m_usecRange - usec);
@@ -619,21 +497,21 @@ private:
     }
     
     // Отправка данных в SPI в контексте RTOS.
-    static void TaskDisplayLED(uint8_t a_value, uint8_t b_value)
+    static void TaskDisplayLED(const uint8_t a_value, const uint8_t b_value)
     {
         uint16_t value = ((a_value << 8) | b_value);
         TaskDisplayLED(value);
     }
 
     // Отправка данных в SPI НЕ в контексте RTOS.
-    static void DisplayLED(uint8_t a_value, uint8_t b_value)
+    static void DisplayLED(const uint8_t a_value, const uint8_t b_value)
     {
         uint16_t value = ((a_value << 8) | b_value);
         DisplayLED(value);
     }
     
     // Отправка данных в SPI НЕ в контексте RTOS.
-    static void DisplayLED(uint16_t value)
+    static void DisplayLED(const uint16_t value)
     {
         SPISend(value);
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_BSY) == SET)
@@ -663,7 +541,7 @@ private:
     }
     
     // Отправка данных в SPI НЕ в контексте RTOS.
-    static void SPISend(uint16_t data)
+    static void SPISend(const uint16_t data)
     {
         while (SPI_I2S_GetFlagStatus(WL_SPI, SPI_I2S_FLAG_TXE) == RESET)
         {
@@ -685,4 +563,4 @@ private:
     }
 };
 
-extern WaterLevelTask g_waterLevelTask;
+extern WaterLevelTask* g_waterLevelTask;

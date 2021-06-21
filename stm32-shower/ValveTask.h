@@ -12,35 +12,6 @@ class ValveTask final : public TaskBase
 {	
 public:
     
-    void Init()
-    {
-        // Клапан.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = Valve_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-        GPIO_Init(Valve_GPIO, &gpio_init);
-        
-        // Закрыть клапан.
-        GPIO_ResetBits(Valve_GPIO, Valve_Pin);
-        
-        // Питающий вывод сенсора.
-        gpio_init = 
-        {
-            .GPIO_Pin = SensorSwitch_Power_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_Out_PP
-        };
-        GPIO_Init(SensorSwitch_Power_GPIO, &gpio_init);
-
-        // Выключить питание сенсора до окончания инициали датчика уровня воды.
-        Common::TurnOffSensorSwitch();
-
-        //m_xValveSemaphore = xSemaphoreCreateBinaryStatic(&m_xValveSemaphoreBuffer);	
-    }
-    
     // Вызывается каждый раз, после OnButtonPushed().
     void UpdateSensorState(bool isOn)
     {
@@ -146,7 +117,7 @@ private:
             // Спим пока не поступит запрос на открытие клапана.
             ulTaskNotifyTake(pdTRUE, /* Clear the notification value before exiting. */ portMAX_DELAY);
             
-            // PS. Текущий поток может устанавливать ТОЛЬКО значение false этому флагу.
+            // PS. Текущий поток ДОЛЖЕН устанавливать ТОЛЬКО значение false этому флагу.
             m_stopRequired = false;
                 
             // Нельзя набирать воду если включен автомат нагревателя из-за вероятности ложного срабатывания.
@@ -165,18 +136,16 @@ private:
                 }
                 else
                 {
-                    if (g_waterLevelTask.GetIsInitialized())
+                    if (g_waterLevelTask->GetIsInitialized())
                     {
-                        uint8_t water_percent = g_waterLevelTask.Percent;
-                
-                        // Если уровень воды меньше уровень автоматического отключения.
-                        if(water_percent < g_properties.WaterValveCutOffPercent)
+                        // Если уровень воды меньше уровня автоматического отключения.
+                        if(g_waterLevelTask->Percent < g_properties.WaterValveCutOffPercent)
                         {					
                             // Включить воду.
-                            Common::OpenValve();	
+                            Common::OpenValve();
                         
                             // Ожидаем достижение порогового уровня воды или ручной остановки.
-                            while(!m_stopRequired && g_waterLevelTask.Percent < g_properties.WaterValveCutOffPercent)
+                            while(!m_stopRequired && g_waterLevelTask->Percent < g_properties.WaterValveCutOffPercent)
                             {
                                 taskYIELD();
                             }

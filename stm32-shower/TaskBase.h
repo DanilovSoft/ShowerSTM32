@@ -37,7 +37,7 @@ public:
 #endif
     }
     
-    void CreateTask(const char* name, UBaseType_t uxPriority = tskIDLE_PRIORITY)
+    void StartTask(const char* name, UBaseType_t uxPriority = tskIDLE_PRIORITY)
     {
         m_taskHandle = xTaskCreateStatic(
             /* Function that implements the task. */

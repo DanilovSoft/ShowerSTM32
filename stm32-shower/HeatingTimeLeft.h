@@ -22,15 +22,15 @@ public:
     // Возвращает время до окончания нагрева в минутах (от 0 до x).
     float GetTimeLeftMin()
     {
-        float intTemp = g_tempSensorTask.AverageInternalTemp;
-        float extTemp = g_tempSensorTask.AverageExternalTemp;
+        float intTemp = g_tempSensorTask->AverageInternalTemp;
+        float extTemp = g_tempSensorTask->AverageExternalTemp;
     
         // Узнаём желаемую температуру воды в баке.
         uint8_t limitTemp;
         g_heaterTempLimit.TryGetTargetTemperature(limitTemp);
 
         // Нужно учесть на сколько процентов заполнен бак.
-        uint8_t tankPercent = g_waterLevelTask.Percent;
+        uint8_t tankPercent = g_waterLevelTask->Percent;
     
         float minutes = CalcTimeLeft(intTemp, limitTemp, tankPercent);
         return minutes;
@@ -39,7 +39,7 @@ public:
     // Возвращает примерный прогресс нагрева воды от 0 до 100%.
     uint8_t GetProgress()
     {
-        float internal_temp = g_tempSensorTask.AverageInternalTemp;
+        float internal_temp = g_tempSensorTask->AverageInternalTemp;
     
         // Узнаём желаемую температуру воды в баке.
         uint8_t limit_temp;

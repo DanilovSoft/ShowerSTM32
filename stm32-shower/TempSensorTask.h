@@ -100,47 +100,25 @@ class TempSensorTask final : public TaskBase
 {
 public:
 
+    TempSensorTask(const PropertyStruct* properties)
+        : m_properties(properties)
+    {
+        // Готовим команду — чтение памяти устройства.
+        memcpy(m_internalDeviceReadScratchCommand + 1, properties->InternalTempSensorId, 8);
+        memcpy(m_externalDeviceReadScratchCommand + 1, properties->ExternalTempSensorId, 8);
+    }
+    
     volatile bool InternalSensorInitialized = false;
     volatile bool ExternalSensorInitialized = false;
     volatile bool RegisteringSensors;
-    // Усредненое показание с датчика.
+    // Усреднённое показание с датчика.
     volatile float AverageInternalTemp = 0;
-    // Усредненое показание с датчика.
+    // Усреднённое показание с датчика.
     volatile float AverageExternalTemp = 0;
-    // Последнее показание с датчика.
+    // Последнее показание с датчика в баке.
     volatile float InternalTemp = 0;
-    // Последнее показание с датчика.
+    // Последнее показание с датчика окружающего воздуха.
     volatile float ExternalTemp = 0;
-    
-    void Init()
-    {
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-        GPIO_PinRemapConfig(GPIO_Remap_USART1, ENABLE);
-        
-        // USART Tx.
-        GPIO_InitTypeDef gpio_init_struct = 
-        {
-            .GPIO_Pin = OW_GPIO_Pin_Tx,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_AF_OD,
-        };
-    
-        GPIO_Init(OneWire_GPIO, &gpio_init_struct);
-
-        USART_InitTypeDef usart_init_struct = 
-        {
-            .USART_BaudRate = 115200,
-            .USART_WordLength = USART_WordLength_8b,
-            .USART_StopBits = USART_StopBits_1,
-            .USART_Parity = USART_Parity_No,
-            .USART_Mode = USART_Mode_Tx | USART_Mode_Rx,
-            .USART_HardwareFlowControl = USART_HardwareFlowControl_None,
-        };
-
-        USART_Init(OneWire_USART, &usart_init_struct);
-        USART_Cmd(OneWire_USART, ENABLE);
-        USART_HalfDuplexCmd(OneWire_USART, ENABLE);
-    }
     
     void WaitFirstConversion()
     {
@@ -174,7 +152,7 @@ private:
         DS18B20_Resolution_12_bit = 0x7F
     } DS18B20_Resolution;
     
-    const uint8_t AllDevicessStartConvert[2] = { SKIP_ROM, CONVERT_T };
+    const uint8_t AllDevicessStartConvert[2] = { DS18B20_Commands::SKIP_ROM, DS18B20_Commands::CONVERT_T };
     static constexpr bool kOneWireNoCRC = false;
     static constexpr uint8_t kOneWire0 = 0x00;
     static constexpr uint8_t kOneWire1 = 0xFF;
@@ -183,6 +161,8 @@ private:
     static constexpr uint8_t kOneWireReadSlot = 0xFF;
     static constexpr uint8_t kCountPerC = 16;
     static constexpr uint16_t kMinimumDelayMsec = 200;
+    
+    const PropertyStruct* m_properties;
     
     uint8_t m_internalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
     uint8_t m_externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
@@ -263,11 +243,11 @@ private:
         TryRegisterNewSensors();
     
         // Готовим команду — чтение памяти устройства.
-        memcpy(m_internalDeviceReadScratchCommand + 1, g_properties.InternalTempSensorId, 8);
-        memcpy(m_externalDeviceReadScratchCommand + 1, g_properties.ExternalTempSensorId, 8);
+        memcpy(m_internalDeviceReadScratchCommand + 1, m_properties->InternalTempSensorId, 8);
+        memcpy(m_externalDeviceReadScratchCommand + 1, m_properties->ExternalTempSensorId, 8);
     
-        SetResolution(DS18B20_Resolution_9_bit, g_properties.InternalTempSensorId);  // Для 9 бит время измерения = 750 msec / 16 = 93.75 msec.
-        SetResolution(DS18B20_Resolution_9_bit, g_properties.ExternalTempSensorId);
+        SetResolution(DS18B20_Resolution_9_bit, m_properties->InternalTempSensorId);  // Для 9 бит время измерения = 750 msec / 16 = 93.75 msec.
+        SetResolution(DS18B20_Resolution_9_bit, m_properties->ExternalTempSensorId);
     
         while (!TryGetFirstTemps())
         {
@@ -281,13 +261,13 @@ private:
         }
     }
     
-    bool SetResolution(DS18B20_Resolution resolution, uint8_t* deviceId)
+    bool SetResolution(const DS18B20_Resolution resolution, const uint8_t* device_id)
     {
         uint8_t scratchpad[9] = { };
     
         uint8_t readScratchCommand[10] = { MATCH_ROM };
         readScratchCommand[9] = READ_SCRATCHPAD;
-        memcpy(readScratchCommand + 1, deviceId, 8);
+        memcpy(readScratchCommand + 1, device_id, 8);
     
         // Читаем память устройства с проверкой контрольной суммы.
         if(!OneWire_Send(readScratchCommand, 10, scratchpad, 9, true))
@@ -329,7 +309,7 @@ private:
             break;
         }
     
-        if (!SaveResolution(resolution, deviceId))
+        if (!SaveResolution(resolution, device_id))
         {
             return false;
         }
@@ -337,7 +317,7 @@ private:
         return true;
     }
 
-    bool SaveResolution(DS18B20_Resolution resolution, uint8_t* deviceId)
+    bool SaveResolution(const DS18B20_Resolution resolution, const uint8_t* device_id)
     {
         // Нужно записать в устройство новые параметры.
 
@@ -358,7 +338,7 @@ private:
             (uint8_t)resolution,
         };
         
-        memcpy(setResolutionCommand + 1, deviceId, 8);
+        memcpy(setResolutionCommand + 1, device_id, 8);
         
         if (!OneWire_Send(setResolutionCommand, 13))
         {
@@ -410,7 +390,7 @@ private:
             COPY_SCRATCHPAD
         };
         
-        memcpy(copyScratchpadCommand + 1, deviceId, 8);
+        memcpy(copyScratchpadCommand + 1, device_id, 8);
 
         if (!OneWire_Send(copyScratchpadCommand, 10))
         {
@@ -426,37 +406,37 @@ private:
     // Если датчики заменить на новые то потребуется зарегистрировать их идентификаторы.
     void TryRegisterNewSensors()
     {
-        uint8_t oneDevRepeatCount = 0;
-        uint8_t twoDevRepeatCount = 0;
-        uint8_t newInternalDevice[8] = { };
-        uint8_t newExternalDevice[8] = { };
+        uint8_t one_dev_repeat_count = 0;
+        uint8_t two_dev_repeat_count = 0;
+        uint8_t new_internal_sensor[8] = { };
+        uint8_t new_air_sensor[8] = { };
     
 repeat:
     
         uint8_t devices[16] = {};
-        uint8_t devCount = OneWire_Scan(devices, 2);
+        uint8_t dev_count = OneWireScan(devices, 2);
     
         // Если в списке только одно устройство и оно новое то зарегистрировать как датчик для бака.
-        if(devCount == 1)
+        if(dev_count == 1)
         {
-            bool isInternalSensor = Common::ArrayEquals(devices, 8, g_properties.InternalTempSensorId, 8);
+            bool is_internal_sensor = Common::ArrayEquals(devices, 8, m_properties->InternalTempSensorId, 8);
         
-            if (!isInternalSensor)
+            if (!is_internal_sensor)
             {
-                bool isExternalSensor = Common::ArrayEquals(devices, 8, g_properties.ExternalTempSensorId, 8);
+                bool is_air_sensor = Common::ArrayEquals(devices, 8, m_properties->ExternalTempSensorId, 8);
             
-                if (!isExternalSensor)
+                if (!is_air_sensor)
                 {
                     // На шине обнаружено только одно устройство и оно новое.
                     // Значит нужно зарегистрировать его как основной датчик бака.
                     // Но ситуация может быть ошибочной поэтому уведомляем пользователя 
                     // и выдерживаем паузу что-бы пользователь мог прервать перезапись идентификатора.
                 
-                    if(oneDevRepeatCount == 0)
+                    if(one_dev_repeat_count == 0)
                     {
-                        oneDevRepeatCount++;
+                        one_dev_repeat_count++;
                     
-                        memcpy(newInternalDevice, devices, 8);      // Запомним ид устройства что-бы сравнить при повторной попытке.
+                        memcpy(new_internal_sensor, devices, 8);      // Запомним ид устройства что-бы сравнить при повторной попытке.
                     
                         RegisteringSensors = true;
                 
@@ -467,13 +447,13 @@ repeat:
                     }
                     else
                     {
-                        if (!Common::ArrayEquals(devices, 8, newInternalDevice, 8))
+                        if (!Common::ArrayEquals(devices, 8, new_internal_sensor, 8))
                         {
                             // Идентификатор изменился - что-то пошло не так. Не будем переписывать значение.
                             return;
                         }
                     
-                        memcpy(g_writeProperties.InternalTempSensorId, newInternalDevice, 8);
+                        memcpy(g_writeProperties.InternalTempSensorId, new_internal_sensor, 8);
                 
                         if (Common::ArrayEquals(g_writeProperties.InternalTempSensorId, 8, g_writeProperties.ExternalTempSensorId, 8))
                         {
@@ -484,17 +464,18 @@ repeat:
                         g_eepromHelper.Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
-                        memcpy(g_properties.InternalTempSensorId, newInternalDevice, 8);
+                        // TODO не очень хорошо модифицировать здесь.
+                        memcpy(g_properties.InternalTempSensorId, new_internal_sensor, 8);
                     }
                 }
             }
         }
-        else if(devCount == 2)
+        else if(dev_count == 2)
         {
             // Если устройств 2, где один это датчик бака, а другое новое то зарегистрировать второй как датчик окружающего воздуха.
 
             // Является ли первое устройство в массиве датчиком бака.
-            bool firstIsInternal = Common::ArrayEquals(devices, 8, g_properties.InternalTempSensorId, 8);
+            bool firstIsInternal = Common::ArrayEquals(devices, 8, m_properties->InternalTempSensorId, 8);
         
             bool secondIsInternal;
         
@@ -504,22 +485,22 @@ repeat:
             }
             else
             {
-                secondIsInternal = Common::ArrayEquals(devices + 8, 8, g_properties.InternalTempSensorId, 8);
+                secondIsInternal = Common::ArrayEquals(devices + 8, 8, m_properties->InternalTempSensorId, 8);
             }
         
             if (firstIsInternal || secondIsInternal)
             {
                 uint8_t* nextDev = firstIsInternal ? devices + 8 : devices;
             
-                if (!Common::ArrayEquals(nextDev, 8, g_properties.ExternalTempSensorId, 8))
+                if (!Common::ArrayEquals(nextDev, 8, m_properties->ExternalTempSensorId, 8))
                 {
                     // Обнаружен новый датчик. Предупредим пользователя, выдержим паузу, перечитаем идентификатор и зарегистрируем его как датчик воздуха.
                 
-                    if(twoDevRepeatCount == 0)
+                    if(two_dev_repeat_count == 0)
                     {
-                        twoDevRepeatCount++;
+                        two_dev_repeat_count++;
                     
-                        memcpy(newExternalDevice, nextDev, 8);         // Запомним ид устройства что-бы сравнить при повторной попытке.
+                        memcpy(new_air_sensor, nextDev, 8);         // Запомним ид устройства что-бы сравнить при повторной попытке.
                     
                         RegisteringSensors = true;
                 
@@ -530,19 +511,19 @@ repeat:
                     }
                     else
                     {
-                        if (!Common::ArrayEquals(nextDev, 8, newExternalDevice, 8))
+                        if (!Common::ArrayEquals(nextDev, 8, new_air_sensor, 8))
                         {
                             // Идентификатор изменился - что-то пошло не так. Не будем переписывать значение.
                             return;
                         }
                     
-                        memcpy(g_writeProperties.ExternalTempSensorId, newExternalDevice, 8);
+                        memcpy(g_writeProperties.ExternalTempSensorId, new_air_sensor, 8);
                 
                         // Перезаписываем идентификатор датчика.
                         g_eepromHelper.Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
-                        memcpy(g_properties.ExternalTempSensorId, newExternalDevice, 8);
+                        memcpy(g_properties.ExternalTempSensorId, new_air_sensor, 8);
                     }
                 }
             }
@@ -550,7 +531,7 @@ repeat:
     }
 
     // Отправляет команду 0xF0.
-    bool OneWire_Reset() 
+    bool OneWireReset() 
     {
         USART_InitTypeDef init_struct =
         {
@@ -631,7 +612,7 @@ repeat:
     //-----------------------------------------------------------------------------
     bool OneWire_Send(const uint8_t* command, uint8_t cLen, uint8_t* data = 0, uint8_t dLen = 0, bool calcCrc = true) 
     {	
-        if (OneWire_Reset())
+        if (OneWireReset())
         {
             uint8_t* dataStart = data;
             const uint8_t dataLen = dLen;
@@ -774,8 +755,8 @@ repeat:
                 m_intTempSum -= m_intTempBuf[m_intTempHead];
                 m_intTempSum += InternalTemp;
                 m_intTempBuf[m_intTempHead] = InternalTemp;
-                m_intTempHead = (m_intTempHead + 1) % g_properties.InternalTempAvgFilterSize;
-                AverageInternalTemp = m_intTempSum / g_properties.InternalTempAvgFilterSize;
+                m_intTempHead = (m_intTempHead + 1) % m_properties->InternalTempAvgFilterSize;
+                AverageInternalTemp = m_intTempSum / m_properties->InternalTempAvgFilterSize;
             }
         
             float air_temp;
@@ -863,8 +844,8 @@ repeat:
     // Заполняет весь скользящий буфер одним значением.
     void InitAverageInternalTemp(const float internal_temp)
     {
-        m_intTempSum = internal_temp * g_properties.InternalTempAvgFilterSize;
-        for (size_t i = 0; i < g_properties.InternalTempAvgFilterSize; i++)
+        m_intTempSum = internal_temp * m_properties->InternalTempAvgFilterSize;
+        for (size_t i = 0; i < m_properties->InternalTempAvgFilterSize; i++)
         {
             m_intTempBuf[i] = internal_temp;
         }
@@ -888,7 +869,7 @@ repeat:
     // переменная num ограничивает количество находимых устройств, чтобы не переполнить
     // буфер.
     //-----------------------------------------------------------------------------
-    uint8_t OneWire_Scan(uint8_t* buf, uint8_t num) 
+    uint8_t OneWireScan(uint8_t* buf, uint8_t num) 
     {
         uint8_t found = 0;
         uint8_t* lastDevice;
@@ -1080,4 +1061,4 @@ repeat:
     }
 };
 
-extern TempSensorTask g_tempSensorTask;
+extern TempSensorTask* g_tempSensorTask;
