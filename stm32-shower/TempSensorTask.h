@@ -177,7 +177,7 @@ private:
     // Сокращенно ow_buf.
     volatile uint8_t m_oneWireBuffer[8] = {};
     
-    static void OneWire_ToBits(uint8_t ow_byte, volatile uint8_t* ow_bits) 
+    static void OneWireToBits(uint8_t ow_byte, volatile uint8_t* ow_bits) 
     {
         uint8_t i;
         for (i = 0; i < 8; i++)
@@ -235,8 +235,6 @@ private:
 
     void Run()
     {
-        g_initializationTask.WaitForPropertiesInitialization();
-        
         // Дать немного времени на инициализацию.
         vTaskDelay(10 / portTICK_PERIOD_MS);
     
@@ -270,7 +268,7 @@ private:
         memcpy(readScratchCommand + 1, device_id, 8);
     
         // Читаем память устройства с проверкой контрольной суммы.
-        if(!OneWire_Send(readScratchCommand, 10, scratchpad, 9, true))
+        if(!OneWireSend(readScratchCommand, 10, scratchpad, 9, true))
         {
             return false;
         }
@@ -340,7 +338,7 @@ private:
         
         memcpy(setResolutionCommand + 1, device_id, 8);
         
-        if (!OneWire_Send(setResolutionCommand, 13))
+        if (!OneWireSend(setResolutionCommand, 13))
         {
             return false;
         }
@@ -392,7 +390,7 @@ private:
         
         memcpy(copyScratchpadCommand + 1, device_id, 8);
 
-        if (!OneWire_Send(copyScratchpadCommand, 10))
+        if (!OneWireSend(copyScratchpadCommand, 10))
         {
             return false;
         }
@@ -610,7 +608,7 @@ repeat:
     // data - если требуется чтение, то ссылка на буфер для чтения, иначе 0.
     // dLen - длина буфера для чтения. Прочитается не более этой длины. Фактически сколько раз будет повторяться вся процедура.
     //-----------------------------------------------------------------------------
-    bool OneWire_Send(const uint8_t* command, uint8_t cLen, uint8_t* data = 0, uint8_t dLen = 0, bool calcCrc = true) 
+    bool OneWireSend(const uint8_t* command, uint8_t cLen, uint8_t* data = 0, uint8_t dLen = 0, bool calcCrc = true) 
     {	
         if (OneWireReset())
         {
@@ -623,7 +621,7 @@ repeat:
             while (cLen--) 
             {
                 uint8_t byte = cLen < dLen ? 0xFF : *command++;
-                OneWire_ToBits(byte, m_oneWireBuffer);
+                OneWireToBits(byte, m_oneWireBuffer);
 
                 // Сбросить читающий канал DMA на значения по умолчанию, перед установкой новых значений (опционально).
                 DMA_DeInit(OW_DMA_CH_RX);
@@ -742,7 +740,7 @@ repeat:
         uint8_t scratchpad[9];
         bool internal_success = false;
         
-        if (OneWire_Send(AllDevicessStartConvert, 2))
+        if (OneWireSend(AllDevicessStartConvert, 2))
         {
             vTaskDelay(kMinimumDelayMsec / portTICK_PERIOD_MS);	
         
@@ -782,16 +780,16 @@ repeat:
     
         // PS. У датчиков по умолчанию значение температуры = 85 градусов С.
     
-        if(OneWire_Send(AllDevicessStartConvert, 2))
+        if(OneWireSend(AllDevicessStartConvert, 2))
         {
             vTaskDelay(kMinimumDelayMsec / portTICK_PERIOD_MS);	
         
-            float internalTemp;
-            if (TryGetInternalTemp(internalTemp))
+            float internal_temp;
+            if (TryGetInternalTemp(internal_temp))
             {
-                InternalTemp = internalTemp;
-                InitAverageInternalTemp(internalTemp);  // Заполнить скользящий буфер первым измерением.
-                AverageInternalTemp = internalTemp;
+                InternalTemp = internal_temp;
+                InitAverageInternalTemp(internal_temp);  // Заполнить скользящий буфер первым измерением.
+                AverageInternalTemp = internal_temp;
                 InternalSensorInitialized = true;
             }
         
@@ -812,7 +810,7 @@ repeat:
         uint8_t scratchpad[9];
         
         // Читаем блокнот конкретного устройства.
-        if(OneWire_Send(m_internalDeviceReadScratchCommand, 10, scratchpad, 9, true))
+        if(OneWireSend(m_internalDeviceReadScratchCommand, 10, scratchpad, 9, true))
         {
             // Значение COUNT_PER_°C должно равняться заданной разрядности.
             uint8_t count_per_c = scratchpad[7];
@@ -829,7 +827,7 @@ repeat:
     {
         uint8_t scratchpad[9];
     
-        if (OneWire_Send(m_externalDeviceReadScratchCommand, 10, scratchpad, 9, true))
+        if (OneWireSend(m_externalDeviceReadScratchCommand, 10, scratchpad, 9, true))
         {
             uint8_t count_per_c = scratchpad[7];
             if (count_per_c == kCountPerC)
@@ -863,35 +861,32 @@ repeat:
         m_extTempHead = 0;
     }
     
-    //-----------------------------------------------------------------------------
     // Данная функция осуществляет сканирование сети 1-wire и записывает найденные
-    //   ID устройств в массив buf, по 8 байт на каждое устройство.
-    // переменная num ограничивает количество находимых устройств, чтобы не переполнить
-    // буфер.
-    //-----------------------------------------------------------------------------
-    uint8_t OneWireScan(uint8_t* buf, uint8_t num) 
+    // ID устройств в массив buf, по 8 байт на каждое устройство.
+    // @param num Переменная num ограничивает количество находимых устройств, чтобы не переполнить буфер.
+    uint8_t OneWireScan(uint8_t* devices, uint8_t num) 
     {
         uint8_t found = 0;
-        uint8_t* lastDevice;
-        uint8_t* curDevice = buf;
-        uint8_t numBit, lastCollision, currentCollision, currentSelection;
+        uint8_t* last_device;
+        uint8_t* cur_device = devices;
+        uint8_t num_bit, last_collision, current_collision, current_selection;
 
-        const uint8_t searchRomCommand[1] = { SEARCH_ROM };
+        static constexpr uint8_t search_rom_command[1] = { SEARCH_ROM };
     
-        lastCollision = 0;
+        last_collision = 0;
         while (found < num) 
         {
-            numBit = 1;
-            currentCollision = 0;
+            num_bit = 1;
+            current_collision = 0;
 
             // Посылаем команду на поиск устройств.
-            OneWire_Send(searchRomCommand, 1, 0, 0);
+            OneWireSend(search_rom_command, 1, 0, 0);
         
-            for (numBit = 1; numBit <= 64; numBit++) 
+            for (num_bit = 1; num_bit <= 64; num_bit++) 
             {
                 // Читаем два бита. Основной и комплементарный.
-                OneWire_ToBits(kOneWireReadSlot, m_oneWireBuffer);
-                OneWire_SendBits(2);
+                OneWireToBits(kOneWireReadSlot, m_oneWireBuffer);
+                OneWireSendBits(2);
 
                 if (m_oneWireBuffer[0] == kOneWireR1) 
                 {
@@ -903,7 +898,7 @@ repeat:
                     else 
                     {
                         // 10 - на данном этапе только 1.
-                        currentSelection = 1;
+                        current_selection = 1;
                     }
                 }
                 else 
@@ -911,78 +906,78 @@ repeat:
                     if (m_oneWireBuffer[1] == kOneWireR1) 
                     {
                         // 01 - на данном этапе только 0.
-                        currentSelection = 0;
+                        current_selection = 0;
                     }
                     else 
                     {
                         // 00 - коллизия.
-                        if(numBit < lastCollision) 
+                        if(num_bit < last_collision) 
                         {
                             // идем по дереву, не дошли до развилки.
-                            if(lastDevice[(numBit - 1) >> 3] & 1 << ((numBit - 1) & 0x07)) 
+                            if(last_device[(num_bit - 1) >> 3] & 1 << ((num_bit - 1) & 0x07)) 
                             {
                                 // (numBit-1)>>3 - номер байта.
                                 // (numBit-1)&0x07 - номер бита в байте.
-                                currentSelection = 1;
+                                current_selection = 1;
 
                                 // если пошли по правой ветке, запоминаем номер бита.
-                                if(currentCollision < numBit) 
+                                if(current_collision < num_bit) 
                                 {
-                                    currentCollision = numBit;
+                                    current_collision = num_bit;
                                 }
                             }
                             else 
                             {
-                                currentSelection = 0;
+                                current_selection = 0;
                             }
                         }
                         else 
                         {
-                            if (numBit == lastCollision) 
+                            if (num_bit == last_collision) 
                             {
-                                currentSelection = 0;
+                                current_selection = 0;
                             }
                             else 
                             {
                                 // идем по правой ветке.
-                                currentSelection = 1;
+                                current_selection = 1;
 
                                 // если пошли по правой ветке, запоминаем номер бита.
-                                if(currentCollision < numBit) 
+                                if(current_collision < num_bit) 
                                 {
-                                    currentCollision = numBit;
+                                    current_collision = num_bit;
                                 }
                             }
                         }
                     }
                 }
 
-                if (currentSelection == 1) 
+                if (current_selection == 1) 
                 {
-                    curDevice[(numBit - 1) >> 3] |= 1 << ((numBit - 1) & 0x07);
-                    OneWire_ToBits(0x01, m_oneWireBuffer);
+                    cur_device[(num_bit - 1) >> 3] |= 1 << ((num_bit - 1) & 0x07);
+                    OneWireToBits(0x01, m_oneWireBuffer);
                 }
                 else 
                 {
-                    curDevice[(numBit - 1) >> 3] &= ~(1 << ((numBit - 1) & 0x07));
-                    OneWire_ToBits(0x00, m_oneWireBuffer);
+                    cur_device[(num_bit - 1) >> 3] &= ~(1 << ((num_bit - 1) & 0x07));
+                    OneWireToBits(0x00, m_oneWireBuffer);
                 }
-                OneWire_SendBits(1);
+                OneWireSendBits(1);
             }
             found++;
-            lastDevice = curDevice;
-            curDevice += 8;
-            if (currentCollision == 0)
+            last_device = cur_device;
+            cur_device += 8;
+            if (current_collision == 0)
             {
                 return found;
             }
 
-            lastCollision = currentCollision;
+            last_collision = current_collision;
         }
         return found;
     }
 
-    void OneWire_SendBits(uint8_t num_bits) 
+    void OneWireSendBits(uint8_t num_bits) 
     {
         DMA_DeInit(OW_DMA_CH_RX);
     
