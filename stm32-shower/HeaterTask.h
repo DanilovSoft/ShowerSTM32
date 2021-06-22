@@ -14,11 +14,17 @@ class HeaterTask final : public TaskBase
 {
 public:
     
+    HeaterTask(const PropertyStruct* properties)
+        : m_properties(properties)
+    {
+        
+    }
+    
     // True если вода нагрета до нужного уровня.
     bool GetIsWaterHeated()
     {
         uint8_t targetTemp;
-        if (g_heaterTempLimit.TryGetTargetTemperature(targetTemp))
+        if (g_heaterTempLimit->TryGetTargetTemperature(targetTemp))
         {
             return g_tempSensorTask->AverageInternalTemp >= targetTemp;
         }
@@ -31,7 +37,7 @@ public:
     uint8_t GetHeatingLimit()
     {
         uint8_t limit;
-        g_heaterTempLimit.TryGetTargetTemperature(limit);
+        g_heaterTempLimit->TryGetTargetTemperature(limit);
         return limit;
     }
     
@@ -60,6 +66,8 @@ public:
 
 private:
     
+    const PropertyStruct* m_properties;
+    
     bool m_circuitBreakerIsOn; // Для запоминания состояния переключателя автомата.
     bool m_heaterEnabled; // Для запоминания состояния нагревателя (включено реле или нет).
     Stopwatch m_beepStopwatch; // Для периодического звукового сигнала.
@@ -79,7 +87,7 @@ private:
         }
         ;
         
-        g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+        g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
         m_beepStopwatch.Reset();
     }
 
@@ -96,7 +104,7 @@ private:
         }
         ;
         
-        g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+        g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
         m_beepStopwatch.Reset();
     }
 
@@ -114,7 +122,7 @@ private:
     
         if (m_beepStopwatch.TimedOut(7000))
         {
-            g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+            g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
             m_beepStopwatch.Reset();
         }
     }
@@ -137,7 +145,7 @@ private:
         {
             if (GetIsWaterHeated())
             {
-                g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+                g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
                 m_beepStopwatch.Reset();
             }
         }
@@ -161,16 +169,14 @@ private:
         
         if (m_beepStopwatch.TimedOut(7000))
         {
-            g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+            g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
             m_beepStopwatch.Reset();
         }
     }
 
     void Run()
     {
-        g_initializationTask.WaitForPropertiesInitialization();
-        
-        m_heaterWatchdog = new HeaterWatchdog(g_properties.HeatingTimeLimitMin * 60, g_properties.AbsoluteHeatingTimeLimitHours * 60 * 60);
+        m_heaterWatchdog = new HeaterWatchdog(m_properties->HeatingTimeLimitMin * 60, m_properties->AbsoluteHeatingTimeLimitHours * 60 * 60);
         m_beepStopwatch.Reset();
         g_tempSensorTask->WaitFirstConversion();
     
@@ -274,7 +280,7 @@ private:
     void ControlTurnOn()
     {
         uint8_t targetTemp;
-        if (g_heaterTempLimit.TryGetTargetTemperature(targetTemp))
+        if (g_heaterTempLimit->TryGetTargetTemperature(targetTemp))
         {
             float internalTemp = g_tempSensorTask->AverageInternalTemp;
         
@@ -289,7 +295,7 @@ private:
             else if (g_waterLevelTask->GetIsInitialized())
             {
                 // Если уровень воды больше допустимого минимума И температура в баке меньше необходимой.
-                if(internalTemp < targetTemp && !g_waterLevelTask->GetIsError() && g_waterLevelTask->Percent >= g_properties.MinimumWaterHeatingPercent)
+                if(internalTemp < targetTemp && !g_waterLevelTask->GetIsError() && g_waterLevelTask->Percent >= m_properties->MinimumWaterHeatingPercent)
                 {
                     TurnOnHeaterWithSound();
                 }
@@ -308,7 +314,7 @@ private:
     void ControlTurnOff()
     {	
         uint8_t target_temp;
-        if (g_heaterTempLimit.TryGetTargetTemperature(target_temp))
+        if (g_heaterTempLimit->TryGetTargetTemperature(target_temp))
         {
             float internal_temp = g_tempSensorTask->AverageInternalTemp;
         
@@ -321,4 +327,4 @@ private:
     }
 };
 
-extern HeaterTask g_heaterTask;
+extern HeaterTask* g_heaterTask;

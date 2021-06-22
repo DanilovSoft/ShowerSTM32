@@ -6,16 +6,21 @@
 #include "HeaterTask.h"
 #include "FreeRTOS.h"
 #include "Interlocked.h"
-#include "InitializationTask.h"
 
 class ValveTask final : public TaskBase
 {	
 public:
     
-    // Вызывается каждый раз, после OnButtonPushed().
-    void UpdateSensorState(bool isOn)
+    ValveTask(const PropertyStruct* const properties)
+        : m_properties(properties)
     {
-        if (isOn)
+        
+    }
+    
+    // Вызывается каждый раз, после OnButtonPushed().
+    void UpdateSensorState(bool is_on)
+    {
+        if (is_on)
         {
             if (!m_sensorSwitchIsOnLastState)
             {
@@ -76,6 +81,8 @@ private:
     
     // Пауза для повторного включения клапана.
     static const auto kValveDebounceMsec = 300;
+    
+    const PropertyStruct* const m_properties;
     bool m_sensorSwitchIsOnLastState = false;
     // Флаг прекращающий набор воды по запросу пользователя.
     volatile bool m_stopRequired = false;
@@ -104,8 +111,6 @@ private:
     
     void Run()
     {
-        g_initializationTask.WaitForPropertiesInitialization();
-        
         // Нужно включить флаг перед включением сенсора.
         m_openValveAllowed = ValveTask::WaitingRequest;
         
@@ -139,13 +144,13 @@ private:
                     if (g_waterLevelTask->GetIsInitialized())
                     {
                         // Если уровень воды меньше уровня автоматического отключения.
-                        if(g_waterLevelTask->Percent < g_properties.WaterValveCutOffPercent)
+                        if(g_waterLevelTask->Percent < m_properties->WaterValveCutOffPercent)
                         {					
                             // Включить воду.
                             Common::OpenValve();
                         
                             // Ожидаем достижение порогового уровня воды или ручной остановки.
-                            while(!m_stopRequired && g_waterLevelTask->Percent < g_properties.WaterValveCutOffPercent)
+                            while(!m_stopRequired && g_waterLevelTask->Percent < m_properties->WaterValveCutOffPercent)
                             {
                                 taskYIELD();
                             }
@@ -177,4 +182,4 @@ private:
     }
 };
 
-extern ValveTask g_valveTask;
+extern ValveTask* g_valveTask;

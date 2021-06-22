@@ -37,4 +37,4 @@ private:
     void Run();
 };
 
-extern WaterLevelAnimationTask g_wlAnimationTask;
+extern WaterLevelAnimationTask* g_wlAnimationTask;

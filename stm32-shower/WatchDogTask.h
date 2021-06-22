@@ -47,4 +47,4 @@ private:
     }
 };
 
-extern WatchDogTask g_watchDogTask;
+extern WatchDogTask* g_watchDogTask;

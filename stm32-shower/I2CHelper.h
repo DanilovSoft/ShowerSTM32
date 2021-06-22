@@ -33,6 +33,11 @@ class I2CHelper final
 {
 public:
 
+    I2CHelper()
+    {
+        
+    }
+    
     void InitI2C()
     {
         // http://www.freertos.org/xSemaphoreCreateBinaryStatic.html
@@ -638,4 +643,4 @@ private:
     }  
 };
 
-extern I2CHelper g_i2cHelper;
+//extern I2CHelper* const g_i2cHelper;

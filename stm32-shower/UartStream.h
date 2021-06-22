@@ -21,70 +21,9 @@ class UartStream final
 {
 public:
     
-    void Init()
+    UartStream()
     {
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
         
-        // Настраиваем ногу TxD как выход push-pull c альтернативной функцией.
-        GPIO_InitTypeDef gpio_init = 
-        {
-            .GPIO_Pin = GPIO_WIFI_Pin_Tx,
-            .GPIO_Speed = GPIO_Speed_50MHz,
-            .GPIO_Mode = GPIO_Mode_AF_PP
-        };
-        GPIO_Init(GPIO_WIFI_USART, &gpio_init);
-
-        // Настраиваем ногу как вход UARTа (RxD).
-        gpio_init = 
-        {
-            .GPIO_Pin = GPIO_WIFI_Pin_Rx,
-            .GPIO_Speed = GPIO_Speed_50MHz,
-            .GPIO_Mode = GPIO_Mode_IN_FLOATING
-        };
-        GPIO_Init(GPIO_WIFI_USART, &gpio_init);
-        
-        // Заполняем структуру настройками UARTa.
-        USART_InitTypeDef uart_struct = 
-        {
-            .USART_BaudRate = kWiFiUartSpeed,
-            .USART_WordLength = USART_WordLength_8b,
-            .USART_StopBits = USART_StopBits_1,
-            .USART_Parity = USART_Parity_No,
-            .USART_Mode = USART_Mode_Rx | USART_Mode_Tx,
-            .USART_HardwareFlowControl = USART_HardwareFlowControl_None
-        };
-
-        // В методе USART_Init есть ошибка, подробности по ссылке
-        // http://we.easyelectronics.ru/STM32/nastroyka-uart-v-stm32-i-problemy-dvoichno-desyatichnoy-arifmetiki.html
-        USART_Init(WIFI_USART, &uart_struct);   // Инициализируем UART.
-        
-        DMA_DeInit(WIFI_DMA_CH_RX);
-        DMA_DeInit(WIFI_DMA_CH_TX);
-        
-        DMA_InitTypeDef dma_init_struct = 
-        {
-            .DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR),
-            .DMA_MemoryBaseAddr = (uint32_t) m_rxFifoBuf,
-            .DMA_DIR = DMA_DIR_PeripheralSRC,
-            .DMA_BufferSize = kUartRxFifoSize,
-            .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
-            .DMA_MemoryInc = DMA_MemoryInc_Enable,
-            .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
-            .DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
-            .DMA_Mode = DMA_Mode_Circular,
-            .DMA_Priority = DMA_Priority_Low,
-            .DMA_M2M = DMA_M2M_Disable
-        };
-        DMA_Init(WIFI_DMA_CH_RX, &dma_init_struct);
-        
-        // Разрешить DMA для USART.
-        USART_DMACmd(WIFI_USART, USART_DMAReq_Rx | USART_DMAReq_Tx, ENABLE);
-        
-        // Включаем UART.
-        USART_Cmd(WIFI_USART, ENABLE);
-        
-        // Старт приема через DMA.
-        DMA_Cmd(WIFI_DMA_CH_RX, ENABLE);
     }
     
     WaitStatus WaitLine(const char* str1, const char* str2, const char* str3, uint16_t timeout_msec)
@@ -194,8 +133,16 @@ public:
         }
         return 0;
     }
-
+    
+    // Возвращает адрес внутреннего буфера куда следует записывать данные получаемые от UART.
+    uint32_t GetUartBufferAddress() const
+    {
+        return (uint32_t)m_rxFifoBuf;
+    }
+    
 private:
+    
+    volatile uint8_t m_rxFifoBuf[kUartRxFifoSize];
     
     // Буффер в который копируем данные из RX_FIFO_BUF.
     uint8_t m_rxBuf[kUartRxFifoSize] = {0};
@@ -205,7 +152,6 @@ private:
     uint16_t m_head = 0;
     uint16_t m_head2 = kUartRxFifoSize;
     uint16_t m_tail = 0;
-    volatile uint8_t m_rxFifoBuf[kUartRxFifoSize];
 
     bool CopyRingBuf()
     {
@@ -552,4 +498,4 @@ private:
     }
 };
 
-extern UartStream g_uartStream;
+extern UartStream* g_uartStream;

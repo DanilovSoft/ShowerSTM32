@@ -33,44 +33,8 @@ class Buzzer final
 {
 public:
     
-    void Init()
-    {	
-        DisableGPIO();
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-        
-        TIM_TimeBaseInitTypeDef tim_time_base_init_struct = 
-        {
-            .TIM_Prescaler = (uint16_t)(SystemCoreClock / 100000 - 1),  // 100 KHz timebase.
-            .TIM_CounterMode = TIM_CounterMode_Up,
-            .TIM_Period = (uint16_t)(SystemCoreClock / 10000 - 1),      // Arbitary placeholder 100 Hz.
-            .TIM_ClockDivision = TIM_CKD_DIV1,							// Без  делителя.
-            .TIM_RepetitionCounter = 0
-        };
-        TIM_TimeBaseInit(Buzzer_TIM, &tim_time_base_init_struct);
-
-        TIM_OCInitTypeDef tim_oc_init_struct = 
-        {
-            .TIM_OCMode = TIM_OCMode_PWM1,
-            .TIM_OutputState = TIM_OutputState_Enable,
-            .TIM_OutputNState = TIM_OutputNState_Disable,
-            .TIM_Pulse = (uint16_t)((tim_time_base_init_struct.TIM_Period + 1) / 2),       // 50% Duty.
-            .TIM_OCPolarity = TIM_OCPolarity_High,
-            .TIM_OCNPolarity = TIM_OCPolarity_High,
-            .TIM_OCIdleState = TIM_OCIdleState_Reset,
-            .TIM_OCNIdleState = TIM_OCNIdleState_Reset
-        };
-        TIM_OC1Init(Buzzer_TIM, &tim_oc_init_struct);
-        
-        TIM_OC1PreloadConfig(Buzzer_TIM, TIM_OCPreload_Enable);
-        TIM_ARRPreloadConfig(Buzzer_TIM, ENABLE);
-        
-        const uint16_t period = 100000 / 1000;   // 1000 гц.
-        Buzzer_TIM->ARR = period - 1;
-        Buzzer_TIM->CCR1 = period / 2;
-        
-        DisableGPIO();
-        TIM_Cmd(Buzzer_TIM, ENABLE);
-        
+    Buzzer()
+    {
         m_xSemaphore = xSemaphoreCreateBinaryStatic(&m_xSemaphoreBuffer);
         xSemaphoreGive(m_xSemaphore);
 
@@ -145,7 +109,7 @@ private:
     {
         if (freq == 0)
         {
-            DisableGPIO();
+            Common::DisableBeeper();
         }
         else
         {
@@ -153,30 +117,8 @@ private:
             Buzzer_TIM->ARR = period - 1;
             Buzzer_TIM->CCR1 = period / 2;
             
-            EnableGPIO();
+            Common::EnableBeeper();
         }
-    }
-    
-    void EnableGPIO()
-    {
-        GPIO_InitTypeDef gpio_init_struct = 
-        {
-            .GPIO_Pin = GPIO_Buzzer_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_AF_PP
-        };
-        GPIO_Init(GPIO_Buzzer, &gpio_init_struct);
-    }
-    
-    void DisableGPIO()
-    {
-        GPIO_InitTypeDef gpio_init_struct = 
-        {
-            .GPIO_Pin = GPIO_Buzzer_Pin,
-            .GPIO_Speed = GPIO_Speed_2MHz,
-            .GPIO_Mode = GPIO_Mode_IN_FLOATING
-        };
-        GPIO_Init(GPIO_Buzzer, &gpio_init_struct);
     }
     
     void InnerPlaySound(const BeepSound* samples, const uint8_t length)
@@ -197,4 +139,4 @@ private:
     }
 };
 
-extern Buzzer g_buzzer;
+extern Buzzer* const g_buzzer;

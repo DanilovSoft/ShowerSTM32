@@ -2,7 +2,6 @@
 #include "TaskBase.h"
 #include "LiquidCrystal.h"
 #include "HeatingTimeLeft.h"
-#include "InitializationTask.h"
 #include "TempSensorTask.h"
 #include "WaterLevelTask.h"
 #include "WaterLevelAnimationTask.h"
@@ -15,8 +14,17 @@ class LcdTask final : public TaskBase
 {
 public:
     
+    LcdTask(const PropertyStruct* const properties, I2CHelper* const i2c_helper)
+        : m_properties(properties)
+        , m_liquidCrystal(i2c_helper)
+    {
+        
+    }
+    
 private:
 
+    const PropertyStruct* const m_properties;
+    
     LiquidCrystal m_liquidCrystal;
     
     static void DisplayTemp(char* buf, int16_t temp)
@@ -40,8 +48,6 @@ private:
     
     void Run()
     {
-        g_initializationTask.WaitForPropertiesInitialization();
-        
         if (!m_liquidCrystal.Setup(16, 2))
         {
             return;
@@ -58,7 +64,7 @@ private:
         {
             uint8_t target_temp = 0;
             
-            bool got_target_temp = g_heaterTempLimit.TryGetTargetTemperature(target_temp);
+            bool got_target_temp = g_heaterTempLimit->TryGetTargetTemperature(target_temp);
             bool circuit_breaker_is_on = Common::CircuitBreakerIsOn();  // Включен ли автомат.
             bool heater_is_on = Common::HeaterIsOn();  // Включен ли ТЭН.
             bool valve_is_open = Common::ValveIsOpen(); // Набирается ли вода.
@@ -76,7 +82,7 @@ private:
                     // Уровень воды в первой строке.
                     if(g_waterLevelTask->GetIsError() || !g_waterLevelTask->GetIsInitialized())
                     {
-                        line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
+                        line_water_level[15] = g_wlAnimationTask->GetWaterLevelAnimChar();
                     }
                     else
                     {
@@ -87,7 +93,7 @@ private:
                 {
                     line_water_level[13] = '-';
                     line_water_level[14] = '-';
-                    line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
+                    line_water_level[15] = g_wlAnimationTask->GetWaterLevelAnimChar();
                 }
                 
                 m_liquidCrystal.WriteString(line_water_level);
@@ -151,7 +157,7 @@ private:
                     water_heated = (round(g_tempSensorTask->AverageInternalTemp) >= target_temp);
                 }
                 
-                if (circuit_breaker_is_on && water_heated && g_waterLevelTask->Percent >= g_properties.MinimumWaterHeatingPercent)
+                if (circuit_breaker_is_on && water_heated && g_waterLevelTask->Percent >= m_properties->MinimumWaterHeatingPercent)
                 {
                     // 'Вода нагрета'.
                     m_liquidCrystal.WriteString(line_water_ready);
@@ -167,7 +173,7 @@ private:
                         
                         if (g_waterLevelTask->GetIsError() || !g_waterLevelTask->GetIsInitialized())
                         {
-                            line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
+                            line_water_level[15] = g_wlAnimationTask->GetWaterLevelAnimChar();
                         }
                         else
                         {
@@ -180,7 +186,7 @@ private:
                         
                         line_water_level[13] = '-';
                         line_water_level[14] = '-';
-                        line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
+                        line_water_level[15] = g_wlAnimationTask->GetWaterLevelAnimChar();
                     }
                     
                     m_liquidCrystal.WriteString(line_water_level);
@@ -199,4 +205,4 @@ private:
     }
 };
 
-extern LcdTask g_lcdTask;
+extern LcdTask* g_lcdTask;

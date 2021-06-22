@@ -100,7 +100,7 @@ class TempSensorTask final : public TaskBase
 {
 public:
 
-    TempSensorTask(const PropertyStruct* properties)
+    TempSensorTask(PropertyStruct* properties)
         : m_properties(properties)
     {
         // Готовим команду — чтение памяти устройства.
@@ -128,6 +128,16 @@ public:
         }
     }
 
+    bool TryGetAirTemp(float& air_temp)
+    {
+        if (ExternalSensorInitialized)
+        {	
+            float air_temp = AverageExternalTemp;
+            return true;
+        }
+        return false;
+    }
+    
 private:
     
     typedef enum 
@@ -162,7 +172,7 @@ private:
     static constexpr uint8_t kCountPerC = 16;
     static constexpr uint16_t kMinimumDelayMsec = 200;
     
-    const PropertyStruct* m_properties;
+    PropertyStruct* m_properties;
     
     uint8_t m_internalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
     uint8_t m_externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
@@ -459,11 +469,11 @@ repeat:
                         }
                     
                         // Перезаписываем идентификатор датчика.
-                        g_eepromHelper.Save();
+                        g_eepromHelper->Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
                         // TODO не очень хорошо модифицировать здесь.
-                        memcpy(g_properties.InternalTempSensorId, new_internal_sensor, 8);
+                        memcpy(m_properties->InternalTempSensorId, new_internal_sensor, 8);
                     }
                 }
             }
@@ -518,10 +528,10 @@ repeat:
                         memcpy(g_writeProperties.ExternalTempSensorId, new_air_sensor, 8);
                 
                         // Перезаписываем идентификатор датчика.
-                        g_eepromHelper.Save();
+                        g_eepromHelper->Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
-                        memcpy(g_properties.ExternalTempSensorId, new_air_sensor, 8);
+                        memcpy(m_properties->ExternalTempSensorId, new_air_sensor, 8);
                     }
                 }
             }

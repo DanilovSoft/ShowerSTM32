@@ -10,7 +10,13 @@ class EepromHelper final
 {	
 public:
 
-    void InitProperties()
+    EepromHelper(I2CHelper* const i2cHelper)
+        : m_i2cHelper(i2cHelper)
+    {
+        DebugAssert(i2cHelper != NULL);
+    }
+    
+    PropertyStruct DeserializeProperties()
     {
         while (!TryInitProperties())
         {
@@ -19,8 +25,10 @@ public:
         
         g_writeProperties.SelfFix();
     
+        return g_writeProperties;
+        
         // Копируем всю структуру.
-        g_properties = g_writeProperties;
+        //g_properties = g_writeProperties;
     }
 
     // Сохраняет в EEPROM значение структуры g_writeProperties.
@@ -34,14 +42,14 @@ public:
     
 private:
     
-   
+    I2CHelper* const m_i2cHelper;
     uint8_t m_curPageAddr;
     
     bool SafeBufferRead(uint8_t* pBuffer, uint8_t read_addr, uint8_t num_bytes_to_read)
     {
         while (num_bytes_to_read--)
         {
-            if (!g_i2cHelper.EE_ByteRead(read_addr, *pBuffer))
+            if (!m_i2cHelper->EE_ByteRead(read_addr, *pBuffer))
             {
                 return false;
             }
@@ -57,7 +65,7 @@ private:
     {
         uint8_t data_index;
     
-        if (!g_i2cHelper.EE_ByteRead(0, data_index))
+        if (!m_i2cHelper->EE_ByteRead(0, data_index))
         {
             return false;
         }
@@ -82,7 +90,7 @@ private:
             uint8_t bufIndex = i % 4;
             uint8_t& bufAddr = crc32_buffer[bufIndex];
             
-            if (!g_i2cHelper.EE_ByteRead(read_addr, bufAddr))
+            if (!m_i2cHelper->EE_ByteRead(read_addr, bufAddr))
             {
                 return false;
             }
@@ -104,7 +112,7 @@ private:
         // Используем соседнюю половину памяти.
         uint16_t page_address = (m_curPageAddr == EE_DataAddr1 ? EE_DataAddr2 : EE_DataAddr1);
 
-        if (!g_i2cHelper.EE_BufferWrite((uint8_t*)&g_writeProperties, page_address, sizeof(g_writeProperties)))
+        if (!m_i2cHelper->EE_BufferWrite((uint8_t*)&g_writeProperties, page_address, sizeof(g_writeProperties)))
         {
             return false;
         }
@@ -125,14 +133,14 @@ private:
         
         uint8_t new_index = m_curPageAddr == EE_DataAddr1 ? 1 : 0;
 
-        if (!g_i2cHelper.EE_ByteWrite(0, new_index))
+        if (!m_i2cHelper->EE_ByteWrite(0, new_index))
         {
             return false;
         }
                         
         uint8_t index_test;
     
-        if (!g_i2cHelper.EE_ByteRead(0, index_test))
+        if (!m_i2cHelper->EE_ByteRead(0, index_test))
         {
             return false;
         }
@@ -147,4 +155,4 @@ private:
     }
 };
 
-extern EepromHelper g_eepromHelper;
+extern EepromHelper* g_eepromHelper;

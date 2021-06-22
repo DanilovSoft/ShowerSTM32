@@ -18,8 +18,15 @@ class WiFiTask final : public TaskBase
 {
 public:
     
+    WiFiTask(PropertyStruct* properties)
+        : m_properties(properties)
+    {
+        
+    }
+    
 private:
     
+    PropertyStruct* const m_properties;
     Request m_request;
     uint8_t m_requestData[256] = {0}; // Буфер для данных входного запроса.
     
@@ -53,7 +60,7 @@ private:
     bool TryInitWiFi()
     {
         // Ожидание инициализации WiFi.
-        if (!g_uartStream.WaitLine("ready", 1000))
+        if (!g_uartStream->WaitLine("ready", 1000))
         {
             return false;
         }
@@ -63,41 +70,41 @@ private:
         //			return false;
         
         // Выключить эхо.
-        g_uartStream.WriteLine("ATE0\r\n");
+        g_uartStream->WriteLine("ATE0\r\n");
     
-        if (!g_uartStream.WaitLine("OK", 300))
+        if (!g_uartStream->WaitLine("OK", 300))
         {
             return false;
         }
         
-        g_uartStream.WriteLine("AT+CWMODE_CUR=1\r\n");
+        g_uartStream->WriteLine("AT+CWMODE_CUR=1\r\n");
     
-        if (!g_uartStream.WaitLine("OK", 300))
+        if (!g_uartStream->WaitLine("OK", 300))
         {
             return false;
         }
         
         char rf_power[] = "AT+RFPOWER=\0\0\0\0";
-        Common::NumberToString(g_properties.WiFiPower, rf_power + 11);
+        Common::NumberToString(m_properties->WiFiPower, rf_power + 11);
         strcat(rf_power, "\r\n");
     
-        g_uartStream.WriteLine(rf_power); 		// 40..82, unit:0.25dBm
+        g_uartStream->WriteLine(rf_power); 		// 40..82, unit:0.25dBm
     
-        if(!g_uartStream.WaitLine("OK", 300))
+        if(!g_uartStream->WaitLine("OK", 300))
         {
             return false;
         }
 
-        g_uartStream.WriteLine("AT+CIPMUX=1\r\n");      // разрешить множественные подключения.
+        g_uartStream->WriteLine("AT+CIPMUX=1\r\n");      // разрешить множественные подключения.
     
-        if(!g_uartStream.WaitLine("OK", 300))
+        if(!g_uartStream->WaitLine("OK", 300))
         {
             return false;
         }
 
-        g_uartStream.WriteLine("AT+CIPSERVER=1,333\r\n");      // запустить TCP сервер, порт 333.
+        g_uartStream->WriteLine("AT+CIPSERVER=1,333\r\n");      // запустить TCP сервер, порт 333.
     
-        if(!g_uartStream.WaitLine("OK", 300))
+        if(!g_uartStream->WaitLine("OK", 300))
         {
             return false;
         }
@@ -120,15 +127,15 @@ private:
             BeepSound(4000, 120),
             BeepSound(30),
         };
-        g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
+        g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
 
         //			uartStream.WriteLine("AT+CWQAP");     // забыть сохраненную точку доступа
         //			if (!uartStream.WaitLine("OK", 100))
         //				return false;
 
-        g_uartStream.WriteLine("AT+WPS=1\r\n");
+        g_uartStream->WriteLine("AT+WPS=1\r\n");
         
-        if (!g_uartStream.WaitLine("OK", 500))
+        if (!g_uartStream->WaitLine("OK", 500))
         {
             return false;
         }
@@ -148,7 +155,7 @@ private:
         str[pref_size + length + 1] = '\n';
         str[pref_size + length + 2] = 0;
         
-        g_uartStream.WriteLine(str);
+        g_uartStream->WriteLine(str);
     }
     
     void InnerSetCurAP(uint8_t* data, uint8_t length)
@@ -165,8 +172,6 @@ private:
     
     void Run()
     {
-        g_initializationTask.WaitForPropertiesInitialization();
-        
         if (InitWiFi())
         {
             while (true)
@@ -244,14 +249,14 @@ private:
                 if (request_length == sizeof(g_writeProperties.Chart))
                 {
                     g_writeProperties.Chart.Parse(m_requestData);
-                    g_properties.Chart.Parse(m_requestData);  // Установить значения в ОЗУ.
+                    m_properties->Chart.Parse(m_requestData);  // Установить значения в ОЗУ.
                     m_request.SendResponse(kOK);
                 }
                 break;
             }
         case ShowerCode::kSave:
             {
-                g_eepromHelper.Save();
+                g_eepromHelper->Save();
                 m_request.SendResponse(kOK);
                 break;
             }
@@ -338,13 +343,13 @@ private:
             }
         case ShowerCode::kGetHeatingTimeoutState:
             {
-                bool value = g_heaterTask.GetTimeoutOccured();
+                bool value = g_heaterTask->GetTimeoutOccured();
                 m_request.SendResponse(value);
                 break;
             }
         case ShowerCode::kGetAbsoluteTimeoutStatus:
             {
-                bool value = g_heaterTask.GetAbsoluteTimeoutOccured();
+                bool value = g_heaterTask->GetAbsoluteTimeoutOccured();
                 m_request.SendResponse(value);
                 break;
             }
@@ -384,7 +389,7 @@ private:
             }
         case ShowerCode::kGetWatchDogWasReset:
             {
-                m_request.SendResponse(g_watchDogTask.GetWasReset());
+                m_request.SendResponse(g_watchDogTask->GetWasReset());
                 break;
             }
         case ShowerCode::kGetHasMainPower:
@@ -395,7 +400,7 @@ private:
             }
         case ShowerCode::kGetHeatingLimit:
             {
-                uint8_t value = g_heaterTask.GetHeatingLimit();
+                uint8_t value = g_heaterTask->GetHeatingLimit();
                 m_request.SendResponse(value);
                 break;
             }
@@ -430,7 +435,7 @@ private:
             }
         case ShowerCode::kGetWaterHeated:
             {
-                bool value = g_heaterTask.GetIsWaterHeated();
+                bool value = g_heaterTask->GetIsWaterHeated();
                 m_request.SendResponse(value);
                 break;
             }
@@ -594,4 +599,4 @@ private:
     }
 };
 
-extern WiFiTask g_wifiTask;
+extern WiFiTask* g_wifiTask;

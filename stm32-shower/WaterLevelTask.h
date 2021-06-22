@@ -182,7 +182,7 @@ private:
             if (GetIsError())
             {
                 // Опять запускаем анимацию на LCD.
-                g_wlAnimationTask.ResumeAnimation();
+                g_wlAnimationTask->ResumeAnimation();
             }
         }
         else

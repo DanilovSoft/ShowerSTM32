@@ -6,8 +6,9 @@ class WaterSensorButton final
 {
 public:
     
-    WaterSensorButton(ButtonPressedFunc button_pressed_func)
+    WaterSensorButton(ButtonPressedFunc button_pressed_func, const PropertyStruct* const properties)
         : m_buttonPressedFunc(button_pressed_func)
+        , m_properties(properties)
     {
         m_considerIsOn = false;
         m_pendingOn = false;
@@ -28,6 +29,7 @@ public:
 
 private:
     
+    const PropertyStruct* const m_properties;
     const ButtonPressedFunc m_buttonPressedFunc;
     Stopwatch m_debounce;
     bool m_considerIsOn;
@@ -47,7 +49,7 @@ private:
                 }
                 else
                 {
-                    if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMsec)
+                    if (m_debounce.GetElapsedMsec() >= m_properties->ButtonPressTimeMsec)
                     {
                         m_considerIsOn = true;
                         m_pendingOn = false;
@@ -70,7 +72,7 @@ private:
                 }
                 else
                 {
-                    if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMsec)
+                    if (m_debounce.GetElapsedMsec() >= m_properties->ButtonPressTimeMsec)
                     {
                         m_considerIsOn = false;
                         m_pendingOff = false;

@@ -14,12 +14,16 @@ typedef struct
     uint8_t BacklightVal;
 } LiquidCrystal_I2C_Def;
 
-
-
 class LiquidCrystal final
 {
 public:
 
+    LiquidCrystal(I2CHelper* const i2c_helper)
+        : m_i2cHelper(i2c_helper)
+    {
+        
+    }
+    
     /* When the display powers up, it is configured as follows:
 
          1. Display clear
@@ -201,6 +205,8 @@ private:
     static constexpr uint8_t En = 0x04;   		// Enable bit.
     static constexpr uint8_t Rw = 0x02;   		// Read/Write bit.
     static constexpr uint8_t Rs = 0x01;   		// Register select bit.
+    
+    I2CHelper* const m_i2cHelper;
     
     LiquidCrystal_I2C_Def m_lcdI2c = { 0 };
     
@@ -475,7 +481,7 @@ private:
 
     bool ExpanderWrite(uint8_t data) 
     {
-        return g_i2cHelper.LCD_ExpanderWrite(data | m_lcdI2c.BacklightVal);
+        return m_i2cHelper->LCD_ExpanderWrite(data | m_lcdI2c.BacklightVal);
     }
 
     bool PulseEnable(uint8_t data) 

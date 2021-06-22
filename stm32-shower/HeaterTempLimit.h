@@ -9,24 +9,30 @@ class HeaterTempLimit final
 {
 public:
 
+    HeaterTempLimit(const PropertyStruct* properties)
+        : m_properties(properties)
+    {
+        
+    }
+    
 	// Если датчик окружающего воздуха был инициализирован то возвращает желаемую температуру воды в баке.
 	bool TryGetTargetTemperature(uint8_t& target_temp)
 	{
-		if (g_tempSensorTask->ExternalSensorInitialized)
-		{
-			float air_temp = g_tempSensorTask->AverageExternalTemp;
-			uint8_t air_temp_c = round(air_temp);
+    	float air_temp;
+    	if (g_tempSensorTask->TryGetAirTemp(air_temp))
+		{	
+			uint8_t int_air_temp = round(air_temp);
 		
-			if (Common::abs(air_temp_c, m_airTemp) > 1)
+			if (Common::abs(int_air_temp, m_airTemp) > 1)
 			{
-				m_airTemp = air_temp_c;
+				m_airTemp = int_air_temp;
 			}
 			else
 			{
-				air_temp_c = m_airTemp;
+				int_air_temp = m_airTemp;
 			}
 		
-			target_temp = g_properties.Chart.GetLimit(air_temp_c);	
+    		target_temp = m_properties->Chart.GetLimit(int_air_temp);	
 			return true;
 		}
 		return false;
@@ -45,8 +51,10 @@ public:
 	
 private:
 
+    const PropertyStruct* m_properties;
+    
 	// Температура окружающего воздуха в градусах.
 	volatile uint8_t m_airTemp;
 };
 
-extern HeaterTempLimit g_heaterTempLimit;
+extern HeaterTempLimit* g_heaterTempLimit;

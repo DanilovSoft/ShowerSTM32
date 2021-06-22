@@ -27,7 +27,7 @@ public:
     
         // Узнаём желаемую температуру воды в баке.
         uint8_t limitTemp;
-        g_heaterTempLimit.TryGetTargetTemperature(limitTemp);
+        g_heaterTempLimit->TryGetTargetTemperature(limitTemp);
 
         // Нужно учесть на сколько процентов заполнен бак.
         uint8_t tankPercent = g_waterLevelTask->Percent;
@@ -43,7 +43,7 @@ public:
     
         // Узнаём желаемую температуру воды в баке.
         uint8_t limit_temp;
-        g_heaterTempLimit.TryGetTargetTemperature(limit_temp);
+        g_heaterTempLimit->TryGetTargetTemperature(limit_temp);
         
         if (internal_temp > limit_temp)
         {

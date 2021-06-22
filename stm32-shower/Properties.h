@@ -1,20 +1,20 @@
 #pragma once
 #include "math.h"
-#include "Common.h"
+#include "Defines.h"
 
-struct TempStep
+class TempStep
 {
 public:
 
-    uint8_t GetLimit(uint8_t ext_temp)
+    uint8_t GetLimit(const uint8_t air_temp)
     {
-        uint8_t index = GetIndex(ext_temp);
+        uint8_t index = GetIndex(air_temp);
         return m_internal[index];
     }
 
-    uint8_t GetLimit(float ext_temp)
+    uint8_t GetLimit(const float air_temp) const
     {
-        uint8_t index = GetIndexf(ext_temp);
+        uint8_t index = GetIndexf(air_temp);
         return m_internal[index];
     }
 
@@ -174,29 +174,29 @@ private:
     // Температура в баке.
     uint8_t m_internal[kAirTempSteps];
     
-    uint8_t GetIndex(uint8_t externalTemp)
+    uint8_t GetIndex(const uint8_t air_temp) const
     {
-        if (externalTemp <= kAirTempLowerBound)
+        if (air_temp <= kAirTempLowerBound)
         {
             return 0;
         }
         
-        if (externalTemp >= (kAirTempUpperBound - 1))
+        if (air_temp >= (kAirTempUpperBound - 1))
         {
             return kAirTempSteps - 1;
         }
         
-        return externalTemp - kAirTempLowerBound;
+        return air_temp - kAirTempLowerBound;
     }
     
-    uint8_t GetIndexf(float externalTemp)
+    uint8_t GetIndexf(const float air_temp) const
     {
-        uint8_t t = round(externalTemp);
+        uint8_t t = round(air_temp);
         return GetIndex(t);
     }
 };
 
-struct PropertyStruct
+class PropertyStruct
 {
 public:
     
@@ -459,4 +459,5 @@ public:
     
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.
 
-extern PropertyStruct g_properties, g_writeProperties;
+//extern PropertyStruct g_properties;
+extern PropertyStruct g_writeProperties;

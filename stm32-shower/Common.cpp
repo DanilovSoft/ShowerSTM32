@@ -3,10 +3,20 @@
 #include "MedianFilter.h"
 #include "MovingAverageFilter.h"
 #include "WaterLevelTask.h"
+#include "UartStream.h"
 
-void Common::InitWaterLevel()
+__attribute__((noreturn)) void __break_func(const char * file_name, int line)
 {
-    float usec_per_percent = (g_properties.WaterLevelEmpty - g_properties.WaterLevelFull) / 99.0;
+    __asm("bkpt 255");
+    exit(0);
+}
+
+
+void Common::InitWaterLevel(const PropertyStruct* const properties)
+{
+    DebugAssert(properties != NULL);
+    
+    float usec_per_percent = (properties->WaterLevelEmpty - properties->WaterLevelFull) / 99.0;
         
     // Trig.
     GPIO_InitTypeDef gpio_init = 
@@ -30,8 +40,8 @@ void Common::InitWaterLevel()
     GPIO_Init(WL_GPIO_TIM, &gpio_init);
     GPIO_ResetBits(WL_GPIO_TIM, WL_GPIO_TIM_Pin);
     
-    uint16_t prescaler = SystemCoreClock / 1000000 - 1;      // 1 микросекунда.
-    uint16_t period = g_properties.WaterLevelEmpty + (usec_per_percent * 10);      // Диаппазон таймера с запасом на пару процентов.
+    const uint16_t prescaler = SystemCoreClock / 1000000 - 1;      // 1 микросекунда.
+    const uint16_t period = properties->WaterLevelEmpty + (usec_per_percent * 10);       // Диаппазон таймера с запасом на пару процентов.
     
     TIM_TimeBaseInitTypeDef base_timer =
     {
@@ -162,7 +172,7 @@ void Common::InitTempSensor()
     USART_HalfDuplexCmd(OneWire_USART, ENABLE);
 }
 
-void Common::InitLedLight()
+void Common::InitLedLight(const PropertyStruct* const properties)
 {
     // Тактуем таймер от шины APB1.
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
@@ -190,7 +200,7 @@ void Common::InitLedLight()
     TIM_TimeBaseInit(LED_TIM, &tim_time_base_init_struct);
     
     // Скважность от 0 до 100%.
-    uint16_t pulse = (tim_time_base_init_struct.TIM_Period + 1) / 100 * g_properties.LightBrightness;
+    uint16_t pulse = (tim_time_base_init_struct.TIM_Period + 1) / 100 * properties->LightBrightness;
     
     TIM_OCInitTypeDef tim_oc_init_struct = 
     {
@@ -286,4 +296,70 @@ void Common::InitWaterLevelPeripheral()
         .GPIO_Mode = GPIO_Mode_AF_PP
     };
     GPIO_Init(WL_GPIO_SPI, &gpio_init);
+}
+
+void Common::InitUartPeripheral(const uint32_t memory_base_addr)
+{
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+        
+    // Настраиваем ногу TxD как выход push-pull c альтернативной функцией.
+    GPIO_InitTypeDef gpio_init = 
+    {
+        .GPIO_Pin = GPIO_WIFI_Pin_Tx,
+        .GPIO_Speed = GPIO_Speed_50MHz,
+        .GPIO_Mode = GPIO_Mode_AF_PP
+    };
+    GPIO_Init(GPIO_WIFI_USART, &gpio_init);
+
+    // Настраиваем ногу как вход UARTа (RxD).
+    gpio_init = 
+    {
+        .GPIO_Pin = GPIO_WIFI_Pin_Rx,
+        .GPIO_Speed = GPIO_Speed_50MHz,
+        .GPIO_Mode = GPIO_Mode_IN_FLOATING
+    };
+    GPIO_Init(GPIO_WIFI_USART, &gpio_init);
+        
+    // Заполняем структуру настройками UARTa.
+    USART_InitTypeDef uart_struct = 
+    {
+        .USART_BaudRate = kWiFiUartSpeed,
+        .USART_WordLength = USART_WordLength_8b,
+        .USART_StopBits = USART_StopBits_1,
+        .USART_Parity = USART_Parity_No,
+        .USART_Mode = USART_Mode_Rx | USART_Mode_Tx,
+        .USART_HardwareFlowControl = USART_HardwareFlowControl_None
+    };
+
+    // В методе USART_Init есть ошибка, подробности по ссылке
+    // http://we.easyelectronics.ru/STM32/nastroyka-uart-v-stm32-i-problemy-dvoichno-desyatichnoy-arifmetiki.html
+    USART_Init(WIFI_USART, &uart_struct);     // Инициализируем UART.
+        
+    DMA_DeInit(WIFI_DMA_CH_RX);
+    DMA_DeInit(WIFI_DMA_CH_TX);
+        
+    DMA_InitTypeDef dma_init_struct = 
+    {
+        .DMA_PeripheralBaseAddr = (uint32_t)&(WIFI_USART->DR),
+        .DMA_MemoryBaseAddr = memory_base_addr,
+        .DMA_DIR = DMA_DIR_PeripheralSRC,
+        .DMA_BufferSize = kUartRxFifoSize,
+        .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
+        .DMA_MemoryInc = DMA_MemoryInc_Enable,
+        .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
+        .DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
+        .DMA_Mode = DMA_Mode_Circular,
+        .DMA_Priority = DMA_Priority_Low,
+        .DMA_M2M = DMA_M2M_Disable
+    };
+    DMA_Init(WIFI_DMA_CH_RX, &dma_init_struct);
+        
+    // Разрешить DMA для USART.
+    USART_DMACmd(WIFI_USART, USART_DMAReq_Rx | USART_DMAReq_Tx, ENABLE);
+        
+    // Включаем UART.
+    USART_Cmd(WIFI_USART, ENABLE);
+        
+    // Старт приема через DMA.
+    DMA_Cmd(WIFI_DMA_CH_RX, ENABLE);
 }

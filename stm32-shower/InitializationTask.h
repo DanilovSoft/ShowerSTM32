@@ -2,24 +2,24 @@
 #include "TaskBase.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "Common.h"
 
 class InitializationTask final : public TaskBase
 {
 public:
     
-    void WaitForPropertiesInitialization()
+    InitializationTask(TaskFunction_t func)
+        : m_func(func)
     {
-        while (!m_propertyInitialized)
-        {
-            taskYIELD();
-        }
+        DebugAssert(func != NULL);
     }
     
 private:
     
-    volatile bool m_propertyInitialized = false;
-  
-    void Run();
+    const TaskFunction_t m_func;
+    
+    void Run()
+    {
+        m_func(NULL);
+    }
 };
-
-extern InitializationTask g_initializationTask;

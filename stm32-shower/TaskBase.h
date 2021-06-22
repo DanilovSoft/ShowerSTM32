@@ -41,7 +41,7 @@ public:
     {
         m_taskHandle = xTaskCreateStatic(
             /* Function that implements the task. */
-            (TaskFunction_t)InnerRun,
+            InnerRun,
             /* Text name for the task. */
             name,
             /* Размер массива xStack */

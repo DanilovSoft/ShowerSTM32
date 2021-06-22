@@ -376,5 +376,8 @@
     <ClInclude Include="WaterLevelAnimationTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="Defines.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
