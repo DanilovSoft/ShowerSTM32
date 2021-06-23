@@ -371,11 +371,10 @@ void Common::InitUartPeripheral(const uint32_t memory_base_addr)
 
 void Common::AssertAllTasksInitialized()
 {
-    Debug::Assert(g_waterLevelTask != NULL);
     Debug::Assert(g_tempSensorTask != NULL);
     Debug::Assert(g_heaterTask != NULL);
     Debug::Assert(g_wlAnimationTask != NULL);
-    Debug::Assert(g_wifiTask != NULL);
+    //Debug::Assert(g_wifiTask != NULL);
     Debug::Assert(g_lcdTask != NULL);
     Debug::Assert(g_ledLightTask != NULL);
     Debug::Assert(g_buttonsTask != NULL);

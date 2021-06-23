@@ -28,7 +28,7 @@ PropertyWrapper g_properties;
 PropertyStruct g_writeProperties;
 
 // Принимает команды по WiFi и выполняет их.
-WiFiTask* g_wifiTask;
+WiFiTask g_wifiTask;
 
 // Отображает информацию на LCD дисплее.
 LcdTask* g_lcdTask;
@@ -163,7 +163,7 @@ void PreInitPeripheral()
 static void InitialThread(void* parm)
 {
     I2CHelper i2c_helper;
-    i2c_helper.InitI2C();     // Инициализируем шину I2C.
+    i2c_helper.InitI2C();   // Инициализируем шину I2C.
     
     g_eepromHelper = new EepromHelper(&i2c_helper);
     
@@ -173,16 +173,16 @@ static void InitialThread(void* parm)
     g_properties.Initialized = true;
     
     // Инициализируем структуру актуальными значениями.
-    g_heatingTimeLeft = new HeatingTimeLeft(properties.WaterTankVolumeLitre, properties.WaterHeaterPowerKWatt);
+    //g_heatingTimeLeft = new HeatingTimeLeft(properties.WaterTankVolumeLitre, properties.WaterHeaterPowerKWatt);
     
     // Инициализируем периферию потоков.
-    Common::InitPeripheral(&properties);
+    //Common::InitPeripheral(&properties);
     
     g_waterLevelTask.Init();
+    g_wifiTask.Init();
 //    g_tempSensorTask = new TempSensorTask(&properties);
 //    g_heaterTask = new HeaterTask(&properties);
 //    g_wlAnimationTask = new WaterLevelAnimationTask();
-//    g_wifiTask = new WiFiTask(&properties);
 //    g_lcdTask = new LcdTask(&properties, &i2c_helper);
 //    g_ledLightTask = new LedLightTask();
 //    g_buttonsTask = new ButtonsTask(&properties);
@@ -192,7 +192,7 @@ static void InitialThread(void* parm)
     g_tempSensorTask->StartTask("TempSensor");
     g_heaterTask->StartTask("Heater"); 
     g_wlAnimationTask->StartTask("WaterLevelAnim");         
-    g_wifiTask->StartTask("WiFi");                          
+    g_wifiTask.StartTask("WiFi");                          
     g_lcdTask->StartTask("LCD");                            
     g_ledLightTask->StartTask("LedLight");                  
     g_buttonsTask->StartTask("Buttons");                    

@@ -143,16 +143,16 @@ private:
                 }
                 else
                 {
-                    if (g_waterLevelTask->GetIsInitialized())
+                    if (g_waterLevelTask.GetIsInitialized())
                     {
                         // Если уровень воды меньше уровня автоматического отключения.
-                        if(g_waterLevelTask->Percent < m_properties->WaterValveCutOffPercent)
+                        if(g_waterLevelTask.Percent < m_properties->WaterValveCutOffPercent)
                         {					
                             // Включить воду.
                             Common::OpenValve();
                         
                             // Ожидаем достижение порогового уровня воды или ручной остановки.
-                            while(!m_stopRequired && g_waterLevelTask->Percent < m_properties->WaterValveCutOffPercent)
+                            while(!m_stopRequired && g_waterLevelTask.Percent < m_properties->WaterValveCutOffPercent)
                             {
                                 taskYIELD();
                             }

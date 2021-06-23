@@ -18,15 +18,13 @@ class WiFiTask final : public TaskBase
 {
 public:
     
-    WiFiTask(PropertyStruct* properties)
-        : m_properties(properties)
+    void Init()
     {
-        Debug::Assert(properties != NULL);
+        Debug::Assert(g_properties.Initialized);
     }
     
 private:
     
-    PropertyStruct* const m_properties;
     Request m_request;
     uint8_t m_requestData[256] = {0}; // Буфер для данных входного запроса.
     
@@ -85,7 +83,7 @@ private:
         }
         
         char rf_power[] = "AT+RFPOWER=\0\0\0\0";
-        Common::NumberToString(m_properties->WiFiPower, rf_power + 11);
+        Common::NumberToString(g_properties.WiFiPower, rf_power + 11);
         strcat(rf_power, "\r\n");
     
         g_uartStream->WriteLine(rf_power); 		// 40..82, unit:0.25dBm
@@ -233,12 +231,12 @@ private:
             }
         case ShowerCode::kGetWaterLevel:
             {
-                m_request.SendResponse(g_waterLevelTask->AvgUsec);
+                m_request.SendResponse(g_waterLevelTask.AvgUsec);
                 break;
             }
         case ShowerCode::kGetWaterLevelRaw:
             {
-                m_request.SendResponse(g_waterLevelTask->UsecRaw);
+                m_request.SendResponse(g_waterLevelTask.UsecRaw);
                 break;
             }
         case ShowerCode::kGetTempChart:
@@ -251,7 +249,7 @@ private:
                 if (request_length == sizeof(g_writeProperties.Chart))
                 {
                     g_writeProperties.Chart.Parse(m_requestData);
-                    m_properties->Chart.Parse(m_requestData);  // Установить значения в ОЗУ.
+                    g_properties.Chart.Parse(m_requestData);  // Установить значения в ОЗУ.
                     m_request.SendResponse(kOK);
                 }
                 break;
@@ -277,7 +275,7 @@ private:
             }
         case ShowerCode::kGetWaterPercent:
             {
-                m_request.SendResponse(g_waterLevelTask->Percent);
+                m_request.SendResponse(g_waterLevelTask.Percent);
                 break;
             }
         case ShowerCode::kGetExternalTemp:
@@ -601,4 +599,4 @@ private:
     }
 };
 
-extern WiFiTask* g_wifiTask;
+extern WiFiTask g_wifiTask;

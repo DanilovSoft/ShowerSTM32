@@ -30,7 +30,7 @@ public:
         g_heaterTempLimit->TryGetTargetTemperature(limitTemp);
 
         // Нужно учесть на сколько процентов заполнен бак.
-        uint8_t tankPercent = g_waterLevelTask->Percent;
+        uint8_t tankPercent = g_waterLevelTask.Percent;
     
         float minutes = CalcTimeLeft(intTemp, limitTemp, tankPercent);
         return minutes;

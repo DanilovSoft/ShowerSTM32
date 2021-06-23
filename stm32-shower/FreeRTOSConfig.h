@@ -59,6 +59,7 @@
 #define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 
 #if DEBUG
 #define configCHECK_FOR_STACK_OVERFLOW      2 // Включать только для отладки.
@@ -66,7 +67,7 @@
 
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION					1
-#define configSUPPORT_DYNAMIC_ALLOCATION				0
+#define configSUPPORT_DYNAMIC_ALLOCATION				0  // Если выключено то нельзя использовать обычный оператор 'new'.
 #define configAPPLICATION_ALLOCATED_HEAP				0
 
 /* Co-routine definitions. */

@@ -77,12 +77,12 @@ private:
             {
                 // Набирается вода, включен автомат и включен ТЭН.
                 
-                if(g_waterLevelTask->PreInitialized)
+                if(g_waterLevelTask.PreInitialized)
                 {
                     CopyPercent(line_water_level);
                 
                     // Уровень воды в первой строке.
-                    if(g_waterLevelTask->GetIsError() || !g_waterLevelTask->GetIsInitialized())
+                    if(g_waterLevelTask.GetIsError() || !g_waterLevelTask.GetIsInitialized())
                     {
                         line_water_level[15] = g_wlAnimationTask->GetWaterLevelAnimChar();
                     }
@@ -159,7 +159,7 @@ private:
                     water_heated = (round(g_tempSensorTask->AverageInternalTemp) >= target_temp);
                 }
                 
-                if (circuit_breaker_is_on && water_heated && g_waterLevelTask->Percent >= m_properties->MinimumWaterHeatingPercent)
+                if (circuit_breaker_is_on && water_heated && g_waterLevelTask.Percent >= m_properties->MinimumWaterHeatingPercent)
                 {
                     // 'Вода нагрета'.
                     m_liquidCrystal.WriteString(line_water_ready);
@@ -167,13 +167,13 @@ private:
                 else
                 {
                     // Уровень воды во второй строке.
-                    if(g_waterLevelTask->PreInitialized)
+                    if(g_waterLevelTask.PreInitialized)
                     {
                         // У датчика есть показание.
                         
                         CopyPercent(line_water_level);
                         
-                        if (g_waterLevelTask->GetIsError() || !g_waterLevelTask->GetIsInitialized())
+                        if (g_waterLevelTask.GetIsError() || !g_waterLevelTask.GetIsInitialized())
                         {
                             line_water_level[15] = g_wlAnimationTask->GetWaterLevelAnimChar();
                         }
@@ -200,7 +200,7 @@ private:
     
     static void CopyPercent(char* line_water_level)
     {
-        uint8_t water_level = g_waterLevelTask->Percent;
+        uint8_t water_level = g_waterLevelTask.Percent;
         char first_digit = Common::DigitToChar(water_level / 10);
         line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
         line_water_level[14] = Common::DigitToChar(water_level % 10);
