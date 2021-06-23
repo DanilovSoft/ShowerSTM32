@@ -21,7 +21,7 @@ public:
     WiFiTask(PropertyStruct* properties)
         : m_properties(properties)
     {
-        
+        Debug::Assert(properties != NULL);
     }
     
 private:
@@ -172,6 +172,8 @@ private:
     
     void Run()
     {
+        Common::AssertAllTasksInitialized();
+        
         if (InitWiFi())
         {
             while (true)

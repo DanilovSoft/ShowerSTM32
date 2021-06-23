@@ -379,5 +379,11 @@
     <ClInclude Include="Defines.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="Debug.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertyWrapper.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

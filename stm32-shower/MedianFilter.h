@@ -5,9 +5,9 @@ class MedianFilter final
 {
 public:
 
-    MedianFilter(const uint8_t filter_size)
-        : m_medianFilterSize(filter_size)
+    void Init(const uint8_t filter_size)
     {
+        m_medianFilterSize = filter_size;
     }
     
     uint16_t AddValue(uint16_t datum)
@@ -102,9 +102,9 @@ private:
         uint16_t Value;
     };
 
-    const static uint16_t kStopper = 0; // Smaller than any datum.
+    static constexpr uint16_t kStopper = 0;  // Smaller than any datum.
     
-    const uint8_t m_medianFilterSize;
+    uint8_t m_medianFilterSize;
     
     // Buffer of nwidth pairs.
     struct Pair m_buffer[kWaterLevelMedianMaxSize] = { 0 };

@@ -5,6 +5,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "I2CHelper.h"
+#include "Common.h"
+#include "Debug.h"
 
 class EepromHelper final
 {	
@@ -13,7 +15,7 @@ public:
     EepromHelper(I2CHelper* const i2cHelper)
         : m_i2cHelper(i2cHelper)
     {
-        DebugAssert(i2cHelper != NULL);
+        Debug::Assert(i2cHelper != NULL);
     }
     
     PropertyStruct DeserializeProperties()

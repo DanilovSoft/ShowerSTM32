@@ -103,6 +103,8 @@ public:
     TempSensorTask(PropertyStruct* properties)
         : m_properties(properties)
     {
+        Debug::Assert(properties != NULL);
+        
         // Готовим команду — чтение памяти устройства.
         memcpy(m_internalDeviceReadScratchCommand + 1, properties->InternalTempSensorId, 8);
         memcpy(m_externalDeviceReadScratchCommand + 1, properties->ExternalTempSensorId, 8);
@@ -245,6 +247,8 @@ private:
 
     void Run()
     {
+        Common::AssertAllTasksInitialized();
+        
         // Дать немного времени на инициализацию.
         vTaskDelay(10 / portTICK_PERIOD_MS);
     

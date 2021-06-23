@@ -196,7 +196,7 @@ private:
     }
 };
 
-class PropertyStruct
+struct PropertyStruct
 {
 public:
     

@@ -24,14 +24,14 @@ inline void _delay_loops(unsigned int loops)
 
 #define DELAY_US( US ) _delay_loops( (unsigned int)((double)US * (SystemCoreClock / 3000000.0)) )
 
-#ifdef  NDEBUG
-# define DebugAssert(__e) ((void)0)
-#else
-
-__attribute__((noreturn)) void __break_func(const char * file_name, int line);
-        
-# define DebugAssert(__e) ((__e) ? (void)0 : __break_func (__FILE__, __LINE__))
-#endif
+//#ifdef  NDEBUG
+//# define assert_break(__e) ((void)0)
+//#else
+//
+//__attribute__((noreturn)) void __break_func(const char * file_name, int line);
+//        
+//# define assert_break(__e) ((__e) ? (void)0 : __break_func (__FILE__, __LINE__))
+//#endif
 
 class Common final
 {
@@ -360,6 +360,8 @@ public:
     }
     
     static void InitUartPeripheral(const uint32_t memory_base_addr);
+    
+    static void AssertAllTasksInitialized();
     
 private:
     

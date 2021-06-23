@@ -18,7 +18,7 @@ public:
         : m_properties(properties)
         , m_liquidCrystal(i2c_helper)
     {
-        
+        Debug::Assert(properties != NULL);
     }
     
 private:
@@ -48,6 +48,8 @@ private:
     
     void Run()
     {
+        Common::AssertAllTasksInitialized();
+        
         if (!m_liquidCrystal.Setup(16, 2))
         {
             return;

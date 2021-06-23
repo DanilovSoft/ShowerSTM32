@@ -8,6 +8,11 @@ class WatchDogTask final : public TaskBase
 {
 public:
     
+    WatchDogTask()
+    {
+        
+    }
+    
     bool GetWasReset()
     {
         return m_wasReset;
@@ -39,6 +44,7 @@ private:
     
     void Run()
     {
+        // Внимание, другие таски на этот момент ещё могут быть NULL.
         while (true)
         {
             IWDG_ReloadCounter();
@@ -47,4 +53,4 @@ private:
     }
 };
 
-extern WatchDogTask* g_watchDogTask;
+extern WatchDogTask* const g_watchDogTask;

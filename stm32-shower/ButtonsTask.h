@@ -18,7 +18,7 @@ public:
     ButtonsTask(PropertyStruct* const properties)
         : m_properties(properties)
     {
-        
+        Debug::Assert(properties != NULL);
     }
     
 private:
@@ -40,6 +40,8 @@ private:
 
     void Run()
     {
+        Common::AssertAllTasksInitialized();
+        
         ButtonDebounce debounce_temp_plus(&Common::ButtonTempPlussPressed, m_properties->ButtonPressTimeMsec, m_properties->ButtonPressTimeMsec * 2);
         ButtonDebounce debounce_temp_minus(&Common::ButtonTempMinusPressed, m_properties->ButtonPressTimeMsec, m_properties->ButtonPressTimeMsec * 2);
         ButtonDebounce debounce_valve(&Common::ButtonValvePressed, m_properties->ButtonPressTimeMsec, m_properties->ButtonPressTimeMsec * 2);

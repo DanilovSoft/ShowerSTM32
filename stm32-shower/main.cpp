@@ -19,16 +19,13 @@
 #include "TempSensorTask.h"
 #include "MedianFilter.h"
 #include "WaterLevelAnimationTask.h"
+#include "PropertyWrapper.h"
 
-// Эта структура существует только для чтения, потому что с ней 
-// работают несколько потоков, а запись ничем не синхронизирована.
-//PropertyStruct g_properties;
+PropertyWrapper g_properties;
 
 // Эта структура накапливает изменения и затем сохраняет их в EEPROM и уже после
 // перезугрузки устройства, изменения попадут в структуру g_properties.
 PropertyStruct g_writeProperties;
-
-
 
 // Принимает команды по WiFi и выполняет их.
 WiFiTask* g_wifiTask;
@@ -37,7 +34,7 @@ WiFiTask* g_wifiTask;
 LcdTask* g_lcdTask;
 
 // Снимает показания датчика расстояния.
-WaterLevelTask* g_waterLevelTask;
+WaterLevelTask g_waterLevelTask;
 
 // Снимает показания с температурных датчиков.
 TempSensorTask* g_tempSensorTask;
@@ -55,7 +52,7 @@ ButtonsTask* g_buttonsTask;
 ValveTask* g_valveTask;
 
 // Просто сбрасывает сторожевой таймер каждую секунду.
-WatchDogTask* g_watchDogTask;
+WatchDogTask* const g_watchDogTask = new WatchDogTask();
 
 // Крутит анимацию символа '%' когда датчик уровня не может получить данные.
 WaterLevelAnimationTask* g_wlAnimationTask;
@@ -66,9 +63,9 @@ EepromHelper* g_eepromHelper;
 
 HeaterTempLimit* g_heaterTempLimit;
 
-HeatingTimeLeft* g_heatingTimeLeft; // TODO попробовать убрать все new инициализации и проверить размер FLASH.
+HeatingTimeLeft* g_heatingTimeLeft;
 
-UartStream* g_uartStream = new UartStream();
+UartStream* const g_uartStream = new UartStream();
 
 void PreInitPeripheral()
 {
@@ -170,8 +167,10 @@ static void InitialThread(void* parm)
     
     g_eepromHelper = new EepromHelper(&i2c_helper);
     
+    
     // Параметры прочитанные из EEPROM.
-    PropertyStruct properties = g_eepromHelper->DeserializeProperties();    // Использует шину I2C.
+    g_properties = g_eepromHelper->DeserializeProperties();     // Использует шину I2C.
+    g_properties.Initialized = true;
     
     // Инициализируем структуру актуальными значениями.
     g_heatingTimeLeft = new HeatingTimeLeft(properties.WaterTankVolumeLitre, properties.WaterHeaterPowerKWatt);
@@ -179,12 +178,26 @@ static void InitialThread(void* parm)
     // Инициализируем периферию потоков.
     Common::InitPeripheral(&properties);
     
-    g_waterLevelTask = new WaterLevelTask(&properties);
-    g_tempSensorTask = new TempSensorTask(&properties);
-    g_heaterTask = new HeaterTask(&properties);
-    
-    g_waterLevelTask->StartTask("WaterLevel");
+    g_waterLevelTask.Init();
+//    g_tempSensorTask = new TempSensorTask(&properties);
+//    g_heaterTask = new HeaterTask(&properties);
+//    g_wlAnimationTask = new WaterLevelAnimationTask();
+//    g_wifiTask = new WiFiTask(&properties);
+//    g_lcdTask = new LcdTask(&properties, &i2c_helper);
+//    g_ledLightTask = new LedLightTask();
+//    g_buttonsTask = new ButtonsTask(&properties);
+//    g_valveTask = new ValveTask(&properties);
+//    
+    g_waterLevelTask.StartTask("WaterLevel");
     g_tempSensorTask->StartTask("TempSensor");
+    g_heaterTask->StartTask("Heater"); 
+    g_wlAnimationTask->StartTask("WaterLevelAnim");         
+    g_wifiTask->StartTask("WiFi");                          
+    g_lcdTask->StartTask("LCD");                            
+    g_ledLightTask->StartTask("LedLight");                  
+    g_buttonsTask->StartTask("Buttons");                    
+    g_valveTask->StartTask("Valve");                        
+
 }
 
 // Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.
@@ -194,32 +207,22 @@ int main(void)
 {
     PreInitPeripheral();
     
-    // Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.
-    //InitializationTask initialization_task((TaskFunction_t)&InitialThread);
-    
     initialization_task.StartTask("Initial");
     
-//    g_initializationTask.StartTask("Initialization");      
-//    
-//    g_wlAnimationTask.StartTask("WaterLevelAnim");         
-//    g_wifiTask.StartTask("WiFi");                          
-//    g_lcdTask.StartTask("LCD");                            
-//    
-//    //g_heaterTask->StartTask("Heater");                       
-//    g_ledLightTask.StartTask("LedLight");                  
-//    g_buttonsTask.StartTask("Buttons");                    
-//    g_valveTask.StartTask("Valve");                        
-//    g_watchDogTask.StartTask("WatchDog");                  
-//    
-//    g_watchDogTask.Init(); // Запускает сторожевой таймер.
+    g_watchDogTask->Init(); // Запускает сторожевой таймер.
+    g_watchDogTask->StartTask("WatchDog");  
     
     vTaskStartScheduler();
 }
 
-//extern "C"
-//{
-//    void vApplicationStackOverflowHook(TaskHandle_t xTask, signed char *pcTaskName)
-//    {
-//        __asm("bkpt 255");
-//    }
-//}
+#if DEBUG
+
+extern "C"
+{
+    void vApplicationStackOverflowHook(TaskHandle_t xTask, signed char *pcTaskName)
+    {
+        __asm("bkpt 255");
+    }
+}
+
+#endif

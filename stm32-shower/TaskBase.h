@@ -24,7 +24,7 @@ public:
     // Точка входа потока.
     static void InnerRun(void* parm)
     {
-        TaskBase* task = (TaskBase*)parm;
+        auto task = static_cast<TaskBase*>(parm);
         task->Run();
      
         // ! ВНИМАНИЕ ! Если таск завершится, а опция INCLUDE_vTaskDelete будет выключена 

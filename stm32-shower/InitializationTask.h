@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "Common.h"
+#include "Debug.h"
 
 class InitializationTask final : public TaskBase
 {
@@ -11,7 +12,7 @@ public:
     InitializationTask(TaskFunction_t func)
         : m_func(func)
     {
-        DebugAssert(func != NULL);
+        Debug::Assert(func != NULL);
     }
     
 private:

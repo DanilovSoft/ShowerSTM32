@@ -17,7 +17,7 @@ public:
     HeaterTask(const PropertyStruct* properties)
         : m_properties(properties)
     {
-        
+        Debug::Assert(properties != NULL);
     }
     
     // True если вода нагрета до нужного уровня.
@@ -176,6 +176,8 @@ private:
 
     void Run()
     {
+        Common::AssertAllTasksInitialized();
+        
         m_heaterWatchdog = new HeaterWatchdog(m_properties->HeatingTimeLimitMin * 60, m_properties->AbsoluteHeatingTimeLimitHours * 60 * 60);
         m_beepStopwatch.Reset();
         g_tempSensorTask->WaitFirstConversion();

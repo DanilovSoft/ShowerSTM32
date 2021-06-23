@@ -59,9 +59,9 @@
     <ClCompile>
       <AdditionalIncludeDirectories>StdPeriph/Inc;FreeRTOS/Source/include;FreeRTOS/Source/portable/GCC/ARM_CM3;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG=1;RELEASE=1;STM32F10X_MD;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
-      <Optimization>O2</Optimization>
+      <Optimization>O3</Optimization>
       <CPPLanguageStandard>GNUPP14</CPPLanguageStandard>
-      <CLanguageStandard>GNU18</CLanguageStandard>
+      <CLanguageStandard>GNU17</CLanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLinkerInputs>;%(Link.AdditionalLinkerInputs)</AdditionalLinkerInputs>
@@ -125,6 +125,7 @@
     <ClInclude Include="Buzzer.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="ConnectionsBuffer.h" />
+    <ClInclude Include="Debug.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="EepromHelper.h" />
     <ClInclude Include="FreeRTOSConfig.h" />
@@ -136,6 +137,7 @@
     <ClInclude Include="HeaterWatchdog.h" />
     <ClInclude Include="HeatingTimeLeft.h" />
     <ClInclude Include="I2CHelper.h" />
+    <ClInclude Include="PropertyWrapper.h" />
     <ClInclude Include="TaskBase.h" />
     <ClInclude Include="Interlocked.h" />
     <ClInclude Include="IpdBuffer.h" />

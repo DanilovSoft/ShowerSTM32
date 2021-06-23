@@ -3,6 +3,8 @@
 
 void WaterLevelAnimationTask::Run()
 {
+    Common::AssertAllTasksInitialized();
+    
     TickType_t last_wake_time;
         
     // Initialise the xLastWakeTime variable with the current time.

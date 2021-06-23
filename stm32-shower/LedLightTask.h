@@ -14,6 +14,8 @@ private:
 
     void Run()
     {
+        Common::AssertAllTasksInitialized();
+        
         bool light_is_on;
         
         while (true)

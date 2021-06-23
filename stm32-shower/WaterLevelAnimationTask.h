@@ -5,6 +5,11 @@ class WaterLevelAnimationTask final : public TaskBase
 {
 public:
     
+    WaterLevelAnimationTask()
+    {
+        
+    }
+    
     // По очереди меняет символы ['\', '|', '/', '-'].
     char GetWaterLevelAnimChar() volatile
     {

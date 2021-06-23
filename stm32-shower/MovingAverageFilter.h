@@ -7,9 +7,9 @@ class MovingAverageFilter final
 {	
 public:
     
-    MovingAverageFilter(const uint8_t buffer_size)
-        : m_bufferSize(buffer_size)
+    void Init(const uint8_t buffer_size)
     {
+        m_bufferSize = buffer_size;
     }
     
     uint16_t AddValue(uint16_t value)
@@ -27,7 +27,7 @@ public:
     
 private:
     
-    const uint8_t m_bufferSize;
+    uint8_t m_bufferSize;
     uint16_t m_buf[kWaterLevelAvgFilterMaxSize] = {0}; // Инициализировать обнуленным.
     uint32_t m_sum = 0;
     uint8_t m_head = 0;

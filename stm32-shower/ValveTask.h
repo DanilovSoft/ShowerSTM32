@@ -14,7 +14,7 @@ public:
     ValveTask(const PropertyStruct* const properties)
         : m_properties(properties)
     {
-        
+        Debug::Assert(properties != NULL);
     }
     
     // Вызывается каждый раз, после OnButtonPushed().
@@ -111,6 +111,8 @@ private:
     
     void Run()
     {
+        Common::AssertAllTasksInitialized();
+        
         // Нужно включить флаг перед включением сенсора.
         m_openValveAllowed = ValveTask::WaitingRequest;
         

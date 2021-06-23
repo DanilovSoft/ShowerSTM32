@@ -12,6 +12,7 @@
 #include "Properties.h"
 #include "TempSensorTask.h"
 #include "WaterLevelAnimationTask.h"
+#include "PropertyWrapper.h"
 
 // PS. При повышении температуры воздуха на 1 °C скорость звука в нем увеличивается на 0.57 м/с 
 // 1% на каждые 5 °С => 0.2% на 1 °С
@@ -27,14 +28,15 @@ class WaterLevelTask final : public TaskBase
 {	
 public:
     
-    WaterLevelTask(const PropertyStruct* properties)
-        : m_medianFilter(MedianFilter(properties->WaterLevelMedianFilterSize))
-        , m_movingAverageFilter(MovingAverageFilter(properties->WaterLevelAvgFilterSize))
-        , m_usecRange(properties->WaterLevelEmpty - properties->WaterLevelFull)
-        , m_intervalPauseMsec(properties->WaterLevelMeasureIntervalMsec / portTICK_PERIOD_MS)
-        , m_minimumAllowedUsec(properties->WaterLevelFull * 0.8) // На 20% меньше минимально допустимого значения.
-        , m_properties(properties)
+    void Init()
     {   
+        Debug::Assert(g_properties.Initialized);
+        
+        m_medianFilter.Init(g_properties.WaterLevelMedianFilterSize);
+        m_movingAverageFilter.Init(g_properties.WaterLevelAvgFilterSize);
+        m_usecRange = g_properties.WaterLevelEmpty - g_properties.WaterLevelFull;
+        m_intervalPauseMsec = g_properties.WaterLevelMeasureIntervalMsec / portTICK_PERIOD_MS;
+        m_minimumAllowedUsec = g_properties.WaterLevelFull * 0.8; // На 20% меньше минимально допустимого значения.
     }
     
     // Последнее измеренное значение после усреднений.
@@ -72,7 +74,7 @@ public:
     // Возвращает True если датчик, за последнее время, получил слишком много не валидных показаний.
     bool GetIsError() volatile
     {
-        return m_errorCounter >= m_properties->WaterLevelErrorThreshold;
+        return m_errorCounter >= g_properties.WaterLevelErrorThreshold;
     }
     
 private:
@@ -81,12 +83,12 @@ private:
     static constexpr uint8_t kBDash = 0b11111101; // Горизонтальный прочерк во втором разряде индикатора.
     static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
     
-    const PropertyStruct* m_properties;
-    const uint16_t m_usecRange;  // Ширина полного диаппазона в микросекундах.
-    const uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
+    //const PropertyStruct* const m_properties;
+    uint16_t m_usecRange;  // Ширина полного диаппазона в микросекундах.
+    uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
     // Показания датчика меньше этого значения будут считаться не валидными 
     // (например когда датчик заслонён или ловит своё эхо от зеркала).
-    const uint16_t m_minimumAllowedUsec;
+    uint16_t m_minimumAllowedUsec;
     MovingAverageFilter m_movingAverageFilter;
     MedianFilter m_medianFilter;
     
@@ -94,8 +96,10 @@ private:
     volatile bool m_isInitialized = false;
     volatile uint8_t m_errorCounter = 0;
 
-    void Run()
+    virtual void Run() override
     {
+        Common::AssertAllTasksInitialized();
+        
         // Initialise the xLastWakeTime variable with the current time.
         TickType_t xLastWakeTime = xTaskGetTickCount();
     
@@ -175,7 +179,7 @@ private:
 
     void IncrementError()
     {
-        if (m_errorCounter < m_properties->WaterLevelErrorThreshold)
+        if (m_errorCounter < g_properties.WaterLevelErrorThreshold)
         {
             m_errorCounter++;
             
@@ -218,7 +222,7 @@ private:
         vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
         
         // Размер медианного фильтра + буфера скользящее среднее.
-        uint16_t warmup_count = m_properties->WaterLevelMedianFilterSize + m_properties->WaterLevelAvgFilterSize;
+        uint16_t warmup_count = g_properties.WaterLevelMedianFilterSize + g_properties.WaterLevelAvgFilterSize;
     
         uint8_t last_point;
         for (uint16_t i = 0; i < warmup_count;)
@@ -237,7 +241,7 @@ private:
                     // Добавить значение в буффер скользящего среднего.
                     uint16_t avg = m_movingAverageFilter.AddValue(median);
             
-                    if (i < m_properties->WaterLevelAvgFilterSize)
+                    if (i < g_properties.WaterLevelAvgFilterSize)
                     {
                         // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполненности.
                         avg = m_movingAverageFilter.GetAverage() / (i + 1);      // Точность с кажной итерацией будет увеличиваться.
@@ -337,7 +341,7 @@ private:
         usec = ClampRange(usec);
         
         // Смещение.
-        usec -= m_properties->WaterLevelFull;
+        usec -= g_properties.WaterLevelFull;
         
         // Уровень воды в микросекундах.
         usec = m_usecRange - usec;
@@ -363,13 +367,13 @@ private:
 
     uint16_t ClampRange(const uint16_t usec)
     {
-        if (usec < m_properties->WaterLevelFull)
+        if (usec < g_properties.WaterLevelFull)
         {
-            return m_properties->WaterLevelFull;
+            return g_properties.WaterLevelFull;
         }
-        else if (usec > m_properties->WaterLevelEmpty)
+        else if (usec > g_properties.WaterLevelEmpty)
         {
-            return m_properties->WaterLevelEmpty;
+            return g_properties.WaterLevelEmpty;
         }
     
         return usec;
@@ -449,7 +453,7 @@ private:
     float GetPoint(uint16_t usec)
     {
         // Смещение.
-        usec -= m_properties->WaterLevelFull;
+        usec -= g_properties.WaterLevelFull;
         
         // Уровень воды в микросекундах.
         usec = (m_usecRange - usec);
@@ -563,4 +567,4 @@ private:
     }
 };
 
-extern WaterLevelTask* g_waterLevelTask;
+extern WaterLevelTask g_waterLevelTask;

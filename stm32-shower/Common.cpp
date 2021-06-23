@@ -4,6 +4,11 @@
 #include "MovingAverageFilter.h"
 #include "WaterLevelTask.h"
 #include "UartStream.h"
+#include "HeaterTask.h"
+#include "WiFiTask.h"
+#include "LcdTask.h"
+#include "LedLightTask.h"
+#include "ButtonsTask.h"
 
 __attribute__((noreturn)) void __break_func(const char * file_name, int line)
 {
@@ -14,7 +19,7 @@ __attribute__((noreturn)) void __break_func(const char * file_name, int line)
 
 void Common::InitWaterLevel(const PropertyStruct* const properties)
 {
-    DebugAssert(properties != NULL);
+    Debug::Assert(properties != NULL);
     
     float usec_per_percent = (properties->WaterLevelEmpty - properties->WaterLevelFull) / 99.0;
         
@@ -362,4 +367,18 @@ void Common::InitUartPeripheral(const uint32_t memory_base_addr)
         
     // Старт приема через DMA.
     DMA_Cmd(WIFI_DMA_CH_RX, ENABLE);
+}
+
+void Common::AssertAllTasksInitialized()
+{
+    Debug::Assert(g_waterLevelTask != NULL);
+    Debug::Assert(g_tempSensorTask != NULL);
+    Debug::Assert(g_heaterTask != NULL);
+    Debug::Assert(g_wlAnimationTask != NULL);
+    Debug::Assert(g_wifiTask != NULL);
+    Debug::Assert(g_lcdTask != NULL);
+    Debug::Assert(g_ledLightTask != NULL);
+    Debug::Assert(g_buttonsTask != NULL);
+    Debug::Assert(g_valveTask != NULL);
+    Debug::Assert(g_watchDogTask != NULL);
 }
