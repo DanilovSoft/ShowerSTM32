@@ -38,19 +38,18 @@ public:
     
 private:
     
-    //I2CHelper* const m_i2cHelper;
     uint8_t m_curPageAddr;
     
-    bool SafeBufferRead(uint8_t* pBuffer, uint8_t read_addr, uint8_t num_bytes_to_read)
+    bool SafeBufferRead(uint8_t* buffer, uint8_t read_addr, uint8_t num_bytes_to_read)
     {
         while (num_bytes_to_read--)
         {
-            if (!g_i2cHelper.EE_ByteRead(read_addr, *pBuffer))
+            if (!g_i2cHelper.EE_ByteRead(read_addr, *buffer))
             {
                 return false;
             }
             
-            pBuffer++;
+            buffer++;
             read_addr++;
         }
         
@@ -76,7 +75,7 @@ private:
         return true;
     }
 
-    bool SafeBufferCrc32(uint8_t read_addr, uint8_t num_bytes_to_read, uint32_t &crc32)
+    bool SafeBufferCrc32(uint8_t read_addr, uint8_t num_bytes_to_read, uint32_t& crc32)
     {
         uint8_t crc32_buffer[4];
         CRC_ResetDR();
