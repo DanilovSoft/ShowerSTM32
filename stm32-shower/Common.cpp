@@ -7,15 +7,8 @@
 #include "HeaterTask.h"
 #include "WiFiTask.h"
 #include "LcdTask.h"
-#include "LedLightTask.h"
+#include "LightTask.h"
 #include "ButtonsTask.h"
-
-__attribute__((noreturn)) void __break_func(const char * file_name, int line)
-{
-    __asm("bkpt 255");
-    exit(0);
-}
-
 
 void Common::InitWaterLevel(const PropertyStruct* const properties)
 {

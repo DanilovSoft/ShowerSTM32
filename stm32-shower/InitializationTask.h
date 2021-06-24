@@ -19,7 +19,7 @@ private:
     
     const TaskFunction_t m_func;
     
-    void Run()
+    virtual void Run() override
     {
         m_func(NULL);
     }

@@ -42,7 +42,7 @@ private:
     
     bool m_wasReset = false;
     
-    void Run()
+    virtual void Run() override
     {
         // Внимание, другие таски на этот момент ещё могут быть NULL.
         while (true)

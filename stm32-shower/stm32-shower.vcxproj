@@ -141,7 +141,7 @@
     <ClInclude Include="Interlocked.h" />
     <ClInclude Include="IpdBuffer.h" />
     <ClInclude Include="LcdTask.h" />
-    <ClInclude Include="LedLightTask.h" />
+    <ClInclude Include="LightTask.h" />
     <ClInclude Include="LiquidCrystal.h" />
     <ClInclude Include="MedianFilter.h" />
     <ClInclude Include="MovingAverageFilter.h" />

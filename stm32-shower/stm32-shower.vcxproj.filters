@@ -358,7 +358,7 @@
     <ClInclude Include="WaterLevelTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="LedLightTask.h">
+    <ClInclude Include="LightTask.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="FreeRTOS\Source\include\task.h">

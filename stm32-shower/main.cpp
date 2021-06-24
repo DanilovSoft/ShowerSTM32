@@ -1,7 +1,7 @@
 #include "WiFiTask.h"
 #include "HeaterTask.h"
 #include "WaterLevelTask.h"
-#include "LedLightTask.h"
+#include "LightTask.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32f10x_bkp.h"
@@ -43,7 +43,7 @@ TempSensorTask g_tempSensorTask;
 HeaterTask g_heaterTask;
 
 // Включает или выключает свет в соответствии с положением автомата.
-LedLightTask g_ledLightTask;
+LightTask g_ledLightTask;
 
 // Бесконечно опрашивает кнопки и сенсорную панель.
 ButtonsTask g_buttonsTask;

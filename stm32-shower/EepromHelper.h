@@ -7,12 +7,13 @@
 #include "I2CHelper.h"
 #include "Common.h"
 #include "Debug.h"
+#include "PropertyWrapper.h"
 
 class EepromHelper final
 {	
 public:
 
-    void DeserializeProperties(PropertyStruct& out_properties)
+    void DeserializeProperties(PropertyWrapper& out_properties)
     {
         Debug::Assert(g_i2cHelper.GetInitialized());
         

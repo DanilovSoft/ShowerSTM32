@@ -2,13 +2,9 @@
 #include "TaskBase.h"
 #include "Common.h"
 
-class LedLightTask final : public TaskBase
+class LightTask final : public TaskBase
 {
 public:
-    
-    LedLightTask()
-    {
-    }
     
 private:
 
@@ -37,4 +33,4 @@ private:
     }
 };
 
-extern LedLightTask g_ledLightTask;
+extern LightTask g_ledLightTask;
