@@ -53,4 +53,4 @@ private:
     }
 };
 
-extern WatchDogTask* const g_watchDogTask;
+extern WatchDogTask g_watchDogTask;

@@ -11,12 +11,6 @@ class ValveTask final : public TaskBase
 {	
 public:
     
-    ValveTask(const PropertyStruct* const properties)
-        : m_properties(properties)
-    {
-        Debug::Assert(properties != NULL);
-    }
-    
     // Вызывается каждый раз, после OnButtonPushed().
     void UpdateSensorState(bool is_on)
     {
@@ -81,8 +75,6 @@ private:
     
     // Пауза для повторного включения клапана.
     static const auto kValveDebounceMsec = 300;
-    
-    const PropertyStruct* const m_properties;
     bool m_sensorSwitchIsOnLastState = false;
     // Флаг прекращающий набор воды по запросу пользователя.
     volatile bool m_stopRequired = false;
@@ -109,9 +101,9 @@ private:
         Common::TurnOnSensorSwitch();
     }
     
-    void Run()
+    virtual void Run() override
     {
-        Common::AssertAllTasksInitialized();
+        Debug::Assert(g_properties.Initialized);
         
         // Нужно включить флаг перед включением сенсора.
         m_openValveAllowed = ValveTask::WaitingRequest;
@@ -143,16 +135,16 @@ private:
                 }
                 else
                 {
-                    if (g_waterLevelTask.GetIsInitialized())
+                    if (g_waterLevelTask.GetInitialized())
                     {
                         // Если уровень воды меньше уровня автоматического отключения.
-                        if(g_waterLevelTask.GetPercent() < m_properties->WaterValveCutOffPercent)
+                        if(g_waterLevelTask.GetPercent() < g_properties.WaterValveCutOffPercent)
                         {					
                             // Включить воду.
                             Common::OpenValve();
                         
                             // Ожидаем достижение порогового уровня воды или ручной остановки.
-                            while(!m_stopRequired && g_waterLevelTask.GetPercent() < m_properties->WaterValveCutOffPercent)
+                            while(!m_stopRequired && g_waterLevelTask.GetPercent() < g_properties.WaterValveCutOffPercent)
                             {
                                 taskYIELD();
                             }
@@ -184,4 +176,4 @@ private:
     }
 };
 
-extern ValveTask* g_valveTask;
+extern ValveTask g_valveTask;

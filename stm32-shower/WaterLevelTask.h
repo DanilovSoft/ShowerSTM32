@@ -63,9 +63,9 @@ public:
         return m_hasPercent;
     }
     
-    bool GetIsInitialized() volatile
+    bool GetInitialized() volatile
     {
-        return m_isInitialized;
+        return m_initialized;
     }
     
     static void ClearDisplay()
@@ -77,7 +77,7 @@ public:
     
     void WaitInitialization()
     {
-        while (!m_isInitialized)
+        while (!m_initialized)
         {
             taskYIELD();
         }
@@ -105,7 +105,7 @@ private:
     MedianFilter m_medianFilter;
     
     bool m_waterIsRising = true; // По умолчанию для гистерезиса считать что вода подымается.
-    volatile bool m_isInitialized = false;
+    volatile bool m_initialized = false;
     volatile uint8_t m_errorCounter = 0;
     
     // Последнее измеренное значение после усреднений.
@@ -122,8 +122,6 @@ private:
 
     virtual void Run() override
     {
-        Common::AssertAllTasksInitialized();
-        
         // Initialise the xLastWakeTime variable with the current time.
         TickType_t xLastWakeTime = xTaskGetTickCount();
     
@@ -131,7 +129,7 @@ private:
         uint8_t last_point = InitDisplay();
     
         // Уровень воды инициализирован.
-        m_isInitialized = true;
+        m_initialized = true;
     
         // Для гистерезиса по умолчанию считаем что уровень воды поднимается (Что-бы не допустить перелив).
         m_waterIsRising = true;
@@ -210,7 +208,7 @@ private:
             if (GetIsError())
             {
                 // Опять запускаем анимацию на LCD.
-                g_wlAnimationTask->ResumeAnimation();
+                g_wlAnimationTask.ResumeAnimation();
             }
         }
         else

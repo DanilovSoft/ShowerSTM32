@@ -498,4 +498,4 @@ private:
     }
 };
 
-extern UartStream* const g_uartStream;
+extern UartStream g_uartStream;

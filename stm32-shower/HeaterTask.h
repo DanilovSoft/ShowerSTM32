@@ -25,7 +25,7 @@ public:
     bool GetIsWaterHeated()
     {
         uint8_t targetTemp;
-        if (g_heaterTempLimit->TryGetTargetTemperature(targetTemp))
+        if (g_heaterTempLimit.TryGetTargetTemperature(targetTemp))
         {
             return g_tempSensorTask.GetAverageInternalTemp() >= targetTemp;
         }
@@ -38,7 +38,7 @@ public:
     uint8_t GetHeatingLimit()
     {
         uint8_t limit;
-        g_heaterTempLimit->TryGetTargetTemperature(limit);
+        g_heaterTempLimit.TryGetTargetTemperature(limit);
         return limit;
     }
     
@@ -77,7 +77,7 @@ private:
     // Блокирует поток на время воспроизведения.
     void BeepTurnOff()
     {
-        BeepSound samples[]
+        static const BeepSound samples[]
         {
             BeepSound(3000, 140),
             BeepSound(30),
@@ -86,7 +86,7 @@ private:
         }
         ;
         
-        g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
+        g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
         m_beepStopwatch.Reset();
     }
 
@@ -94,7 +94,7 @@ private:
     // Блокирует поток на время воспроизведения.
     void BeepTurnOn()
     {
-        BeepSound samples[]
+        static const BeepSound samples[]
         {
             BeepSound(2400, 140),
             BeepSound(30),
@@ -103,7 +103,7 @@ private:
         }
         ;
         
-        g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
+        g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
         m_beepStopwatch.Reset();
     }
 
@@ -121,7 +121,7 @@ private:
     
         if (m_beepStopwatch.TimedOut(7000))
         {
-            g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
+            g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
             m_beepStopwatch.Reset();
         }
     }
@@ -144,7 +144,7 @@ private:
         {
             if (GetIsWaterHeated())
             {
-                g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
+                g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
                 m_beepStopwatch.Reset();
             }
         }
@@ -168,14 +168,14 @@ private:
         
         if (m_beepStopwatch.TimedOut(7000))
         {
-            g_buzzer->PlaySound(samples, sizeof(samples) / sizeof(*samples));
+            g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));
             m_beepStopwatch.Reset();
         }
     }
 
-    void Run()
-    {
-        Common::AssertAllTasksInitialized();
+    virtual void Run() override
+    {   
+        Debug::Assert(g_properties.Initialized);
         
         m_beepStopwatch.Reset();
         g_tempSensorTask.WaitFirstConversion();
@@ -282,7 +282,7 @@ private:
     {
         uint8_t target_temp;
         
-        if (g_heaterTempLimit->TryGetTargetTemperature(target_temp))
+        if (g_heaterTempLimit.TryGetTargetTemperature(target_temp))
         {
             float internal_temp = g_tempSensorTask.GetAverageInternalTemp();
         
@@ -294,7 +294,7 @@ private:
                     TurnOnHeaterWithSound();
                 }
             }
-            else if (g_waterLevelTask.GetIsInitialized())
+            else if (g_waterLevelTask.GetInitialized())
             {
                 // Если уровень воды больше допустимого минимума И температура в баке меньше необходимой.
                 if(internal_temp < target_temp && !g_waterLevelTask.GetIsError() && g_waterLevelTask.GetPercent() >= g_properties.MinimumWaterHeatingPercent)
@@ -317,7 +317,7 @@ private:
     {	
         uint8_t target_temp;
         
-        if (g_heaterTempLimit->TryGetTargetTemperature(target_temp))
+        if (g_heaterTempLimit.TryGetTargetTemperature(target_temp))
         {
             float internal_temp = g_tempSensorTask.GetAverageInternalTemp();
         

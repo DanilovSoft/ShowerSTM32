@@ -6,10 +6,11 @@ class WaterSensorButton final
 {
 public:
     
-    WaterSensorButton(ButtonPressedFunc button_pressed_func, const PropertyStruct* const properties)
+    WaterSensorButton(const ButtonPressedFunc button_pressed_func)
         : m_buttonPressedFunc(button_pressed_func)
-        , m_properties(properties)
     {
+        Debug::Assert(g_properties.Initialized);
+        
         m_considerIsOn = false;
         m_pendingOn = false;
         m_pendingOff = false;
@@ -29,12 +30,11 @@ public:
 
 private:
     
-    const PropertyStruct* const m_properties;
     const ButtonPressedFunc m_buttonPressedFunc;
+    bool m_considerIsOn = false;
+    bool m_pendingOn = false;
+    bool m_pendingOff = false;
     Stopwatch m_debounce;
-    bool m_considerIsOn;
-    bool m_pendingOn;
-    bool m_pendingOff;
     
     void UpdateConsiderIsOn()
     {
@@ -49,7 +49,7 @@ private:
                 }
                 else
                 {
-                    if (m_debounce.GetElapsedMsec() >= m_properties->ButtonPressTimeMsec)
+                    if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMsec)
                     {
                         m_considerIsOn = true;
                         m_pendingOn = false;
@@ -72,7 +72,7 @@ private:
                 }
                 else
                 {
-                    if (m_debounce.GetElapsedMsec() >= m_properties->ButtonPressTimeMsec)
+                    if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMsec)
                     {
                         m_considerIsOn = false;
                         m_pendingOff = false;

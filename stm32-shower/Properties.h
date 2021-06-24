@@ -20,7 +20,7 @@ public:
 
     // Принимает температуру окружающего воздуха в грудусах, что-бы
     // увеличить температуру нагрева при такой температуре окружающей среды.
-    bool TempPlus(const uint8_t air_temp)
+    bool IncrementInternalTemp(const uint8_t air_temp)
     {
         const uint8_t index = GetIndex(air_temp);
         uint8_t value = m_internal[index];
@@ -71,7 +71,7 @@ public:
 
     // Принимает температуру окружающего воздуха в грудусах, что-бы
     // уменьшить температуру нагрева при такой температуре окружающей среды.
-    bool TempMinus(const uint8_t air_temp)
+    bool DecrementInternalTemp(const uint8_t air_temp)
     {
         const uint8_t index = GetIndex(air_temp);
 
@@ -459,5 +459,6 @@ public:
     
 } __attribute__((aligned(16)));		// Размер структуры должен быть кратен 4 для удобства подсчета CRC32 или 16 для удобства хранения в странице EEPROM.
 
-//extern PropertyStruct g_properties;
+static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of PropertyStruct struct greater than available in eeprom");
+
 extern PropertyStruct g_writeProperties;

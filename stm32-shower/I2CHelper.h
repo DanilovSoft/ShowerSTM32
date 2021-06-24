@@ -9,25 +9,6 @@
 #include "Common.h"
 #include "stm32f10x_rcc.h"
 
-// Всего 8 блоков памяти по 256 байт (по 16 страниц).
-// Каждый блок имеет свой уникальный адрес как отдельное устройство,
-// в зависимости от битов b3, b2, b1
-//
-// Используем только 1 блок памяти.
-// Используем первый байт, первой страницы для хранения флага 0 или 1
-// указывающего по какому адресу находятся данные.
-// На хранение 2 блоков данных приходится по 7 страниц или 112 байт
-
-// Адрес первого блока памяти на 256 байт из 8 (для 24—16).
-constexpr auto EE_HW_ADDRESS =          0xA0;   // b3 = b2 = b1 = 0
-constexpr auto LCD_HW_ADDRESS =         0x7E;
-constexpr auto EE_FLASH_PAGESIZE =      16;      // 16-byte Page.
-constexpr auto EE_BlockSize =           256;
-constexpr auto EE_DataAddr1 =           0x0000 + 16; // Адрес блока в EEPROM где храняться параметры PropertyStruct.
-constexpr auto EE_DataAddr2 =           0x0000 + 128;  // Адрес блока в EEPROM где храняться параметры PropertyStruct.
-constexpr auto EE_AvailableDataSize = EE_BlockSize / 2 - EE_FLASH_PAGESIZE;   // 112 байт.
-static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of PropertyStruct struct greater than available in eeprom");
-
 // Синхронизирует доступ к Eeprom и LCD устройствами.
 class I2CHelper final
 {
@@ -95,6 +76,7 @@ public:
         return result;
     }
     
+    // Блокирует шину I2C и 
     bool LCD_ExpanderWrite(uint8_t data) 
     {
         LockI2c();

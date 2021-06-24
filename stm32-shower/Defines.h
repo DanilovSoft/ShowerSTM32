@@ -79,6 +79,7 @@ static constexpr auto kDefaultWiFiPower = 60;                        // 60 = 15.
 static constexpr auto kDefaultWaterHeaterPowerKWatt = 1.247616;      // Полтора-киловатный ТЭН с учётом КПД.
 static constexpr auto kDefaultMinimumWaterHeatingPercent = 25;
 
+static constexpr auto kAnimSpeedMsec = 300;                      // Скорость анимации символа '%' на LCD.
 static constexpr uint8_t kWiFiTryInitLimit = 3;
 static constexpr auto kUartRxFifoSize = 1024;                    // Размер кольцевого буфера UART.
 static constexpr auto kUartMaxStrLen = 200;                      // Максимальная длина строки получаемая через UART.
@@ -94,4 +95,22 @@ static constexpr auto kAirTempSteps = kAirTempUpperBound - kAirTempLowerBound;  
 static constexpr auto kTankMinimumHeightCm = 30;                 // Минимально возможная высота бака, см.
 static constexpr auto kTankMaximumHeightCm = 50;                 // Максимально возможная высота бака, см.
 static constexpr uint16_t kTempSensorPauseMsec = 2000;           // Пауза между измерениями температуры.
+
+// Всего 8 блоков памяти по 256 байт (по 16 страниц).
+// Каждый блок имеет свой уникальный адрес как отдельное устройство,
+// в зависимости от битов b3, b2, b1
+//
+// Используем только 1 блок памяти.
+// Используем первый байт, первой страницы для хранения флага 0 или 1
+// указывающего по какому адресу находятся данные.
+// На хранение 2 блоков данных приходится по 7 страниц или 112 байт
+
+static constexpr auto EE_HW_ADDRESS =          0xA0;   // Адрес первого блока памяти на 256 байт из 8 (для 24—16).  // b3 = b2 = b1 = 0
+static constexpr auto LCD_HW_ADDRESS =         0x7E;
+static constexpr auto EE_FLASH_PAGESIZE =      16;        // 16-byte Page.
+static constexpr auto EE_BlockSize =           256;
+static constexpr auto EE_DataAddr1 =           0x0000 + 16;   // Адрес блока в EEPROM где храняться параметры PropertyStruct.
+static constexpr auto EE_DataAddr2 =           0x0000 + 128;    // Адрес блока в EEPROM где храняться параметры PropertyStruct.
+static constexpr auto EE_AvailableDataSize = EE_BlockSize / 2 - EE_FLASH_PAGESIZE;     // 112 байт.
+
 static_assert(kAirTempUpperBound > kAirTempLowerBound, "kAirTempLowerBound should be lower than kAirTempUpperBound");

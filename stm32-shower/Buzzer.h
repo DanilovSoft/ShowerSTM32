@@ -105,7 +105,7 @@ private:
     SemaphoreHandle_t m_xSemaphorePause;
     StaticSemaphore_t m_xSemaphorePauseBuffer;
     
-    void Freq(const uint16_t freq)
+    void SetFrequency(const uint16_t freq)
     {
         if (freq == 0)
         {
@@ -113,7 +113,7 @@ private:
         }
         else
         {
-            uint16_t period = 100000 / freq;     // compute period as function of 60KHz ticks
+            uint16_t period = 100000 / freq;     // compute period as function of 60KHz ticks.
             Buzzer_TIM->ARR = period - 1;
             Buzzer_TIM->CCR1 = period / 2;
             
@@ -125,7 +125,7 @@ private:
     {
         for (uint8_t i = 0; i < length; i++)
         {
-            Freq(samples->kFrequency);
+            SetFrequency(samples->kFrequency);
             
             //vTaskDelay(samples->Duration / portTICK_PERIOD_MS);
             bool interrupted = (xSemaphoreTake(m_xSemaphorePause, samples->kDuration / portTICK_PERIOD_MS) == pdTRUE);
@@ -135,8 +135,8 @@ private:
             }
             samples++;
         }
-        Freq(0);
+        SetFrequency(0);
     }
 };
 
-extern Buzzer* const g_buzzer;
+extern Buzzer g_buzzer;

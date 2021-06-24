@@ -383,16 +383,3 @@ void Common::InitI2C()
     };
     I2C_Init(I2C_EE_LCD, &i2c_init_struct);
 }
-
-void Common::AssertAllTasksInitialized()
-{
-    //Debug::Assert(g_tempSensorTask != NULL);
-    //Debug::Assert(g_heaterTask != NULL);
-    Debug::Assert(g_wlAnimationTask != NULL);
-    //Debug::Assert(g_wifiTask != NULL);
-    Debug::Assert(g_lcdTask != NULL);
-    Debug::Assert(g_ledLightTask != NULL);
-    Debug::Assert(g_buttonsTask != NULL);
-    Debug::Assert(g_valveTask != NULL);
-    Debug::Assert(g_watchDogTask != NULL);
-}

@@ -145,9 +145,6 @@
     <ClCompile Include="$(BSP_ROOT)\STM32F1xxxx\StartupFiles\startup_stm32f103xb.c">
       <Filter>Source files\Device-specific files</Filter>
     </ClCompile>
-    <ClCompile Include="InitializationTask.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="WaterLevelTask.cpp">
       <Filter>Source files</Filter>
     </ClCompile>

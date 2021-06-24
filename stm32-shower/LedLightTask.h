@@ -12,10 +12,8 @@ public:
     
 private:
 
-    void Run()
-    {
-        Common::AssertAllTasksInitialized();
-        
+    virtual void Run() override
+    {   
         bool light_is_on;
         
         while (true)
@@ -39,4 +37,4 @@ private:
     }
 };
 
-extern LedLightTask* g_ledLightTask;
+extern LedLightTask g_ledLightTask;

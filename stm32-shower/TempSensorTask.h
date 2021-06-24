@@ -285,9 +285,9 @@ private:
         return data;
     }
 
-    void Run()
-    {
-        Common::AssertAllTasksInitialized();
+    virtual void Run() override
+    {        
+        Debug::Assert(g_properties.Initialized);
         
         // Дать немного времени на инициализацию.
         vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -760,25 +760,6 @@ repeat:
         return false;
     }
 
-    //float TempSensor::Decode(uint8_t* scratchPad)
-    //{
-    //	const uint8_t TEMP_LSB = 0;
-    //	const uint8_t TEMP_MSB = 1;
-    //
-    //	/*
-    //		1. Truncating the 0.5 bit - use a simple & mask: raw & 0xFFFE
-    //		2. Convert to 12 bit value (1/16 of °C) - shift left: (raw & 0xFFFE)<<3
-    //		3. Subtracting 0.25 (1/4 °C of 1/16) or 0.25/0.0625 = 4: ((raw & 0xFFFE)<<3)-4
-    //		4. Add the count (count per c - count remain), count per c is constant of 16, and no need to dived by 16 since we are calculating to the 1/16 of °C: +16 - COUNT_REMAIN 
-    //	*/
-    //		
-    //	// Construct the integer value
-    //	int16_t rawTemperature = (((int16_t)scratchPad[TEMP_MSB]) << 8) | scratchPad[TEMP_LSB];
-    //	rawTemperature = ((rawTemperature & 0xFFFE) << 3) - 4 + 16 - scratchPad[6];
-    //	float temp = rawTemperature * 0.0625f;
-    //	return temp;
-    //}
-
     void Pause()
     {
         vTaskDelay(kTempSensorPauseMsec / portTICK_PERIOD_MS);
@@ -1028,8 +1009,6 @@ repeat:
         }
         return found;
     }
-
-    
 
     uint8_t GetDevider(DS18B20_Resolution resolution) 
     {

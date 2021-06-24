@@ -1,5 +1,6 @@
 #pragma once
 #include "TaskBase.h"
+#include "Defines.h"
 
 class WaterLevelAnimationTask final : public TaskBase
 {
@@ -28,7 +29,6 @@ private:
     static constexpr char kAnimStep2 = '\x03';   // '|'
     static constexpr char kAnimStep3 = '/';
     static constexpr char kAnimStep4 = '-';
-    static constexpr auto kAnimSpeedMsec = 300;
     static constexpr TickType_t  kAnimSpeedPortMsec = kAnimSpeedMsec / portTICK_PERIOD_MS;
     
     volatile char m_lastAnimChar = kAnimStep1;
@@ -42,4 +42,4 @@ private:
     void Run();
 };
 
-extern WaterLevelAnimationTask* g_wlAnimationTask;
+extern WaterLevelAnimationTask g_wlAnimationTask;

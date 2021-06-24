@@ -6,7 +6,7 @@ class ButtonDebounce final
 {
 public:
 
-    ButtonDebounce(ButtonPressedFunc button_pressed_func, uint16_t press_time_msec, uint16_t release_time_msec)
+    ButtonDebounce(const ButtonPressedFunc button_pressed_func, uint16_t press_time_msec, uint16_t release_time_msec)
         : m_pressTimeMsec(press_time_msec)
         , m_releaseTimeMsec(release_time_msec),
         m_buttonPressedFunc(button_pressed_func)

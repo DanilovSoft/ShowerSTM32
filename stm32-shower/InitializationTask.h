@@ -9,7 +9,7 @@ class InitializationTask final : public TaskBase
 {
 public:
     
-    InitializationTask(TaskFunction_t func)
+    InitializationTask(const TaskFunction_t func)
         : m_func(func)
     {
         Debug::Assert(func != NULL);
