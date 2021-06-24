@@ -369,10 +369,25 @@ void Common::InitUartPeripheral(const uint32_t memory_base_addr)
     DMA_Cmd(WIFI_DMA_CH_RX, ENABLE);
 }
 
+void Common::InitI2C()
+{
+    // 100kHz.
+    I2C_InitTypeDef i2c_init_struct = 
+    {
+        .I2C_ClockSpeed = 100000,
+        .I2C_Mode = I2C_Mode_I2C,
+        .I2C_DutyCycle = I2C_DutyCycle_2,
+        .I2C_OwnAddress1 = 0x15,
+        .I2C_Ack = I2C_Ack_Enable,
+        .I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit
+    };
+    I2C_Init(I2C_EE_LCD, &i2c_init_struct);
+}
+
 void Common::AssertAllTasksInitialized()
 {
-    Debug::Assert(g_tempSensorTask != NULL);
-    Debug::Assert(g_heaterTask != NULL);
+    //Debug::Assert(g_tempSensorTask != NULL);
+    //Debug::Assert(g_heaterTask != NULL);
     Debug::Assert(g_wlAnimationTask != NULL);
     //Debug::Assert(g_wifiTask != NULL);
     Debug::Assert(g_lcdTask != NULL);

@@ -95,36 +95,24 @@
 #include "string.h"
 #include "EepromHelper.h"
 #include "InitializationTask.h"
+#include "PropertyWrapper.h"
 
 class TempSensorTask final : public TaskBase
 {
 public:
 
-    TempSensorTask(PropertyStruct* properties)
-        : m_properties(properties)
+    void Init()
     {
-        Debug::Assert(properties != NULL);
+        Debug::Assert(g_properties.Initialized);
         
         // Готовим команду — чтение памяти устройства.
-        memcpy(m_internalDeviceReadScratchCommand + 1, properties->InternalTempSensorId, 8);
-        memcpy(m_externalDeviceReadScratchCommand + 1, properties->ExternalTempSensorId, 8);
+        memcpy(m_internalDeviceReadScratchCommand + 1, g_properties.InternalTempSensorId, 8);
+        memcpy(m_externalDeviceReadScratchCommand + 1, g_properties.ExternalTempSensorId, 8);
     }
-    
-    volatile bool InternalSensorInitialized = false;
-    volatile bool ExternalSensorInitialized = false;
-    volatile bool RegisteringSensors;
-    // Усреднённое показание с датчика.
-    volatile float AverageInternalTemp = 0;
-    // Усреднённое показание с датчика.
-    volatile float AverageExternalTemp = 0;
-    // Последнее показание с датчика в баке.
-    volatile float InternalTemp = 0;
-    // Последнее показание с датчика окружающего воздуха.
-    volatile float ExternalTemp = 0;
     
     void WaitFirstConversion()
     {
-        while (!InternalSensorInitialized || !ExternalSensorInitialized) 
+        while (!m_internalSensorInitialized || !m_airSensorInitialized) 
         {
             taskYIELD();
         }
@@ -132,12 +120,51 @@ public:
 
     bool TryGetAirTemp(float& air_temp)
     {
-        if (ExternalSensorInitialized)
+        if (m_airSensorInitialized)
         {	
-            float air_temp = AverageExternalTemp;
+            float air_temp = m_averageAirTemp;
             return true;
         }
         return false;
+    }
+    
+    bool GetInternalSensorInitialized() volatile
+    {
+        return m_internalSensorInitialized;
+    }
+    
+    bool GetAirSensorInitialized() volatile
+    {
+        return m_airSensorInitialized;
+    }
+    
+    bool GetRegisteringSensors() volatile
+    {
+        return m_registeringSensors;
+    }
+    
+    // Усреднённое показание с датчика в баке.
+    float GetAverageInternalTemp() volatile
+    {
+        return m_averageInternalTemp;
+    }
+    
+    // Усреднённое показание датчика укружающего воздуха.
+    float GetAverageAirTemp() volatile
+    {
+        return m_averageAirTemp;
+    }
+    
+    // Последнее показание с датчика в баке.
+    float GetInternalTemp() volatile
+    {
+        return m_internalTemp;
+    }
+    
+    // Последнее показание с датчика окружающего воздуха.
+    float GetAirTemp() volatile
+    {
+        return m_airTemp;
     }
     
 private:
@@ -174,8 +201,6 @@ private:
     static constexpr uint8_t kCountPerC = 16;
     static constexpr uint16_t kMinimumDelayMsec = 200;
     
-    PropertyStruct* m_properties;
-    
     uint8_t m_internalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
     uint8_t m_externalDeviceReadScratchCommand[10] = { MATCH_ROM, 0, 0, 0, 0, 0, 0, 0, 0, READ_SCRATCHPAD };
     
@@ -186,16 +211,31 @@ private:
     float m_extTempBuf[kAirTempAvgFilterSize] = {};
     double m_extTempSum = 0;
     uint16_t m_extTempHead = 0;
-    // Сокращенно ow_buf.
     volatile uint8_t m_oneWireBuffer[8] = {};
+    volatile bool m_internalSensorInitialized = false;
+    volatile bool m_airSensorInitialized = false;
+    volatile bool m_registeringSensors = false;
     
-    static void OneWireToBits(uint8_t ow_byte, volatile uint8_t* ow_bits) 
+    // Усреднённое показание с датчика.
+    volatile float m_averageInternalTemp = 0;
+    
+    // Усреднённое показание с датчика.
+    volatile float m_averageAirTemp = 0;
+    
+    // Последнее показание с датчика в баке.
+    volatile float m_internalTemp = 0;
+    
+    // Последнее показание с датчика окружающего воздуха.
+    volatile float m_airTemp = 0;
+    
+    // Записывает один байт как последовательность из восьми бит.
+    static void OneWireByteToBits(uint8_t in_byte, volatile uint8_t* out_bits) 
     {
         uint8_t i;
         for (i = 0; i < 8; i++)
         {
-            *ow_bits++ = ow_byte & 0x01 ? kOneWire1 : kOneWire0;
-            ow_byte >>= 1;
+            *out_bits++ = in_byte & 0x01 ? kOneWire1 : kOneWire0;
+            in_byte >>= 1;
         }
     }
 
@@ -255,11 +295,11 @@ private:
         TryRegisterNewSensors();
     
         // Готовим команду — чтение памяти устройства.
-        memcpy(m_internalDeviceReadScratchCommand + 1, m_properties->InternalTempSensorId, 8);
-        memcpy(m_externalDeviceReadScratchCommand + 1, m_properties->ExternalTempSensorId, 8);
+        memcpy(m_internalDeviceReadScratchCommand + 1, g_properties.InternalTempSensorId, 8);
+        memcpy(m_externalDeviceReadScratchCommand + 1, g_properties.ExternalTempSensorId, 8);
     
-        SetResolution(DS18B20_Resolution_9_bit, m_properties->InternalTempSensorId);  // Для 9 бит время измерения = 750 msec / 16 = 93.75 msec.
-        SetResolution(DS18B20_Resolution_9_bit, m_properties->ExternalTempSensorId);
+        SetResolution(DS18B20_Resolution_9_bit, g_properties.InternalTempSensorId);  // Для 9 бит время измерения = 750 msec / 16 = 93.75 msec.
+        SetResolution(DS18B20_Resolution_9_bit, g_properties.ExternalTempSensorId);
     
         while (!TryGetFirstTemps())
         {
@@ -431,11 +471,11 @@ repeat:
         // Если в списке только одно устройство и оно новое то зарегистрировать как датчик для бака.
         if(dev_count == 1)
         {
-            bool is_internal_sensor = Common::ArrayEquals(devices, 8, m_properties->InternalTempSensorId, 8);
+            bool is_internal_sensor = Common::ArrayEquals(devices, 8, g_properties.InternalTempSensorId, 8);
         
             if (!is_internal_sensor)
             {
-                bool is_air_sensor = Common::ArrayEquals(devices, 8, m_properties->ExternalTempSensorId, 8);
+                bool is_air_sensor = Common::ArrayEquals(devices, 8, g_properties.ExternalTempSensorId, 8);
             
                 if (!is_air_sensor)
                 {
@@ -450,7 +490,7 @@ repeat:
                     
                         memcpy(new_internal_sensor, devices, 8);      // Запомним ид устройства что-бы сравнить при повторной попытке.
                     
-                        RegisteringSensors = true;
+                        m_registeringSensors = true;
                 
                         vTaskDelay(10000 / portTICK_PERIOD_MS);
                     
@@ -473,11 +513,11 @@ repeat:
                         }
                     
                         // Перезаписываем идентификатор датчика.
-                        g_eepromHelper->Save();
+                        g_eepromHelper.Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
                         // TODO не очень хорошо модифицировать здесь.
-                        memcpy(m_properties->InternalTempSensorId, new_internal_sensor, 8);
+                        memcpy(g_properties.InternalTempSensorId, new_internal_sensor, 8);
                     }
                 }
             }
@@ -487,7 +527,7 @@ repeat:
             // Если устройств 2, где один это датчик бака, а другое новое то зарегистрировать второй как датчик окружающего воздуха.
 
             // Является ли первое устройство в массиве датчиком бака.
-            bool firstIsInternal = Common::ArrayEquals(devices, 8, m_properties->InternalTempSensorId, 8);
+            bool firstIsInternal = Common::ArrayEquals(devices, 8, g_properties.InternalTempSensorId, 8);
         
             bool secondIsInternal;
         
@@ -497,14 +537,14 @@ repeat:
             }
             else
             {
-                secondIsInternal = Common::ArrayEquals(devices + 8, 8, m_properties->InternalTempSensorId, 8);
+                secondIsInternal = Common::ArrayEquals(devices + 8, 8, g_properties.InternalTempSensorId, 8);
             }
         
             if (firstIsInternal || secondIsInternal)
             {
                 uint8_t* nextDev = firstIsInternal ? devices + 8 : devices;
             
-                if (!Common::ArrayEquals(nextDev, 8, m_properties->ExternalTempSensorId, 8))
+                if (!Common::ArrayEquals(nextDev, 8, g_properties.ExternalTempSensorId, 8))
                 {
                     // Обнаружен новый датчик. Предупредим пользователя, выдержим паузу, перечитаем идентификатор и зарегистрируем его как датчик воздуха.
                 
@@ -514,7 +554,7 @@ repeat:
                     
                         memcpy(new_air_sensor, nextDev, 8);         // Запомним ид устройства что-бы сравнить при повторной попытке.
                     
-                        RegisteringSensors = true;
+                        m_registeringSensors = true;
                 
                         vTaskDelay(10000 / portTICK_PERIOD_MS);
                     
@@ -532,10 +572,10 @@ repeat:
                         memcpy(g_writeProperties.ExternalTempSensorId, new_air_sensor, 8);
                 
                         // Перезаписываем идентификатор датчика.
-                        g_eepromHelper->Save();
+                        g_eepromHelper.Save();
                     
                         // Пока никто не работает с этим идентификатором можем безопасно перезаписать (не атомарно).
-                        memcpy(m_properties->ExternalTempSensorId, new_air_sensor, 8);
+                        memcpy(g_properties.ExternalTempSensorId, new_air_sensor, 8);
                     }
                 }
             }
@@ -613,40 +653,43 @@ repeat:
         }
     }
 
-    //-----------------------------------------------------------------------------
     // Процедура общения с шиной 1-wire.
     // Выполняет Reset, затем отправляет команду, затем читает 8 бит (по факту 8 байт) в глобальный
-    // буфер _oneWireBuffer. Затем, опционально, копирует полученный байт в массив data.
-    // command - массив байт, отсылаемых в шину
-    // cLen - длина строки command, столько байт отошлётся в шину.
-    // data - если требуется чтение, то ссылка на буфер для чтения, иначе 0.
-    // dLen - длина буфера для чтения. Прочитается не более этой длины. Фактически сколько раз будет повторяться вся процедура.
-    //-----------------------------------------------------------------------------
-    bool OneWireSend(const uint8_t* command, uint8_t cLen, uint8_t* data = 0, uint8_t dLen = 0, bool calcCrc = true) 
+    // буфер m_oneWireBuffer. Затем, опционально, копирует полученный байт в массив data.
+    // 
+    // @param command массив байт, отсылаемых в шину.
+    //  
+    // @param command_len длина строки command, столько байт отошлётся в шину.
+    //  
+    // @param data если требуется чтение, то ссылка на буфер для чтения, иначе 0.
+    //  
+    // @param out_data_len_bytes длина буфера для чтения. Прочитается не более этой длины. Фактически сколько раз будет повторяться вся процедура.
+    // 
+    // @calc_crc проверять ли контрольную сумму для полеченных данных.
+    bool OneWireSend(const uint8_t* command, uint8_t command_len, uint8_t* data = 0, uint8_t out_data_len_bytes = 0, bool calc_crc = true) 
     {	
         if (OneWireReset())
         {
             uint8_t* dataStart = data;
-            const uint8_t dataLen = dLen;
+            const uint8_t dataLen = out_data_len_bytes;
         
-            uint8_t readStart = dLen ? cLen : 255;
-            cLen += dLen;
+            uint8_t readStart = out_data_len_bytes ? command_len : 255;
+            command_len += out_data_len_bytes;
             
-            while (cLen--) 
+            while (command_len--) 
             {
-                uint8_t byte = cLen < dLen ? 0xFF : *command++;
-                OneWireToBits(byte, m_oneWireBuffer);
+                uint8_t byte = command_len < out_data_len_bytes ? 0xFF : *command++;
+                OneWireByteToBits(byte, m_oneWireBuffer);
 
                 // Сбросить читающий канал DMA на значения по умолчанию, перед установкой новых значений (опционально).
                 DMA_DeInit(OW_DMA_CH_RX);
             
-                DMA_InitTypeDef dmaInitStructure = 
+                DMA_InitTypeDef dma_rx_init_struct = 
                 {
                     .DMA_PeripheralBaseAddr = (uint32_t)&(OneWire_USART->DR),
                     .DMA_MemoryBaseAddr = (uint32_t)m_oneWireBuffer,
                     .DMA_DIR = DMA_DIR_PeripheralSRC,
-                    .DMA_BufferSize = 8,
-                       // 8 байт которые интерпретируем как 8 бит.
+                    .DMA_BufferSize = 8, // 8 байт которые интерпретируем как 8 бит.
                     .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
                     .DMA_MemoryInc = DMA_MemoryInc_Enable,
                     .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
@@ -655,20 +698,17 @@ repeat:
                     .DMA_Priority = DMA_Priority_Low,
                     .DMA_M2M = DMA_M2M_Disable,
                 };
-            
-                // Настроить читающий канал DMA.
-                DMA_Init(OW_DMA_CH_RX, &dmaInitStructure);
+                DMA_Init(OW_DMA_CH_RX, &dma_rx_init_struct); // Настроить читающий канал DMA.
 
                 // Сбросить записывающий канал DMA на значения по умолчанию, перед установкой новых значений (опционально).
                 DMA_DeInit(OW_DMA_CH_TX);
             
-                dmaInitStructure = 
+                DMA_InitTypeDef dma_tx_init_struct = 
                 {
                     .DMA_PeripheralBaseAddr = (uint32_t)&(OneWire_USART->DR),
                     .DMA_MemoryBaseAddr = (uint32_t)m_oneWireBuffer,
                     .DMA_DIR = DMA_DIR_PeripheralDST,
-                    .DMA_BufferSize = 8, 
-                     // 8 байт которые интерпретируем как 8 бит.
+                    .DMA_BufferSize = 8, // 8 байт которые интерпретируем как 8 бит.
                     .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
                     .DMA_MemoryInc = DMA_MemoryInc_Enable,
                     .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
@@ -677,9 +717,7 @@ repeat:
                     .DMA_Priority = DMA_Priority_Low,
                     .DMA_M2M = DMA_M2M_Disable,
                 };
-            
-                // Настроить записывающий канал DMA.
-                DMA_Init(OW_DMA_CH_TX, &dmaInitStructure);
+                DMA_Init(OW_DMA_CH_TX, &dma_tx_init_struct); // Настроить записывающий канал DMA.
 
                 // Старт цикла отправки.
                 USART_ClearFlag(OneWire_USART, USART_FLAG_RXNE | USART_FLAG_TC | USART_FLAG_TXE);
@@ -701,10 +739,10 @@ repeat:
                 // Если прочитанные данные кому-то нужны - запишем их в выходной буфер data.
                 if(readStart != 255)
                 {
-                    if (readStart == 0 && dLen > 0) 
+                    if (readStart == 0 && out_data_len_bytes > 0) 
                     {
                         *data++ = OneWire_ToByte(m_oneWireBuffer);
-                        dLen--;
+                        out_data_len_bytes--;
                     }
                     else 
                     {
@@ -713,7 +751,7 @@ repeat:
                 }
             }
             
-            if (calcCrc)
+            if (calc_crc)
             {
                 return ValidateCrc32(dataStart, dataLen);
             }
@@ -761,26 +799,26 @@ repeat:
             float internal_temp;
             if (TryGetInternalTemp(internal_temp))
             {
-                InternalTemp = internal_temp;
+                m_internalTemp = internal_temp;
             
                 // Записать в скользящее окно.
                 m_intTempSum -= m_intTempBuf[m_intTempHead];
-                m_intTempSum += InternalTemp;
-                m_intTempBuf[m_intTempHead] = InternalTemp;
-                m_intTempHead = (m_intTempHead + 1) % m_properties->InternalTempAvgFilterSize;
-                AverageInternalTemp = m_intTempSum / m_properties->InternalTempAvgFilterSize;
+                m_intTempSum += m_internalTemp;
+                m_intTempBuf[m_intTempHead] = m_internalTemp;
+                m_intTempHead = (m_intTempHead + 1) % g_properties.InternalTempAvgFilterSize;
+                m_averageInternalTemp = m_intTempSum / g_properties.InternalTempAvgFilterSize;
             }
         
             float air_temp;
             if (TryGetExternalTemp(air_temp))
             {
-                ExternalTemp = air_temp;
+                m_airTemp = air_temp;
                 // Записать в скользящее окно.
                 m_extTempSum -= m_extTempBuf[m_extTempHead];
-                m_extTempSum += ExternalTemp;
-                m_extTempBuf[m_extTempHead] = ExternalTemp;
+                m_extTempSum += m_airTemp;
+                m_extTempBuf[m_extTempHead] = m_airTemp;
                 m_extTempHead = (m_extTempHead + 1) % kAirTempAvgFilterSize;
-                AverageExternalTemp = m_extTempSum / kAirTempAvgFilterSize;
+                m_averageAirTemp = m_extTempSum / kAirTempAvgFilterSize;
                 return internal_success;
             }
         }
@@ -801,22 +839,22 @@ repeat:
             float internal_temp;
             if (TryGetInternalTemp(internal_temp))
             {
-                InternalTemp = internal_temp;
+                m_internalTemp = internal_temp;
                 InitAverageInternalTemp(internal_temp);  // Заполнить скользящий буфер первым измерением.
-                AverageInternalTemp = internal_temp;
-                InternalSensorInitialized = true;
+                m_averageInternalTemp = internal_temp;
+                m_internalSensorInitialized = true;
             }
         
             float externalTemp;
             if (TryGetExternalTemp(externalTemp))
             {
-                ExternalTemp = externalTemp;
+                m_airTemp = externalTemp;
                 InitAverageExternalTemp(externalTemp);  // Заполнить скользящий буфер первым измерением.
-                AverageExternalTemp = externalTemp;
-                ExternalSensorInitialized = true;
+                m_averageAirTemp = externalTemp;
+                m_airSensorInitialized = true;
             }
         }
-        return InternalSensorInitialized && ExternalSensorInitialized;
+        return m_internalSensorInitialized && m_airSensorInitialized;
     }
 
     bool TryGetInternalTemp(float& internal_temp)
@@ -856,8 +894,8 @@ repeat:
     // Заполняет весь скользящий буфер одним значением.
     void InitAverageInternalTemp(const float internal_temp)
     {
-        m_intTempSum = internal_temp * m_properties->InternalTempAvgFilterSize;
-        for (size_t i = 0; i < m_properties->InternalTempAvgFilterSize; i++)
+        m_intTempSum = internal_temp * g_properties.InternalTempAvgFilterSize;
+        for (size_t i = 0; i < g_properties.InternalTempAvgFilterSize; i++)
         {
             m_intTempBuf[i] = internal_temp;
         }
@@ -899,8 +937,8 @@ repeat:
             for (num_bit = 1; num_bit <= 64; num_bit++) 
             {
                 // Читаем два бита. Основной и комплементарный.
-                OneWireToBits(kOneWireReadSlot, m_oneWireBuffer);
-                OneWireSendBits(2);
+                OneWireByteToBits(kOneWireReadSlot, m_oneWireBuffer);
+                Common::OneWireSendBits((uint32_t)m_oneWireBuffer, 2);
 
                 if (m_oneWireBuffer[0] == kOneWireR1) 
                 {
@@ -969,14 +1007,14 @@ repeat:
                 if (current_selection == 1) 
                 {
                     cur_device[(num_bit - 1) >> 3] |= 1 << ((num_bit - 1) & 0x07);
-                    OneWireToBits(0x01, m_oneWireBuffer);
+                    OneWireByteToBits(0x01, m_oneWireBuffer);
                 }
                 else 
                 {
                     cur_device[(num_bit - 1) >> 3] &= ~(1 << ((num_bit - 1) & 0x07));
-                    OneWireToBits(0x00, m_oneWireBuffer);
+                    OneWireByteToBits(0x00, m_oneWireBuffer);
                 }
-                OneWireSendBits(1);
+                Common::OneWireSendBits((uint32_t)m_oneWireBuffer, 1); // Читаем один бит.
             }
             found++;
             last_device = cur_device;
@@ -991,60 +1029,7 @@ repeat:
         return found;
     }
 
-    void OneWireSendBits(uint8_t num_bits) 
-    {
-        DMA_DeInit(OW_DMA_CH_RX);
     
-        DMA_InitTypeDef dmaInitStructure = 
-        {
-            .DMA_PeripheralBaseAddr = (uint32_t) &(OneWire_USART->DR),
-            .DMA_MemoryBaseAddr = (uint32_t) m_oneWireBuffer,
-            .DMA_DIR = DMA_DIR_PeripheralSRC,
-            .DMA_BufferSize = num_bits,
-            .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
-            .DMA_MemoryInc = DMA_MemoryInc_Enable,
-            .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
-            .DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
-            .DMA_Mode = DMA_Mode_Normal,
-            .DMA_Priority = DMA_Priority_Low,
-            .DMA_M2M = DMA_M2M_Disable,
-        };
-    
-        DMA_Init(OW_DMA_CH_RX, &dmaInitStructure);
-    
-        DMA_DeInit(OW_DMA_CH_TX);
-    
-        dmaInitStructure = 
-        {
-            .DMA_PeripheralBaseAddr = (uint32_t) &(OneWire_USART->DR),
-            .DMA_MemoryBaseAddr = (uint32_t) m_oneWireBuffer,
-            .DMA_DIR = DMA_DIR_PeripheralDST,
-            .DMA_BufferSize = num_bits,
-            .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
-            .DMA_MemoryInc = DMA_MemoryInc_Enable,
-            .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
-            .DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
-            .DMA_Mode = DMA_Mode_Normal,
-            .DMA_Priority = DMA_Priority_Low,
-            .DMA_M2M = DMA_M2M_Disable,
-        };
-    
-        DMA_Init(OW_DMA_CH_TX, &dmaInitStructure);
-
-        USART_ClearFlag(OneWire_USART, USART_FLAG_RXNE | USART_FLAG_TC | USART_FLAG_TXE);
-        USART_DMACmd(OneWire_USART, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
-        DMA_Cmd(OW_DMA_CH_RX, ENABLE);
-        DMA_Cmd(OW_DMA_CH_TX, ENABLE);
-
-        while (DMA_GetFlagStatus(OW_DMA_FLAG) == RESET) 
-        {
-            taskYIELD();
-        }
-
-        DMA_Cmd(OW_DMA_CH_TX, DISABLE);
-        DMA_Cmd(OW_DMA_CH_RX, DISABLE);
-        USART_DMACmd(OneWire_USART, USART_DMAReq_Tx | USART_DMAReq_Rx, DISABLE);
-    }
 
     uint8_t GetDevider(DS18B20_Resolution resolution) 
     {
@@ -1070,4 +1055,4 @@ repeat:
     }
 };
 
-extern TempSensorTask* g_tempSensorTask;
+extern TempSensorTask g_tempSensorTask;

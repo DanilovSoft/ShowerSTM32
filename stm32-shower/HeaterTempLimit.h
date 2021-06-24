@@ -19,7 +19,7 @@ public:
 	bool TryGetTargetTemperature(uint8_t& target_temp)
 	{
     	float air_temp;
-    	if (g_tempSensorTask->TryGetAirTemp(air_temp))
+    	if (g_tempSensorTask.TryGetAirTemp(air_temp))
 		{	
 			uint8_t int_air_temp = round(air_temp);
 		
@@ -41,7 +41,7 @@ public:
 	// Если датчик окружающего воздуха был инициализирован то возвращает температуру окружающего воздуха в градусах.
 	bool TryGetAirTemperature(uint8_t& air_temp)
 	{
-		if (g_tempSensorTask->ExternalSensorInitialized)
+		if (g_tempSensorTask.GetAirSensorInitialized())
 		{
 			air_temp = m_airTemp;
 			return true;

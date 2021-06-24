@@ -231,12 +231,12 @@ private:
             }
         case ShowerCode::kGetWaterLevel:
             {
-                m_request.SendResponse(g_waterLevelTask.AvgUsec);
+                m_request.SendResponse(g_waterLevelTask.GetAvgUsec());
                 break;
             }
         case ShowerCode::kGetWaterLevelRaw:
             {
-                m_request.SendResponse(g_waterLevelTask.UsecRaw);
+                m_request.SendResponse(g_waterLevelTask.GetUsecRaw());
                 break;
             }
         case ShowerCode::kGetTempChart:
@@ -256,7 +256,7 @@ private:
             }
         case ShowerCode::kSave:
             {
-                g_eepromHelper->Save();
+                g_eepromHelper.Save();
                 m_request.SendResponse(kOK);
                 break;
             }
@@ -275,22 +275,22 @@ private:
             }
         case ShowerCode::kGetWaterPercent:
             {
-                m_request.SendResponse(g_waterLevelTask.Percent);
+                m_request.SendResponse(g_waterLevelTask.GetPercent());
                 break;
             }
-        case ShowerCode::kGetExternalTemp:
+        case ShowerCode::kGetAirTemp:
             {
-                m_request.SendResponse(g_tempSensorTask->ExternalTemp);
+                m_request.SendResponse(g_tempSensorTask.GetAirTemp());
                 break;
             }
-        case ShowerCode::kGetAverageExternalTemp:
+        case ShowerCode::kGetAverageAirTemp:
             {
-                m_request.SendResponse(g_tempSensorTask->AverageExternalTemp);
+                m_request.SendResponse(g_tempSensorTask.GetAverageAirTemp());
                 break;
             }
         case ShowerCode::kGetInternalTemp:
             {
-                m_request.SendResponse(g_tempSensorTask->InternalTemp);
+                m_request.SendResponse(g_tempSensorTask.GetInternalTemp());
                 break;
             }
         case ShowerCode::kGetMinimumWaterHeatingLevel:
@@ -337,19 +337,19 @@ private:
             }
         case ShowerCode::kGetTimeLeft:
             {
-                uint8_t value = g_heatingTimeLeft->GetTimeLeftMin();
+                uint8_t value = g_heatingTimeLeft.GetTimeLeftMin();
                 m_request.SendResponse(value);
                 break;
             }
         case ShowerCode::kGetHeatingTimeoutState:
             {
-                bool value = g_heaterTask->GetTimeoutOccured();
+                bool value = g_heaterTask.GetTimeoutOccured();
                 m_request.SendResponse(value);
                 break;
             }
         case ShowerCode::kGetAbsoluteTimeoutStatus:
             {
-                bool value = g_heaterTask->GetAbsoluteTimeoutOccured();
+                bool value = g_heaterTask.GetAbsoluteTimeoutOccured();
                 m_request.SendResponse(value);
                 break;
             }
@@ -400,13 +400,13 @@ private:
             }
         case ShowerCode::kGetHeatingLimit:
             {
-                uint8_t value = g_heaterTask->GetHeatingLimit();
+                uint8_t value = g_heaterTask.GetHeatingLimit();
                 m_request.SendResponse(value);
                 break;
             }
         case ShowerCode::kGetAverageInternalTemp:
             {
-                m_request.SendResponse(g_tempSensorTask->AverageInternalTemp);
+                m_request.SendResponse(g_tempSensorTask.GetAverageInternalTemp());
                 break;
             }
         case ShowerCode::kSetCurAP:
@@ -429,13 +429,13 @@ private:
             }
         case ShowerCode::kGetHeatingProgress:
             {
-                uint8_t value = g_heatingTimeLeft->GetProgress();
+                uint8_t value = g_heatingTimeLeft.GetProgress();
                 m_request.SendResponse(value);
                 break;
             }
         case ShowerCode::kGetWaterHeated:
             {
-                bool value = g_heaterTask->GetIsWaterHeated();
+                bool value = g_heaterTask.GetIsWaterHeated();
                 m_request.SendResponse(value);
                 break;
             }

@@ -34,7 +34,7 @@ private:
         }
         ;
         
-        g_heaterTask->ResetBeepInterval();
+        g_heaterTask.ResetBeepInterval();
         g_buzzer->BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
     }
 
@@ -73,7 +73,7 @@ private:
                 if (Common::CircuitBreakerIsOn())
                 {
                     // Принудительно включаем нагрев воды.
-                    g_heaterTask->IgnoreWaterLevelOnce();
+                    g_heaterTask.IgnoreWaterLevelOnce();
                 }
                 else
                 {
@@ -96,7 +96,7 @@ private:
         {
             if (g_writeProperties.Chart.TempPlus(externalTemp))
             {
-                g_eepromHelper->Save();
+                g_eepromHelper.Save();
                 m_properties->Chart.TempPlus(externalTemp);
             }
         }
@@ -109,7 +109,7 @@ private:
         {
             if (g_writeProperties.Chart.TempMinus(air_temp))
             {
-                g_eepromHelper->Save();
+                g_eepromHelper.Save();
                 m_properties->Chart.TempMinus(air_temp);
             }
         }

@@ -37,10 +37,10 @@ LcdTask* g_lcdTask;
 WaterLevelTask g_waterLevelTask;
 
 // Снимает показания с температурных датчиков.
-TempSensorTask* g_tempSensorTask;
+TempSensorTask g_tempSensorTask;
 
 // Включает и выключает ТЭН.
-HeaterTask* g_heaterTask;
+HeaterTask g_heaterTask;
 
 // Включает или выключает свет в соответствии с положением автомата.
 LedLightTask* g_ledLightTask;
@@ -59,13 +59,15 @@ WaterLevelAnimationTask* g_wlAnimationTask;
 
 Buzzer* const g_buzzer = new Buzzer();
 
-EepromHelper* g_eepromHelper;
+EepromHelper g_eepromHelper;
 
 HeaterTempLimit* g_heaterTempLimit;
 
-HeatingTimeLeft* g_heatingTimeLeft;
+HeatingTimeLeft g_heatingTimeLeft;
 
 UartStream* const g_uartStream = new UartStream();
+
+I2CHelper g_i2cHelper;
 
 void PreInitPeripheral()
 {
@@ -162,42 +164,41 @@ void PreInitPeripheral()
 // Поток который инициализарует остальные потоки.
 static void InitialThread(void* parm)
 {
-    I2CHelper i2c_helper;
-    i2c_helper.InitI2C();   // Инициализируем шину I2C.
+    // Инициализируем шину I²C.
+    g_i2cHelper.Init();
     
-    g_eepromHelper = new EepromHelper(&i2c_helper);
-    
+    g_eepromHelper.Init();
     
     // Параметры прочитанные из EEPROM.
-    g_properties = g_eepromHelper->DeserializeProperties();     // Использует шину I2C.
+    g_properties = g_eepromHelper.DeserializeProperties();  // Использует шину I2C.
     g_properties.Initialized = true;
     
     // Инициализируем структуру актуальными значениями.
-    //g_heatingTimeLeft = new HeatingTimeLeft(properties.WaterTankVolumeLitre, properties.WaterHeaterPowerKWatt);
+    g_heatingTimeLeft.Init(g_properties.WaterTankVolumeLitre, g_properties.WaterHeaterPowerKWatt);
     
     // Инициализируем периферию потоков.
-    //Common::InitPeripheral(&properties);
+    Common::InitPeripheral(&g_properties);
     
     g_waterLevelTask.Init();
     g_wifiTask.Init();
-//    g_tempSensorTask = new TempSensorTask(&properties);
-//    g_heaterTask = new HeaterTask(&properties);
-//    g_wlAnimationTask = new WaterLevelAnimationTask();
-//    g_lcdTask = new LcdTask(&properties, &i2c_helper);
-//    g_ledLightTask = new LedLightTask();
-//    g_buttonsTask = new ButtonsTask(&properties);
-//    g_valveTask = new ValveTask(&properties);
-//    
+    g_tempSensorTask.Init();
+    g_heaterTask.Init();
+    //    g_heaterTask = new HeaterTask(&properties);
+    //    g_wlAnimationTask = new WaterLevelAnimationTask();
+    //    g_lcdTask = new LcdTask(&properties, &i2c_helper);
+    //    g_ledLightTask = new LedLightTask();
+    //    g_buttonsTask = new ButtonsTask(&properties);
+    //    g_valveTask = new ValveTask(&properties);
+
     g_waterLevelTask.StartTask("WaterLevel");
-    g_tempSensorTask->StartTask("TempSensor");
-    g_heaterTask->StartTask("Heater"); 
+    g_tempSensorTask.StartTask("TempSensor");
+    g_heaterTask.StartTask("Heater"); 
     g_wlAnimationTask->StartTask("WaterLevelAnim");         
     g_wifiTask.StartTask("WiFi");                          
     g_lcdTask->StartTask("LCD");                            
     g_ledLightTask->StartTask("LedLight");                  
     g_buttonsTask->StartTask("Buttons");                    
     g_valveTask->StartTask("Valve");                        
-
 }
 
 // Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.

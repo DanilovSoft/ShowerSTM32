@@ -363,6 +363,70 @@ public:
     
     static void AssertAllTasksInitialized();
     
+    // Отправляет данные в шину 1-wire через интерфейс UART с помощью DMA.
+    // PS. UART должен быть заранее настроен на совместимый с 1-wire режим.
+    static void OneWireSendBits(const uint32_t memory_base_address, const uint8_t num_bits) 
+    {
+        // Сбрасываем канал DMA.
+        DMA_DeInit(OW_DMA_CH_RX);
+    
+        // Канал DMA будет читать данные из UART устройства в память.
+        DMA_InitTypeDef dma_rx_init_struct = 
+        {
+            .DMA_PeripheralBaseAddr = (uint32_t) &(OneWire_USART->DR),
+            .DMA_MemoryBaseAddr = memory_base_address,
+            .DMA_DIR = DMA_DIR_PeripheralSRC,
+            .DMA_BufferSize = num_bits,
+            .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
+            .DMA_MemoryInc = DMA_MemoryInc_Enable,
+            .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
+            .DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
+            .DMA_Mode = DMA_Mode_Normal,
+            .DMA_Priority = DMA_Priority_Low,
+            .DMA_M2M = DMA_M2M_Disable,
+        };
+        DMA_Init(OW_DMA_CH_RX, &dma_rx_init_struct);
+    
+        // Сбрасываем канал DMA.
+        DMA_DeInit(OW_DMA_CH_TX);
+    
+        // Канал DMA будет отправлять данные из памяти в UART устройство.
+        DMA_InitTypeDef dma_tx_init_struct = 
+        {
+            .DMA_PeripheralBaseAddr = (uint32_t) &(OneWire_USART->DR),
+            .DMA_MemoryBaseAddr = memory_base_address,
+            .DMA_DIR = DMA_DIR_PeripheralDST,
+            .DMA_BufferSize = num_bits,
+            .DMA_PeripheralInc = DMA_PeripheralInc_Disable,
+            .DMA_MemoryInc = DMA_MemoryInc_Enable,
+            .DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte,
+            .DMA_MemoryDataSize = DMA_MemoryDataSize_Byte,
+            .DMA_Mode = DMA_Mode_Normal,
+            .DMA_Priority = DMA_Priority_Low,
+            .DMA_M2M = DMA_M2M_Disable,
+        };
+        DMA_Init(OW_DMA_CH_TX, &dma_tx_init_struct);
+
+        USART_ClearFlag(OneWire_USART, USART_FLAG_RXNE | USART_FLAG_TC | USART_FLAG_TXE);
+        USART_DMACmd(OneWire_USART, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
+        
+        DMA_Cmd(OW_DMA_CH_RX, ENABLE);
+        DMA_Cmd(OW_DMA_CH_TX, ENABLE);
+
+        // Ждём завершение отправки.
+        while(DMA_GetFlagStatus(OW_DMA_FLAG) == RESET) 
+        {
+            taskYIELD();
+        }
+
+        DMA_Cmd(OW_DMA_CH_TX, DISABLE);
+        DMA_Cmd(OW_DMA_CH_RX, DISABLE);
+        USART_DMACmd(OneWire_USART, USART_DMAReq_Tx | USART_DMAReq_Rx, DISABLE);
+    }
+    
+    // Включает I²C.
+    static void InitI2C();
+    
 private:
     
     static void InnerInitPeripheral(const PropertyStruct* const properties)

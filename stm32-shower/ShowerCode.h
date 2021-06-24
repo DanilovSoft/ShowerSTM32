@@ -12,10 +12,10 @@ enum ShowerCode
     kPing = 7,
     kGetWaterLevel = 8,
     kGetWaterPercent = 9,
-    kGetExternalTemp = 10,
+    kGetAirTemp = 10,
     kGetInternalTemp = 11,
     kGetAverageInternalTemp = 12,
-    kGetAverageExternalTemp = 13,
+    kGetAverageAirTemp = 13,
     kGetMinimumWaterHeatingLevel = 14,
     kSetMinimumWaterHeatingLevel = 15,
     

@@ -77,7 +77,7 @@ private:
             {
                 // Набирается вода, включен автомат и включен ТЭН.
                 
-                if(g_waterLevelTask.PreInitialized)
+                if(g_waterLevelTask.GetHasPercent())
                 {
                     CopyPercent(line_water_level);
                 
@@ -102,16 +102,16 @@ private:
             }
             else
             {
-                if (g_tempSensorTask->InternalSensorInitialized)
+                if (g_tempSensorTask.GetInternalSensorInitialized())
                 {
                     // Записывает 2 символа в line_temperature_buf в положение "Температура в баке".
-                    DisplayTemp(line_temperature_buf + 9, round(g_tempSensorTask->AverageInternalTemp));
+                    DisplayTemp(line_temperature_buf + 9, round(g_tempSensorTask.GetAverageInternalTemp()));
                 }
             
-                if (g_tempSensorTask->ExternalSensorInitialized)
+                if (g_tempSensorTask.GetAirSensorInitialized())
                 {
                     // Записывает 2 символа в line_temperature_buf в положение "Температура на улице".
-                    DisplayTemp(line_temperature_buf, round(g_tempSensorTask->AverageExternalTemp));
+                    DisplayTemp(line_temperature_buf, round(g_tempSensorTask.GetAverageAirTemp()));
                 }
             
                 if (got_target_temp)
@@ -129,7 +129,7 @@ private:
             {
                 // ТЭН включен.
                 
-                float time_left_min = g_heatingTimeLeft->GetTimeLeftMin();
+                float time_left_min = g_heatingTimeLeft.GetTimeLeftMin();
             
                 // Округляем до целых.
                 uint8_t time_left_min_int = roundf(time_left_min);
@@ -154,12 +154,12 @@ private:
             {
                 bool water_heated = false;
                 
-                if (got_target_temp && g_tempSensorTask->InternalSensorInitialized)
+                if (got_target_temp && g_tempSensorTask.GetInternalSensorInitialized())
                 {
-                    water_heated = (round(g_tempSensorTask->AverageInternalTemp) >= target_temp);
+                    water_heated = (round(g_tempSensorTask.GetAverageInternalTemp()) >= target_temp);
                 }
                 
-                if (circuit_breaker_is_on && water_heated && g_waterLevelTask.Percent >= m_properties->MinimumWaterHeatingPercent)
+                if (circuit_breaker_is_on && water_heated && g_waterLevelTask.GetPercent() >= m_properties->MinimumWaterHeatingPercent)
                 {
                     // 'Вода нагрета'.
                     m_liquidCrystal.WriteString(line_water_ready);
@@ -167,7 +167,7 @@ private:
                 else
                 {
                     // Уровень воды во второй строке.
-                    if(g_waterLevelTask.PreInitialized)
+                    if(g_waterLevelTask.GetHasPercent())
                     {
                         // У датчика есть показание.
                         
@@ -200,8 +200,10 @@ private:
     
     static void CopyPercent(char* line_water_level)
     {
-        uint8_t water_level = g_waterLevelTask.Percent;
+        uint8_t water_level = g_waterLevelTask.GetPercent();
+        
         char first_digit = Common::DigitToChar(water_level / 10);
+        
         line_water_level[13] = first_digit == '0' ? ' ' : first_digit;
         line_water_level[14] = Common::DigitToChar(water_level % 10);
     }

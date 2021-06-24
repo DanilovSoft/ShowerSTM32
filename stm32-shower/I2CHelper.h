@@ -32,18 +32,9 @@ static_assert(sizeof(PropertyStruct) <= EE_AvailableDataSize, "size of PropertyS
 class I2CHelper final
 {
 public:
-
-    I2CHelper()
-    {
-        
-    }
     
-    void InitI2C()
+    void Init()
     {
-        // http://www.freertos.org/xSemaphoreCreateBinaryStatic.html
-        m_xLockSemaphore = xSemaphoreCreateBinaryStatic(&m_xLockSemaphoreBuffer);
-        xSemaphoreGive(m_xLockSemaphore);
-        
         InitGpio();
         GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
         
@@ -51,7 +42,7 @@ public:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
         
         I2C_DeInit(I2C_EE_LCD);
-        InitI2cPeriph();
+        Common::InitI2C();
         
         // Включить i2c.
         I2C_Cmd(I2C_EE_LCD, ENABLE);
@@ -61,6 +52,20 @@ public:
         {
             ResetBus();
         }
+
+        // http://www.freertos.org/xSemaphoreCreateBinaryStatic.html
+        m_xLockSemaphore = xSemaphoreCreateBinaryStatic(&m_xLockSemaphoreBuffer);  // Создаёт семафор в не сигнальном состоянии.
+
+        /* The pxSemaphoreBuffer was not NULL, so it is expected that the handle will not be NULL. */
+        configASSERT(m_xLockSemaphore);
+        
+        // Разрешаем другим потокам захватывать семафор.
+        xSemaphoreGive(m_xLockSemaphore);
+    }
+    
+    bool GetInitialized()
+    {
+        return m_xLockSemaphore != NULL;
     }
     
     bool EE_BufferWrite(uint8_t* pBuffer, uint8_t write_addr, uint8_t num_bytes_to_write)
@@ -104,22 +109,6 @@ private:
     static constexpr uint16_t kI2CTimeoutMsec = 2000;
     StaticSemaphore_t m_xLockSemaphoreBuffer;
     SemaphoreHandle_t m_xLockSemaphore;
-    
-    void InitI2cPeriph()
-    {   
-        I2C_InitTypeDef i2c_init_struct = 
-        {
-            // 100kHz.
-            .I2C_ClockSpeed = 100000, 
-            .I2C_Mode = I2C_Mode_I2C,
-            .I2C_DutyCycle = I2C_DutyCycle_2,
-            .I2C_OwnAddress1 = 0x15,
-            .I2C_Ack = I2C_Ack_Enable,
-            .I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit
-        };
-
-        I2C_Init(I2C_EE_LCD, &i2c_init_struct);
-    }
     
     void LockI2c()
     {
@@ -165,21 +154,21 @@ private:
     
     void InitGpio()
     {
-        GPIO_InitTypeDef  GPIO_InitStructure = 
+        GPIO_InitTypeDef init_struct = 
         {
             .GPIO_Pin = GPIO_I2C_SCL_Pin,
             .GPIO_Speed = GPIO_Speed_2MHz,
             .GPIO_Mode = GPIO_Mode_AF_OD
         };
-        GPIO_Init(GPIOB, &GPIO_InitStructure);
+        GPIO_Init(GPIOB, &init_struct);
         
-        GPIO_InitStructure = 
+        init_struct = 
         {
             .GPIO_Pin = GPIO_I2C_SDA_Pin,
             .GPIO_Speed = GPIO_Speed_2MHz,
             .GPIO_Mode = GPIO_Mode_AF_OD	
         };
-        GPIO_Init(GPIOB, &GPIO_InitStructure);
+        GPIO_Init(GPIOB, &init_struct);
     }
 
     bool WaitFlag(uint32_t i2c_flag, uint16_t timeout_msec)
@@ -590,7 +579,7 @@ private:
         return true;
     }
 
-    // Формирует сигнал STOP на ногах i2c в ручном режиме.
+    // Формирует сигнал STOP на ногах I²C в ручном режиме.
     void ResetBus()	
     {
         // Starting I2C bus recovery.
@@ -637,10 +626,10 @@ private:
     
         I2C_Cmd(I2C_EE_LCD, DISABLE);
         I2C_DeInit(I2C_EE_LCD);
-        InitI2cPeriph();
+        Common::InitI2C();
         I2C_Cmd(I2C_EE_LCD, ENABLE);
         I2C_AcknowledgeConfig(I2C1, DISABLE);
     }  
 };
 
-//extern I2CHelper* const g_i2cHelper;
+extern I2CHelper g_i2cHelper;

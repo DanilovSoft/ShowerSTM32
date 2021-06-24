@@ -127,7 +127,7 @@ private:
             // PS. Текущий поток ДОЛЖЕН устанавливать ТОЛЬКО значение false этому флагу.
             m_stopRequired = false;
                 
-            // Нельзя набирать воду если включен автомат нагревателя из-за вероятности ложного срабатывания.
+            // Лучше не набирать воду когда включен автомат нагревателя.
             if(!Common::CircuitBreakerIsOn())
             {
                 if (m_openValveAllowed == ValveTask::PendingForceOpen)
@@ -146,13 +146,13 @@ private:
                     if (g_waterLevelTask.GetIsInitialized())
                     {
                         // Если уровень воды меньше уровня автоматического отключения.
-                        if(g_waterLevelTask.Percent < m_properties->WaterValveCutOffPercent)
+                        if(g_waterLevelTask.GetPercent() < m_properties->WaterValveCutOffPercent)
                         {					
                             // Включить воду.
                             Common::OpenValve();
                         
                             // Ожидаем достижение порогового уровня воды или ручной остановки.
-                            while(!m_stopRequired && g_waterLevelTask.Percent < m_properties->WaterValveCutOffPercent)
+                            while(!m_stopRequired && g_waterLevelTask.GetPercent() < m_properties->WaterValveCutOffPercent)
                             {
                                 taskYIELD();
                             }
