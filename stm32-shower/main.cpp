@@ -167,10 +167,8 @@ static void InitialThread(void* parm)
     // Инициализируем шину I²C.
     g_i2cHelper.Init();
     
-    g_eepromHelper.Init();
-    
     // Параметры прочитанные из EEPROM.
-    g_properties = g_eepromHelper.DeserializeProperties();  // Использует шину I2C.
+    g_eepromHelper.DeserializeProperties(g_properties);   // Использует шину I²C.
     g_properties.Initialized = true;
     
     // Инициализируем структуру актуальными значениями.
@@ -195,7 +193,7 @@ static void InitialThread(void* parm)
     g_valveTask.StartTask("Valve");                        
 }
 
-// Инициализирует i2c и записывает параметры из EEPROM в Property и завершается.
+// Инициализирует I²C и записывает параметры из EEPROM в Property и завершается.
 InitializationTask initialization_task(InitialThread);
 
 int main(void)

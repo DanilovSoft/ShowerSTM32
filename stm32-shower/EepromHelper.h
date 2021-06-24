@@ -12,13 +12,10 @@ class EepromHelper final
 {	
 public:
 
-    void Init()
+    void DeserializeProperties(PropertyStruct& out_properties)
     {
         Debug::Assert(g_i2cHelper.GetInitialized());
-    }
-    
-    PropertyStruct DeserializeProperties()
-    {
+        
         while (!TryInitProperties())
         {
             taskYIELD();
@@ -26,10 +23,8 @@ public:
         
         g_writeProperties.SelfFix();
     
-        return g_writeProperties;
-        
         // Копируем всю структуру.
-        //g_properties = g_writeProperties;
+        out_properties = g_writeProperties;
     }
 
     // Сохраняет в EEPROM значение структуры g_writeProperties.

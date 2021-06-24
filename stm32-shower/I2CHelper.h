@@ -25,7 +25,7 @@ public:
         I2C_DeInit(I2C_EE_LCD);
         Common::InitI2C();
         
-        // Включить i2c.
+        // Включить I²C.
         I2C_Cmd(I2C_EE_LCD, ENABLE);
         I2C_AcknowledgeConfig(I2C1, DISABLE);
         
@@ -76,7 +76,7 @@ public:
         return result;
     }
     
-    // Блокирует шину I2C и 
+    // Блокирует шину I²C и 
     bool LCD_ExpanderWrite(uint8_t data) 
     {
         LockI2c();
@@ -564,8 +564,8 @@ private:
     // Формирует сигнал STOP на ногах I²C в ручном режиме.
     void ResetBus()	
     {
-        // Starting I2C bus recovery.
-        // Try i2c bus recovery at 100kHz = 5uS high, 5uS low.
+        // Starting I²C bus recovery.
+        // Try I²C bus recovery at 100kHz = 5uS high, 5uS low.
         
         GPIO_InitTypeDef gpio_init_struct = 
         {

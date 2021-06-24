@@ -8,8 +8,11 @@ public:
     static void Assert(bool condition)
     {
 #if DEBUG
-        __asm("bkpt 255");
-        exit(0);  
+        if (!condition)
+        {
+            __asm("bkpt 255");
+            exit(0);  
+        }
 #endif  
     }
 };
