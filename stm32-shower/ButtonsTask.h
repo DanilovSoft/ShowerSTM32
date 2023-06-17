@@ -10,6 +10,7 @@
 #include "ValveTask.h"
 #include "ButtonDebounce.h"
 #include "WaterSensorButton.h"
+#include "SensorPatternPress.h"
 
 class ButtonsTask final : public TaskBase
 {
@@ -39,7 +40,8 @@ private:
         ButtonDebounce debounce_valve(&Common::ButtonValvePressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         ButtonDebounce debounce_long_valve(&Common::ButtonValvePressed, g_properties.ButtonLongPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         WaterSensorButton sensor_switch(&Common::ButtonSensorSwitchIsOn);
-   
+        SensorPatternPress sensor_switch_pattern(&Common::ButtonSensorSwitchIsOn);
+        
         while (true)
         {
             if (debounce_temp_plus.UpdateAndGet())
@@ -64,16 +66,20 @@ private:
             {
                 if (Common::CircuitBreakerIsOn())
                 {
-                    // Принудительно включаем нагрев воды.
-                    g_heaterTask.IgnoreWaterLevelOnce();
+                    g_heaterTask.IgnoreWaterLevelOnce(); // Принудительно включаем нагрев воды.
                 }
                 else
                 {
-                    // Пытаемся принудительно включить набор воды.
-                    g_valveTask.ForceOpenValve();
+                    g_valveTask.ForceOpenValve(); // Пытаемся принудительно включить набор воды.
                 }           
             }
-        
+            
+            sensor_switch_pattern.Update();
+            if (sensor_switch_pattern.GetLogicalPressed())
+            {
+                
+            }
+            
             bool sensorIsOn = sensor_switch.UpdateAndGet();
             g_valveTask.UpdateSensorState(sensorIsOn);
         

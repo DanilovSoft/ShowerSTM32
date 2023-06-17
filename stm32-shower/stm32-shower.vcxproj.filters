@@ -382,5 +382,8 @@
     <ClInclude Include="PropertyWrapper.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="SensorPatternPress.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

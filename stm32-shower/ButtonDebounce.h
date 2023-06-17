@@ -9,119 +9,86 @@ public:
     ButtonDebounce(const ButtonPressedFunc button_pressed_func, uint16_t press_time_msec, uint16_t release_time_msec)
         : m_pressTimeMsec(press_time_msec)
         , m_releaseTimeMsec(release_time_msec),
-        m_buttonPressedFunc(button_pressed_func)
+        m_physicalButtonPressedFunc(button_pressed_func)
     {
         m_stopwatch.Reset();
-        m_physicallyPressed = false;
-        m_canPressAgain = true;
-        m_consideredPressed = false;
+        m_lastPhysicalButtonPressed = false;
+        m_allowLogickButtonPress = true;
+        m_logicalButtonPressed = false;
     }
     
     void Update()
     {
-        m_consideredPressed = UpdatePressConsider();
+        UpdateLogicPress();
     }
     
-    bool GetConsideredPressed()
+    bool GetLogicalPressed()
     {
-        return m_consideredPressed;
+        return m_logicalButtonPressed;
     }
     
     bool UpdateAndGet()
     {
-        m_consideredPressed = UpdatePressConsider();
-        return m_consideredPressed;
+        UpdateLogicPress();
+        return m_logicalButtonPressed;
     }
     
 private:
     
-    const ButtonPressedFunc m_buttonPressedFunc;
+    const ButtonPressedFunc m_physicalButtonPressedFunc;
     const uint16_t m_pressTimeMsec;
     const uint16_t m_releaseTimeMsec;
     Stopwatch m_stopwatch;
-    bool m_physicallyPressed;
-    // Для гистерезиса — кнопка не должна срабатывать повторно пока 
-    // её не отпустят на какое-то время.
-    bool m_canPressAgain;
-    bool m_consideredPressed;
+    bool m_lastPhysicalButtonPressed; // Мы должны помнить последнее состояние физической кнопки.
+    // Для гистерезиса — кнопка не должна срабатывать повторно пока её не отпустят на какое-то время.
+    bool m_allowLogickButtonPress;
+    bool m_logicalButtonPressed;
     
-    // Возвращает True если разрешено выполнять действие кнопки.
-    bool UpdatePressConsider()
+    void UpdateLogicPress()
     {   
-        if (m_buttonPressedFunc())
-        {
-            // Кнопка физически зажата.
-             
-            if(m_canPressAgain)
+        if (m_physicalButtonPressedFunc()) // Кнопка физически зажата.
+        { 
+            if (m_allowLogickButtonPress) // Нажатие на кнопку разрешено.
             {
-                // Нажатие на кнопку разрешено.
-                
-                if(!m_physicallyPressed)
+                if (m_lastPhysicalButtonPressed) // В прошлый раз физическая кнопка была в нажатом состоянии.
                 {
-                    // Кнопка была в отпущенном состоянии.
-                        
-                    // Фиксируем что кнопка нажата.
-                    m_physicallyPressed = true;
-                    
-                    // Начать отсчет времени зажатой кнопки.
-                    m_stopwatch.Reset();
-                }
-                else
-                {
-                    // Кнопка должна быть зажата некоторое время.
-                    if(m_stopwatch.GetElapsedMsec() >= m_pressTimeMsec)
+                    if (m_stopwatch.GetElapsedMsec() >= m_pressTimeMsec) // Кнопка должна быть зажата некоторое время.
                     {
-                        // Запретить нажатие на кнопку.
-                        m_canPressAgain = false;
-                        
-                        // Разрешено разово выполнить действие кнопки.
-                        return true;
+                        m_allowLogickButtonPress = false; // Запретить нажатие на кнопку.
+                        m_logicalButtonPressed = true; // Считаем что логическая кнопка нажата.
                     }
                 }
+                else // Физическая кнопка была в отпущенном состоянии.
+                {
+                    m_lastPhysicalButtonPressed = true; // Запоминаем что физическая кнопка нажата.
+                    m_stopwatch.Reset(); // Начать отсчет времени зажатой кнопки.
+                }
             }
-            else
+            else // Произошло нажатие но оно еще запрещено гистерезисом.
             {
-                // Произошло нажатие но оно еще запрещено.
-                
-                // Начать отсчет времени отпущенной кнопки заново.
-                m_stopwatch.Reset();
+                m_stopwatch.Reset(); // Заново считаем время отпущенной кнопки.
             }
         }
-        else
+        else // Физическая кнопка отпущена.
         {
-            // Кнопка отпущена.
-                
-            if(m_physicallyPressed)
+            if (m_lastPhysicalButtonPressed) // В прошлый раз физическая кнопка была в нажатом состоянии.
             {
-                // Кнопка была в нажатом состоянии.
-                        
-                // Фиксируем что кнопка отпущена.
-                m_physicallyPressed = false;
-            
-                // Начать отсчет времени отпущенной кнопки.
-                m_stopwatch.Reset();
+                m_lastPhysicalButtonPressed = false; // Запоминаем что физическая кнопка отпущена.
+                m_stopwatch.Reset(); // Начать отсчет времени отпущенной кнопки.
             }
-            else
-            {
-                // Кнопка все еще отпущена.
-                        
-                if(!m_canPressAgain)
+            else // В прошлый раз физическая кнопка тоже была отпущена.
+            {           
+                if (!m_allowLogickButtonPress) // Нажатие на кнопку ещё запрещено гистерезисом.
                 {
-                    // Нажатие на кнопку запрещено.
-                                
-                    // Кнопка должна быть отпущена некоторое время.
-                    if(m_stopwatch.GetElapsedMsec() >= m_releaseTimeMsec)
+                    if (m_stopwatch.GetElapsedMsec() >= m_releaseTimeMsec) // Кнопка должна быть отпущена некоторое время.
                     {   
                         // Кнопка отпущена достаточно долго что-бы разрешить повторное нажатие.
-                                    
-                        // Разрешить повторное нажатие на кнопку.
-                        m_canPressAgain = true;
+                        m_allowLogickButtonPress = true; // Разрешить повторное нажатие на кнопку.
                     }
                 }
             }
         }
     
-        // Действие кнопки выполнять запрещено.
-        return false;
+        m_logicalButtonPressed = false; // Считаем что логическая кнопка отпущена.
     }
 };

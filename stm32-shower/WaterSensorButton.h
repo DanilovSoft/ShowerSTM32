@@ -11,7 +11,7 @@ public:
     {
         Debug::Assert(g_properties.Initialized);
         
-        m_considerIsOn = false;
+        m_logicalIsOn = false;
         m_pendingOn = false;
         m_pendingOff = false;
         m_debounce.Reset();
@@ -19,64 +19,64 @@ public:
     
     void Update()
     {
-        UpdateConsiderIsOn();
+        UpdateLogicalSwitch();
     }
     
     bool UpdateAndGet()
     {
-        UpdateConsiderIsOn();
-        return m_considerIsOn;
+        UpdateLogicalSwitch();
+        return m_logicalIsOn;
     }
 
 private:
     
     const ButtonPressedFunc m_buttonPressedFunc;
-    bool m_considerIsOn = false;
+    bool m_logicalIsOn = false;
     bool m_pendingOn = false;
     bool m_pendingOff = false;
     Stopwatch m_debounce;
     
-    void UpdateConsiderIsOn()
+    void UpdateLogicalSwitch()
     {
         if (m_buttonPressedFunc())
         {
-            if (!m_considerIsOn)
+            if (m_logicalIsOn)
             {
-                if (!m_pendingOn)
+                m_pendingOff = false;
+            }
+            else
+            {
+                if (m_pendingOn)
+                {
+                    if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMsec)
+                    {
+                        m_logicalIsOn = true;
+                        m_pendingOn = false;
+                    }
+                }
+                else
                 {
                     m_pendingOn = true;
                     m_debounce.Reset();
                 }
-                else
-                {
-                    if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMsec)
-                    {
-                        m_considerIsOn = true;
-                        m_pendingOn = false;
-                    }
-                }
-            }
-            else
-            {
-                m_pendingOff = false;
             }
         }
         else
         {
-            if (m_considerIsOn)
+            if (m_logicalIsOn)
             {
-                if (!m_pendingOff)
-                {
-                    m_pendingOff = true;
-                    m_debounce.Reset();
-                }
-                else
+                if (m_pendingOff)
                 {
                     if (m_debounce.GetElapsedMsec() >= g_properties.ButtonPressTimeMsec)
                     {
-                        m_considerIsOn = false;
+                        m_logicalIsOn = false;
                         m_pendingOff = false;
                     }
+                }
+                else
+                {
+                    m_pendingOff = true;
+                    m_debounce.Reset();
                 }
             }
             else

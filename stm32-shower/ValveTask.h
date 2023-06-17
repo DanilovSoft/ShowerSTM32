@@ -12,27 +12,27 @@ class ValveTask final : public TaskBase
 public:
     
     // Вызывается каждый раз, после OnButtonPushed().
-    void UpdateSensorState(bool is_on)
+    void UpdateSensorState(bool sensorIsOn)
     {
-        if (is_on)
+        if (sensorIsOn)
         {
-            if (!m_sensorSwitchIsOnLastState)
+            if (m_lastSensorIsOn)
             {
-                m_sensorSwitchIsOnLastState = true;
-            
-                // Попытка включить воду.
-                TryOpenValve();
+                return;
             }
+            
+            m_lastSensorIsOn = true;
+            TryOpenValve(); // Попытка включить воду.
         }
         else
         {
-            if (m_sensorSwitchIsOnLastState)
+            if (!m_lastSensorIsOn)
             {
-                m_sensorSwitchIsOnLastState = false;
-            
-                // Нужно остановить воду.
-                m_stopRequired = true;
+                return;
             }
+            
+            m_lastSensorIsOn = false;
+            m_stopRequired = true; // Нужно остановить воду.
         }
     }
     
@@ -75,7 +75,7 @@ private:
     
     // Пауза для повторного включения клапана.
     static const auto kValveDebounceMsec = 300;
-    bool m_sensorSwitchIsOnLastState = false;
+    bool m_lastSensorIsOn = false;
     // Флаг прекращающий набор воды по запросу пользователя.
     volatile bool m_stopRequired = false;
     // Флаг предотвращающий повторные запросы на открытие клапана от пользователя,
@@ -88,47 +88,31 @@ private:
     // Блокирует поток на время паузы.
     void CloseValve()
     {
-        // Закрыть клапан.
-        Common::CloseValve();
-        
-        // Выключить сенсор.
-        Common::TurnOffSensorSwitch();
-        
-        // Выдержать паузу для антидребезга.
-        vTaskDelay(kValveDebounceMsec / portTICK_PERIOD_MS);
-
-        // Включить питание сенсора.
-        Common::TurnOnSensorSwitch();
+        Common::CloseValve(); // Закрыть клапан.
+        Common::TurnOffSensorSwitch(); // Выключить сенсор.
+        vTaskDelay(kValveDebounceMsec / portTICK_PERIOD_MS); // Выдержать паузу для антидребезга.
+        Common::TurnOnSensorSwitch(); // Включить питание сенсора.
     }
     
     virtual void Run() override
     {
         Debug::Assert(g_properties.Initialized);
         
-        // Нужно включить флаг перед включением сенсора.
-        m_openValveAllowed = ValveTask::WaitingRequest;
-        
-        // Включить сенсор.
-        Common::TurnOnSensorSwitch();
+        m_openValveAllowed = ValveTask::WaitingRequest; // Нужно включить флаг перед включением сенсора.
+        Common::TurnOnSensorSwitch(); // Включить сенсор.
         
         while (true)
         {
-            // Спим пока не поступит запрос на открытие клапана.
-            ulTaskNotifyTake(pdTRUE, /* Clear the notification value before exiting. */ portMAX_DELAY);
-            
-            // PS. Текущий поток ДОЛЖЕН устанавливать ТОЛЬКО значение false этому флагу.
-            m_stopRequired = false;
+            ulTaskNotifyTake(pdTRUE, /* Clear the notification value before exiting. */ portMAX_DELAY); // Спим пока не поступит запрос на открытие клапана.
+            m_stopRequired = false; // PS. Текущий поток ДОЛЖЕН устанавливать ТОЛЬКО значение false этому флагу.
                 
-            // Лучше не набирать воду когда включен автомат нагревателя.
-            if(!Common::CircuitBreakerIsOn())
+            if (!Common::CircuitBreakerIsOn()) // Лучше не набирать воду когда включен автомат нагревателя.
             {
                 if (m_openValveAllowed == ValveTask::PendingForceOpen)
                 {
-                    // Включить воду.
-                    Common::OpenValve();	
-                        
-                    // Ожидаем достижение порогового уровня воды или ручной остановки.
-                    while (!m_stopRequired)
+                    Common::OpenValve(); // Включить воду.
+                    
+                    while (!m_stopRequired) // Ожидаем достижение порогового уровня воды или ручной остановки.
                     {
                         taskYIELD();
                     }
@@ -138,13 +122,12 @@ private:
                     if (g_waterLevelTask.GetInitialized())
                     {
                         // Если уровень воды меньше уровня автоматического отключения.
-                        if(g_waterLevelTask.GetPercent() < g_properties.WaterValveCutOffPercent)
+                        if (g_waterLevelTask.GetPercent() < g_properties.WaterValveCutOffPercent)
                         {					
-                            // Включить воду.
-                            Common::OpenValve();
+                            Common::OpenValve(); // Включить воду.
                         
                             // Ожидаем достижение порогового уровня воды или ручной остановки.
-                            while(!m_stopRequired && g_waterLevelTask.GetPercent() < g_properties.WaterValveCutOffPercent)
+                            while (!m_stopRequired && g_waterLevelTask.GetPercent() < g_properties.WaterValveCutOffPercent)
                             {
                                 taskYIELD();
                             }
@@ -153,8 +136,7 @@ private:
                 }
             }
                 
-            // Закрываем клапан с небольшой паузой. Здесь получаем дополнительный эффект — гистерезис или антидребезг от повторных включений.
-            CloseValve();
+            CloseValve(); // Закрываем клапан с небольшой паузой. Здесь получаем дополнительный эффект — гистерезис или антидребезг от повторных включений.
 
             // Разрешить следующий запрос на открытие клапана.
             // PS. Текущий поток может устанавливать ТОЛЬКО значение WaitingRequest этому флагу.
@@ -165,14 +147,13 @@ private:
     // Вызывается когда пользователь нажимает на кнопку или на сенсорную панель.
     void TryOpenValve()
     {
-        if (m_openValveAllowed == ValveTask::WaitingRequest)
+        if (m_openValveAllowed != ValveTask::WaitingRequest)
         {
-            // Запрещаем пользователю повторные запросы.
-            m_openValveAllowed = ValveTask::PendingOpen;
-            
-            // Пробуждаем поток.
-            xTaskNotifyGive(m_taskHandle);
+            return;
         }
+        
+        m_openValveAllowed = ValveTask::PendingOpen; // Запрещаем пользователю повторные запросы.
+        xTaskNotifyGive(m_taskHandle); // Пробуждаем поток.
     }
 };
 

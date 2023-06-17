@@ -137,6 +137,7 @@
     <ClInclude Include="HeatingTimeLeft.h" />
     <ClInclude Include="I2CHelper.h" />
     <ClInclude Include="PropertyWrapper.h" />
+    <ClInclude Include="SensorPatternPress.h" />
     <ClInclude Include="TaskBase.h" />
     <ClInclude Include="Interlocked.h" />
     <ClInclude Include="IpdBuffer.h" />
