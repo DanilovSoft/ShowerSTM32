@@ -98,13 +98,13 @@ public:
     }
     
     // Включает питание сенсорной кнопки.
-    static void TurnOnSensorSwitch()
+    static void PowerOnSensorSwitch()
     {
         GPIO_SetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);
     }
     
     // Выключает питание сенсорной кнопки.
-    static void TurnOffSensorSwitch()
+    static void PowerOffSensorSwitch()
     {
         // Выключить сенсор.
         GPIO_ResetBits(SensorSwitch_Power_GPIO, SensorSwitch_Power_Pin);

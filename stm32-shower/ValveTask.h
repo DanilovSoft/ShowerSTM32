@@ -41,27 +41,24 @@ public:
     {
         if (Common::ValveIsOpen())
         {
-            // Нужно остановить воду.
-            m_stopRequired = true;
+            m_stopRequired = true; // Нужно остановить воду.
         }
         else
         {
-            // Попытка включить воду.
-            TryOpenValve();
+            TryOpenValve(); // Попытка включить воду.
         }
     }
 
     // Вызывается при долгом нажатии на кнопку.
     void ForceOpenValve()
     {
-        if (m_openValveAllowed == ValveTask::WaitingRequest)
+        if (m_openValveAllowed != ValveTask::WaitingRequest)
         {
-            // Запрещаем пользователю повторные запросы.
-            m_openValveAllowed = ValveTask::PendingForceOpen;
-            
-            // Пробуждаем поток.
-            xTaskNotifyGive(m_taskHandle);
+            return;
         }
+        
+        m_openValveAllowed = ValveTask::PendingForceOpen; // Запрещаем пользователю повторные запросы.
+        xTaskNotifyGive(m_taskHandle); // Пробуждаем поток.
     }
     
 private:
@@ -89,9 +86,9 @@ private:
     void CloseValve()
     {
         Common::CloseValve(); // Закрыть клапан.
-        Common::TurnOffSensorSwitch(); // Выключить сенсор.
+        //Common::PowerOffSensorSwitch(); // Выключить сенсор.
         vTaskDelay(kValveDebounceMsec / portTICK_PERIOD_MS); // Выдержать паузу для антидребезга.
-        Common::TurnOnSensorSwitch(); // Включить питание сенсора.
+        //Common::PowerOnSensorSwitch(); // Включить питание сенсора.
     }
     
     virtual void Run() override
@@ -99,7 +96,7 @@ private:
         Debug::Assert(g_properties.Initialized);
         
         m_openValveAllowed = ValveTask::WaitingRequest; // Нужно включить флаг перед включением сенсора.
-        Common::TurnOnSensorSwitch(); // Включить сенсор.
+        Common::PowerOnSensorSwitch(); // Включить сенсор.
         
         while (true)
         {

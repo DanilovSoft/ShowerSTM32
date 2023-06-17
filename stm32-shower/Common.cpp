@@ -252,7 +252,7 @@ void Common::InitValve()
     GPIO_Init(SensorSwitch_Power_GPIO, &gpio_init);
 
     // Выключить питание сенсора до окончания инициали датчика уровня воды.
-    TurnOffSensorSwitch();
+    PowerOffSensorSwitch();
 }
 
 void Common::InitWaterLevelPeripheral()

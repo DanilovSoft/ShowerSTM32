@@ -20,7 +20,7 @@ public:
         UpdateLogicPress();
     }
     
-    bool GetLogicalPressed()
+    bool GetLogicalIsOn()
     {
         return m_logicalButtonPressed;
     }

@@ -75,13 +75,15 @@ private:
             }
             
             sensor_switch_pattern.Update();
-            if (sensor_switch_pattern.GetLogicalPressed())
+            if (sensor_switch_pattern.GetLogicalIsOn())
             {
-                
+                g_valveTask.ForceOpenValve(); // Пытаемся принудительно включить набор воды.
             }
-            
-            bool sensorIsOn = sensor_switch.UpdateAndGet();
-            g_valveTask.UpdateSensorState(sensorIsOn);
+            else
+            {
+                bool sensorIsOn = sensor_switch.UpdateAndGet();
+                g_valveTask.UpdateSensorState(sensorIsOn);   
+            }
         
             taskYIELD();
         }
