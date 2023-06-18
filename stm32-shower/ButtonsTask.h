@@ -38,6 +38,7 @@ private:
     {
         Debug::Assert(g_properties.Initialized);
         
+        SensorSwitch sensorSwitch;
         ButtonDebounce debounceTempPlus(&Common::ButtonTempPlussPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         ButtonDebounce debounceTempMinus(&Common::ButtonTempMinusPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         ButtonDebounce debounceValve(&Common::ButtonValvePressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
@@ -80,13 +81,13 @@ private:
                 }           
             }
             
-            if (g_sensorSwitch.IsOn())
+            if (sensorSwitch.IsOn())
             {
                 if (lastSensorSwitchIsOn)
                 {
                     if (!g_valveTask.OpenAllowed() && m_sensorStopwatch.GetElapsedMsec() > SensorPowerOffDelayMsec) // Клапан открывать пока нельзя — сенсор следует потушить.
                     {
-                        g_sensorSwitch.PowerOff();   
+                        sensorSwitch.PowerOff();   
                     }
                 }
                 else
@@ -107,7 +108,7 @@ private:
                 {
                     if (g_valveTask.OpenAllowed())
                     {
-                        g_sensorSwitch.PowerOn();
+                        sensorSwitch.PowerOn();
                     }
                 }
             }

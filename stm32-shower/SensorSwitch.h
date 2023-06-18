@@ -89,5 +89,3 @@ private:
         }
     }
 };
-
-extern SensorSwitch g_sensorSwitch;
