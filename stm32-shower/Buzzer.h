@@ -21,9 +21,9 @@ struct BeepSound final
     
     }
     
-    BeepSound(uint16_t frequency, uint16_t duration)
-        : kFrequency(frequency)
-        , kDuration(duration)
+    BeepSound(uint16_t duration, uint16_t frequency)
+        : kDuration(duration)
+        , kFrequency(frequency)
     {
         
     }

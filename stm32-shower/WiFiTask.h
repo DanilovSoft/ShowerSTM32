@@ -113,11 +113,11 @@ private:
     {
         static const BeepSound samples[] = 
         { 
-            BeepSound(3300, 140),
+            BeepSound(140, 3300),
             BeepSound(30),
-            BeepSound(3600, 120),
+            BeepSound(120, 3600),
             BeepSound(30),
-            BeepSound(4000, 120),
+            BeepSound(120, 4000),
             BeepSound(30),
         };
         g_buzzer.PlaySound(samples, sizeof(samples) / sizeof(*samples));

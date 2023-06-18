@@ -79,9 +79,9 @@ private:
     {
         static const BeepSound samples[]
         {
-            BeepSound(3000, 140),
+            BeepSound(140, 3000),
             BeepSound(30),
-            BeepSound(2400, 320),
+            BeepSound(320, 2400),
             BeepSound(30)
         }
         ;
@@ -96,9 +96,9 @@ private:
     {
         static const BeepSound samples[]
         {
-            BeepSound(2400, 140),
+            BeepSound(140, 2400),
             BeepSound(30),
-            BeepSound(3000, 320),
+            BeepSound(320, 3000),
             BeepSound(30)
         }
         ;
@@ -114,7 +114,7 @@ private:
     {
         BeepSound samples[]
         {
-            BeepSound(4000, 100),
+            BeepSound(100, 4000),
             BeepSound(30),
         }
         ;
@@ -133,9 +133,9 @@ private:
     {
         BeepSound samples[]
         {
-            BeepSound(4000, 80),
+            BeepSound(80, 4000),
             BeepSound(100),
-            BeepSound(4000, 80),
+            BeepSound(80, 4000),
             BeepSound(30)
         }
         ;
@@ -157,11 +157,11 @@ private:
     {
         BeepSound samples[]
         {
-            BeepSound(4000, 300),
+            BeepSound(300, 4000),
             BeepSound(100),
-            BeepSound(4000, 300),
+            BeepSound(300, 4000),
             BeepSound(100),
-            BeepSound(4000, 300),
+            BeepSound(300, 4000),
             BeepSound(30)
         }
         ;

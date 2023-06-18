@@ -22,7 +22,7 @@ private:
     {
         static const BeepSound samples[]
         {
-            BeepSound(2000, 150),
+            BeepSound(150, 2000),
             BeepSound(50)
         }
         ;
