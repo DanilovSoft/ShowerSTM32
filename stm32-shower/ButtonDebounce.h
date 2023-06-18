@@ -17,17 +17,8 @@ public:
         m_logicalButtonPressed = false;
     }
     
-    void Update()
-    {
-        UpdateLogicPress();
-    }
-    
-    bool GetLogicalPressed()
-    {
-        return m_logicalButtonPressed;
-    }
-    
-    bool UpdateAndGet()
+    // Возвращает true если логическая кнопка считается нажатой.
+    bool IsPressed()
     {
         UpdateLogicPress();
         return m_logicalButtonPressed;

@@ -364,7 +364,7 @@
     <ClInclude Include="FreeRTOS\Source\include\task.h">
       <Filter>Header files\FreeRTOS</Filter>
     </ClInclude>
-    <ClInclude Include="WaterSensorButton.h">
+    <ClInclude Include="SensorSwitch.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="ButtonDebounce.h">

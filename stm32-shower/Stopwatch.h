@@ -35,8 +35,7 @@ public:
     uint32_t GetElapsedMsec()
     {
         uint32_t cur_tick_count = xTaskGetTickCount();
-        uint32_t elapsed_msec = Common::abs(cur_tick_count, m_beginTickCount) * portTICK_PERIOD_MS;
-        return elapsed_msec;
+        return Common::abs(cur_tick_count, m_beginTickCount) * portTICK_PERIOD_MS;
     }
     
 private:

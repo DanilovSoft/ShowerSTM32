@@ -150,7 +150,7 @@
     <ClInclude Include="Request.h" />
     <ClInclude Include="RealTimeClockStopwatch.h" />
     <ClInclude Include="WaterLevelAnimationTask.h" />
-    <ClInclude Include="WaterSensorButton.h" />
+    <ClInclude Include="SensorSwitch.h" />
     <ClInclude Include="ShowerCode.h" />
     <ClInclude Include="StdPeriph\Inc\core_cm3.h" />
     <ClInclude Include="StdPeriph\Inc\core_cmFunc.h" />

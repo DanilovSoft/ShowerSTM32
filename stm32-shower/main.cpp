@@ -57,6 +57,8 @@ WatchDogTask g_watchDogTask;
 // Крутит анимацию символа '%' когда датчик уровня не может получить данные.
 WaterLevelAnimationTask g_wlAnimationTask;
 
+SensorSwitch g_sensorSwitch;
+
 Buzzer g_buzzer;
 
 EepromHelper g_eepromHelper;

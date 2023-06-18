@@ -9,7 +9,7 @@
 #include "HeaterTempLimit.h"
 #include "ValveTask.h"
 #include "ButtonDebounce.h"
-#include "WaterSensorButton.h"
+#include "SensorSwitch.h"
 #include "SensorPatternPress.h"
 
 class ButtonsTask final : public TaskBase
@@ -17,6 +17,9 @@ class ButtonsTask final : public TaskBase
 public:
     
 private:
+    
+    const static uint16_t SensorPowerOffDelayMsec = 1000;
+    const static uint16_t SensorPowerOnDelayMsec = 300;
     
     static void PressSound()
     {
@@ -35,34 +38,37 @@ private:
     {
         Debug::Assert(g_properties.Initialized);
         
-        ButtonDebounce debounce_temp_plus(&Common::ButtonTempPlussPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        ButtonDebounce debounce_temp_minus(&Common::ButtonTempMinusPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        ButtonDebounce debounce_valve(&Common::ButtonValvePressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        ButtonDebounce debounce_long_valve(&Common::ButtonValvePressed, g_properties.ButtonLongPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
-        WaterSensorButton sensor_switch(&Common::ButtonSensorSwitchIsOn);
-        SensorPatternPress sensor_switch_pattern(&Common::ButtonSensorSwitchIsOn);
+        ButtonDebounce debounceTempPlus(&Common::ButtonTempPlussPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        ButtonDebounce debounceTempMinus(&Common::ButtonTempMinusPressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        ButtonDebounce debounceValve(&Common::ButtonValvePressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        ButtonDebounce debounceLongPressValve(&Common::ButtonValvePressed, g_properties.ButtonLongPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
+        SensorPatternPress sensorSwitchPatternPress;
+        
+        Stopwatch m_sensorStopwatch;
+        m_sensorStopwatch.Reset();
+        bool lastSensorSwitchIsOn = false;
         
         while (true)
-        {
-            if (debounce_temp_plus.UpdateAndGet())
+        {   
+            if (debounceTempPlus.IsPressed())
             {
                 PressSound();
                 TempPlus();
             }
         
-            if (debounce_temp_minus.UpdateAndGet())
+            if (debounceTempMinus.IsPressed())
             {
                 PressSound();
                 TempMinus();
             }
         
-            if (debounce_valve.UpdateAndGet())
+            if (debounceValve.IsPressed())
             {
                 PressSound();
                 g_valveTask.OnButtonPress();
             }
 
-            if (debounce_long_valve.UpdateAndGet())
+            if (debounceLongPressValve.IsPressed())
             {
                 if (Common::CircuitBreakerIsOn())
                 {
@@ -74,17 +80,44 @@ private:
                 }           
             }
             
-            sensor_switch_pattern.Update();
-            if (sensor_switch_pattern.GetLogicalIsOn())
+            if (g_sensorSwitch.IsOn())
             {
-                g_valveTask.ForceOpenValve(); // Пытаемся принудительно включить набор воды.
+                if (lastSensorSwitchIsOn)
+                {
+                    if (!g_valveTask.OpenAllowed() && m_sensorStopwatch.GetElapsedMsec() > SensorPowerOffDelayMsec) // Клапан открывать пока нельзя — сенсор следует потушить.
+                    {
+                        g_sensorSwitch.PowerOff();   
+                    }
+                }
+                else
+                {
+                    lastSensorSwitchIsOn = true;
+                    m_sensorStopwatch.Reset();
+                    g_valveTask.OpenValveRequest();
+                }
             }
             else
             {
-                bool sensorIsOn = sensor_switch.UpdateAndGet();
-                g_valveTask.UpdateSensorState(sensorIsOn);   
+                if (lastSensorSwitchIsOn)
+                {
+                    lastSensorSwitchIsOn = false;
+                    g_valveTask.CloseValveRequest();
+                }
+                else
+                {
+                    if (g_valveTask.OpenAllowed())
+                    {
+                        g_sensorSwitch.PowerOn();
+                    }
+                }
             }
         
+            if (sensorSwitchPatternPress.IsPatternMatch())
+            {
+                sensorSwitchPatternPress.Reset();
+                g_valveTask.ForceOpenValve(); // Пытаемся принудительно включить набор воды.
+            }
+            
             taskYIELD();
         }
     }

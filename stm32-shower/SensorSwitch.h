@@ -2,12 +2,11 @@
 #include "Stopwatch.h"
 #include "Properties.h"
 
-class WaterSensorButton final
+class SensorSwitch final
 {
 public:
     
-    WaterSensorButton(const ButtonPressedFunc button_pressed_func)
-        : m_buttonPressedFunc(button_pressed_func)
+    SensorSwitch()
     {
         Debug::Assert(g_properties.Initialized);
         
@@ -16,21 +15,25 @@ public:
         m_pendingOff = false;
         m_debounce.Reset();
     }
-    
-    void Update()
-    {
-        UpdateLogicalSwitch();
-    }
-    
-    bool UpdateAndGet()
+
+    bool IsOn()
     {
         UpdateLogicalSwitch();
         return m_logicalIsOn;
     }
-
+    
+    void PowerOff()
+    {
+        Common::PowerOffSensorSwitch(); // Выключить сенсор.
+    }
+    
+    void PowerOn()
+    {
+        Common::PowerOnSensorSwitch();
+    }
+    
 private:
     
-    const ButtonPressedFunc m_buttonPressedFunc;
     bool m_logicalIsOn = false;
     bool m_pendingOn = false;
     bool m_pendingOff = false;
@@ -38,7 +41,7 @@ private:
     
     void UpdateLogicalSwitch()
     {
-        if (m_buttonPressedFunc())
+        if (Common::ButtonSensorSwitchIsOn())
         {
             if (m_logicalIsOn)
             {
@@ -86,3 +89,5 @@ private:
         }
     }
 };
+
+extern SensorSwitch g_sensorSwitch;
