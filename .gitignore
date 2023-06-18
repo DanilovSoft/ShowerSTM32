@@ -265,5 +265,5 @@ __pycache__/
 
 /stm32-shower/.visualgdb/CodeDB/stm32-shower-Debug-VisualGDB
 /stm32-shower/.visualgdb/CodeDB/stm32-shower-Release-VisualGDB
-**/*.visualgdb/
+/.visualgdb/
 /.visualgdb/CodeExplorer/NodeFlags.dat
