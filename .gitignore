@@ -262,5 +262,8 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
 /stm32-shower/.visualgdb/CodeDB/stm32-shower-Debug-VisualGDB
 /stm32-shower/.visualgdb/CodeDB/stm32-shower-Release-VisualGDB
+**/*.visualgdb/
+/.visualgdb/CodeExplorer/NodeFlags.dat
