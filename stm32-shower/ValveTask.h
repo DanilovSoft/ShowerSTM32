@@ -71,7 +71,7 @@ private:
     };
     
     // Пауза для повторного включения клапана.
-    static const auto ValveDebounceMsec = 300;
+    static const auto ValveDebounceMsec = 200;
     // Флаг предотвращающий повторные запросы на открытие клапана от пользователя,
     // пока другой поток обрабатывает первый запрос (троттлинг).
     volatile ValveState m_state = ValveState::OpenRequest;

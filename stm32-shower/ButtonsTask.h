@@ -54,6 +54,8 @@ private:
         Stopwatch sensorSwitchPowerOffStopwatch; // Выключает сенсор с небольшой задержкой; возвращает питание сенсору с небольшой задержкой.
         auto sensorState = ButtonsTask::IsOff;
         
+        sensorSwitch.PowerOn();
+        
         while (true)
         {   
             if (debounceTempPlus.IsPressed())
@@ -128,7 +130,7 @@ private:
                     break;
                 case ButtonsTask::PowerOff:
                     {
-                        if (sensorSwitchPowerOffStopwatch.GetElapsedMsec() > 300)
+                        if (sensorSwitchPowerOffStopwatch.GetElapsedMsec() > 50)
                         {
                             sensorSwitch.PowerOn();
                             sensorState = ButtonsTask::IsOff;
