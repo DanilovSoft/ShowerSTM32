@@ -55,7 +55,7 @@ public:
         xTaskNotifyGive(m_taskHandle); // Пробуждаем поток.
     }
     
-    bool OpenAllowed()
+    bool IsWaitingRequest()
     {
         return m_state == ValveTask::WaitingRequest;
     }

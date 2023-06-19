@@ -18,6 +18,13 @@ public:
     
 private:
     
+    enum SensorState
+    {
+        IsOff,
+        OpenValveRequest,
+        PowerOff
+    };
+    
     const static uint16_t SensorPowerOffDelayMsec = 1000;
     const static uint16_t SensorPowerOnDelayMsec = 300;
     
@@ -44,9 +51,8 @@ private:
         ButtonDebounce debounceValve(&Common::ButtonValvePressed, g_properties.ButtonPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         ButtonDebounce debounceLongPressValve(&Common::ButtonValvePressed, g_properties.ButtonLongPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         SensorPatternPress sensorSwitchPatternPress;
-        
         Stopwatch sensorSwitchPowerOffStopwatch; // Выключает сенсор с небольшой задержкой; возвращает питание сенсору с небольшой задержкой.
-        bool lastSensorSwitchIsOn = false;
+        auto sensorState = ButtonsTask::IsOff;
         
         while (true)
         {   
@@ -82,34 +88,57 @@ private:
             
             if (sensorSwitch.IsOn())
             {
-                if (lastSensorSwitchIsOn)
+                switch (sensorState)
                 {
-                    if (!g_valveTask.OpenAllowed() && sensorSwitchPowerOffStopwatch.GetElapsedMsec() > SensorPowerOffDelayMsec) // Клапан открывать пока нельзя — сенсор следует потушить.
+                case ButtonsTask::IsOff:
                     {
-                        sensorSwitch.PowerOff();
-                        lastSensorSwitchIsOn = false;
+                        sensorState = ButtonsTask::OpenValveRequest;
+                        sensorSwitchPowerOffStopwatch.Reset();
+                        g_valveTask.OpenValveRequest();
                     }
-                }
-                else
-                {
-                    lastSensorSwitchIsOn = true;
-                    sensorSwitchPowerOffStopwatch.Reset();
-                    g_valveTask.OpenValveRequest();
+                    break;
+                case ButtonsTask::OpenValveRequest:
+                    {
+                        if (g_valveTask.IsWaitingRequest())
+                        {
+                            if (sensorSwitchPowerOffStopwatch.GetElapsedMsec() > SensorPowerOffDelayMsec) // Сенсор после включения может самостоятельно потухнуть не раньше чем через 1 сек.
+                            {
+                                sensorSwitch.PowerOff();
+                                sensorState = ButtonsTask::PowerOff;
+                                sensorSwitchPowerOffStopwatch.Reset();
+                            }
+                        }
+                    }
+                    break;
+                case ButtonsTask::PowerOff: // Сюда можем попасть если модуль ещё остался включен из-за остаточной ёмкости.
+                    break;
+                default:
+                    break;
                 }
             }
             else
             {
-                if (lastSensorSwitchIsOn)
+                switch (sensorState)
                 {
-                    lastSensorSwitchIsOn = false;
-                    g_valveTask.CloseValveRequest();
-                }
-                else
-                {
-                    if (g_valveTask.OpenAllowed())
+                case ButtonsTask::OpenValveRequest:
                     {
-                        sensorSwitch.PowerOn();
+                        sensorState = ButtonsTask::IsOff;
+                        g_valveTask.CloseValveRequest();
                     }
+                    break;
+                case ButtonsTask::PowerOff:
+                    {
+                        if (sensorSwitchPowerOffStopwatch.GetElapsedMsec() > 300)
+                        {
+                            sensorSwitch.PowerOn();
+                            sensorState = ButtonsTask::IsOff;
+                        }
+                    }
+                    break;
+                case ButtonsTask::IsOff:
+                    break;
+                default:
+                    break;
                 }
             }
         
