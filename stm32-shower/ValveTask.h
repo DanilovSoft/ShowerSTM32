@@ -26,6 +26,7 @@ public:
     void CloseValveRequest()
     {
         m_state = ValveTask::StopRequest; // Нужно остановить воду.
+        xTaskNotifyGive(m_taskHandle); // Пробуждаем поток.
     }
     
     // Вызывается при нажатии на кнопку.
@@ -34,6 +35,7 @@ public:
         if (Common::ValveIsOpen())
         {
             m_state = ValveTask::StopRequest; // Нужно остановить воду.
+            xTaskNotifyGive(m_taskHandle); // Пробуждаем поток.
         }
         else
         {

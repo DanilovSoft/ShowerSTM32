@@ -86,7 +86,8 @@ private:
                 {
                     if (!g_valveTask.OpenAllowed() && sensorSwitchPowerOffStopwatch.GetElapsedMsec() > SensorPowerOffDelayMsec) // Клапан открывать пока нельзя — сенсор следует потушить.
                     {
-                        sensorSwitch.PowerOff();   
+                        sensorSwitch.PowerOff();
+                        lastSensorSwitchIsOn = false;
                     }
                 }
                 else
