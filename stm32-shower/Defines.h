@@ -5,6 +5,8 @@
 #include "stm32f10x_usart.h"
 #include "stm32f10x_dma.h"
 
+#define SKIP_EEPROM // Для отладки, разрешает пропустить работу с EEPROM
+
 #define GPIO_MainPower				(GPIOA)
 #define GPIO_Pin_MainPower			(GPIO_Pin_1)
 #define WIFI_GPIO					(GPIOB)

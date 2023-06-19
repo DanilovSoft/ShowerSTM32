@@ -294,7 +294,7 @@ private:
                     TurnOnHeaterWithSound();
                 }
             }
-            else if (g_waterLevelTask.GetInitialized())
+            else if (g_waterLevelTask.IsInitialized())
             {
                 // Если уровень воды больше допустимого минимума И температура в баке меньше необходимой.
                 if(internal_temp < target_temp && !g_waterLevelTask.GetIsError() && g_waterLevelTask.GetPercent() >= g_properties.MinimumWaterHeatingPercent)

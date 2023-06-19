@@ -45,8 +45,7 @@ private:
         ButtonDebounce debounceLongPressValve(&Common::ButtonValvePressed, g_properties.ButtonLongPressTimeMsec, g_properties.ButtonPressTimeMsec * 2);
         SensorPatternPress sensorSwitchPatternPress;
         
-        Stopwatch m_sensorStopwatch;
-        m_sensorStopwatch.Reset();
+        Stopwatch sensorSwitchPowerOffStopwatch; // Выключает сенсор с небольшой задержкой; возвращает питание сенсору с небольшой задержкой.
         bool lastSensorSwitchIsOn = false;
         
         while (true)
@@ -85,7 +84,7 @@ private:
             {
                 if (lastSensorSwitchIsOn)
                 {
-                    if (!g_valveTask.OpenAllowed() && m_sensorStopwatch.GetElapsedMsec() > SensorPowerOffDelayMsec) // Клапан открывать пока нельзя — сенсор следует потушить.
+                    if (!g_valveTask.OpenAllowed() && sensorSwitchPowerOffStopwatch.GetElapsedMsec() > SensorPowerOffDelayMsec) // Клапан открывать пока нельзя — сенсор следует потушить.
                     {
                         sensorSwitch.PowerOff();   
                     }
@@ -93,7 +92,7 @@ private:
                 else
                 {
                     lastSensorSwitchIsOn = true;
-                    m_sensorStopwatch.Reset();
+                    sensorSwitchPowerOffStopwatch.Reset();
                     g_valveTask.OpenValveRequest();
                 }
             }
@@ -115,7 +114,8 @@ private:
         
             if (sensorSwitchPatternPress.IsPatternMatch())
             {
-                sensorSwitchPatternPress.Reset();
+                sensorSwitchPatternPress.Reset(); // Сбрасываем флаг о том что набрали паттерн.
+                sensorSwitchPowerOffStopwatch.Reset();
                 g_valveTask.ForceOpenValve(); // Пытаемся принудительно включить набор воды.
             }
             

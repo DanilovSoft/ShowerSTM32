@@ -81,7 +81,7 @@ private:
                     CopyPercent(line_water_level);
                 
                     // Уровень воды в первой строке.
-                    if(g_waterLevelTask.GetIsError() || !g_waterLevelTask.GetInitialized())
+                    if(g_waterLevelTask.GetIsError() || !g_waterLevelTask.IsInitialized())
                     {
                         line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
                     }
@@ -172,7 +172,7 @@ private:
                         
                         CopyPercent(line_water_level);
                         
-                        if (g_waterLevelTask.GetIsError() || !g_waterLevelTask.GetInitialized())
+                        if (g_waterLevelTask.GetIsError() || !g_waterLevelTask.IsInitialized())
                         {
                             line_water_level[15] = g_wlAnimationTask.GetWaterLevelAnimChar();
                         }

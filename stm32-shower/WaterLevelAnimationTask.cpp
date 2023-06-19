@@ -10,7 +10,7 @@ void WaterLevelAnimationTask::Run()
         
     while (true)
     {
-        while (!g_waterLevelTask.GetInitialized() || g_waterLevelTask.GetIsError())
+        while (!g_waterLevelTask.IsInitialized() || g_waterLevelTask.GetIsError())
         {
             // Что-бы анимация была равномерной, используем более точную паузу.
             vTaskDelayUntil(&last_wake_time, kAnimSpeedPortMsec);

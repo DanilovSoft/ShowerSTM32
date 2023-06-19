@@ -63,7 +63,7 @@ public:
         return m_hasPercent;
     }
     
-    bool GetInitialized() volatile
+    bool IsInitialized() volatile
     {
         return m_initialized;
     }

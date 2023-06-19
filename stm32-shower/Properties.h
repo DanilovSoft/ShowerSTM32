@@ -304,7 +304,7 @@ public:
     {
         if (time_msec < 1000 || time_msec > 10000)
         {
-            return 4000;
+            return 3000;
         }
         return time_msec;
     }

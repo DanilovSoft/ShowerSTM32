@@ -263,7 +263,5 @@ paket-files/
 __pycache__/
 *.pyc
 
-#/stm32-shower/.visualgdb/CodeDB/stm32-shower-Debug-VisualGDB
-#/stm32-shower/.visualgdb/CodeDB/stm32-shower-Release-VisualGDB
 /.visualgdb/
 /stm32-shower/

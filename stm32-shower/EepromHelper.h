@@ -17,10 +17,7 @@ public:
     {
         Debug::Assert(g_i2cHelper.GetInitialized());
         
-        while (!TryInitProperties())
-        {
-            taskYIELD();
-        }
+        ReadFromEeprom();
         
         g_writeProperties.SelfFix();
     
@@ -40,6 +37,19 @@ public:
 private:
     
     uint8_t m_curPageAddr;
+    
+    void ReadFromEeprom()
+    {
+        while (!TryInitProperties())
+        {
+#ifdef SKIP_EEPROM
+            return;
+#endif // SKIP_EEPROM
+
+            
+            taskYIELD();
+        }
+    }
     
     bool SafeBufferRead(uint8_t* buffer, uint8_t read_addr, uint8_t num_bytes_to_read)
     {
