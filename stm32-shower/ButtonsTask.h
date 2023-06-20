@@ -27,19 +27,6 @@ private:
     
     const static uint16_t SensorPowerOffDelayMsec = 1000;
     const static uint16_t SensorPowerOnDelayMsec = 300;
-    
-    static void PressSound()
-    {
-        static const BeepSound samples[]
-        {
-            BeepSound(150, 2000),
-            BeepSound(50)
-        }
-        ;
-        
-        g_heaterTask.ResetBeepInterval();
-        g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
-    }
 
     virtual void Run() override
     {
@@ -73,11 +60,13 @@ private:
             if (debounceValve.IsPressed())
             {
                 PressSound();
-                g_valveTask.OnButtonPress();
+                g_valveTask.StopOrOpen();
             }
 
             if (debounceLongPressValve.IsPressed())
             {
+                LongPressSound();
+                
                 if (Common::CircuitBreakerIsOn())
                 {
                     g_heaterTask.IgnoreWaterLevelOnce(); // Принудительно включаем нагрев воды.
@@ -113,6 +102,7 @@ private:
                     }
                     break;
                 case ButtonsTask::PowerOff: // Сюда можем попасть если модуль ещё остался включен из-за остаточной ёмкости.
+                    sensorSwitchPowerOffStopwatch.Reset();
                     break;
                 default:
                     break;
@@ -130,7 +120,7 @@ private:
                     break;
                 case ButtonsTask::PowerOff:
                     {
-                        if (sensorSwitchPowerOffStopwatch.GetElapsedMsec() > 50)
+                        if (sensorSwitchPowerOffStopwatch.GetElapsedMsec() > 10) // После подачи питания сенсор самокалибруется ~70ms.
                         {
                             sensorSwitch.PowerOn();
                             sensorState = ButtonsTask::IsOff;
@@ -183,7 +173,33 @@ private:
     
     void WaterPushButton()
     {
-        g_valveTask.OnButtonPress();
+        g_valveTask.StopOrOpen();
+    }
+    
+    static void PressSound()
+    {
+        static const BeepSound samples[]
+        {
+            BeepSound(150, 2000),
+            BeepSound(50)
+        }
+        ;
+        
+        g_heaterTask.ResetBeepInterval();
+        g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
+    }
+    
+    static void LongPressSound()
+    {
+        static const BeepSound samples[]
+        {
+            BeepSound(300, 2000),
+            BeepSound(50)
+        }
+        ;
+        
+        g_heaterTask.ResetBeepInterval();
+        g_buzzer.BeepHighPrio(samples, sizeof(samples) / sizeof(*samples));
     }
 };
 

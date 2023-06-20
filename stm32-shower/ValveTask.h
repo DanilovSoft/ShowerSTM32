@@ -30,7 +30,7 @@ public:
     }
     
     // Вызывается при нажатии на кнопку.
-    void OnButtonPress()
+    void StopOrOpen()
     {
         if (Common::ValveIsOpen())
         {

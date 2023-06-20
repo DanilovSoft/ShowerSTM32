@@ -10,12 +10,12 @@ public:
     SensorPatternPress()
     {
         m_stopwatch.Reset();
-        m_state = SensorPatternPress::Ready;
+        m_state = SensorPatternPress::WaitingStart;
     }
     
     bool IsPatternMatch()
     {
-        UpdateLogicPress();
+        UpdateState();
         return m_state == SensorPatternPress::PatternMatch;
     }
     
@@ -28,9 +28,9 @@ private:
     
     enum State
     {
-        Ready,
-        Step1,
-        Step2,
+        WaitingStart,
+        Step1Detected,
+        Step2Detected,
         PatternMatch,
         BackToBegining // Когда сенсор включен но патерн отмерять не нужно.
     };
@@ -43,30 +43,35 @@ private:
     uint32_t m_lastTime;
     State m_state;
     
-    void UpdateLogicPress()
+    void UpdateState()
     {
         if (Common::ButtonSensorSwitchIsOn())
         {
             switch (m_state)
             {
-            case SensorPatternPress::Ready:
+            case WaitingStart:
                 {
-                    m_state = SensorPatternPress::Step1;
+                    m_state = SensorPatternPress::Step1Detected;
                     m_stopwatch.Reset(); // Начинаем замерять первый этап.
                 }
                 break;
-            case SensorPatternPress::Step2:
+            case Step2Detected:
                 {
                     auto step2Msec = m_stopwatch.GetElapsedMsec();
 
                     if (step2Msec < MinimumTimeMsec || step2Msec > MaximumTimeMsec || Common::abs(step2Msec, m_lastTime) > MaxDeviationMsec)
                     {
-                        m_state = SensorPatternPress::BackToBegining;
+                        m_state = SensorPatternPress::BackToBegining; // Был обнаружен патерн но не прошли по таймингам, поэтому начнём с начала.
                     }
                     else
                     {
                         m_state = SensorPatternPress::PatternMatch;
                     }
+                }
+                break;
+            case PatternMatch:
+                {
+                    m_state = SensorPatternPress::BackToBegining;
                 }
                 break;
             default:
@@ -77,29 +82,25 @@ private:
         {
             switch (m_state)
             {
-            case SensorPatternPress::Step1:
+            case Step1Detected:
                 {
                     m_lastTime = m_stopwatch.GetElapsedMsec();
 
                     if (m_lastTime < MinimumTimeMsec || m_lastTime > MaximumTimeMsec)
                     {
-                        m_state = SensorPatternPress::Ready;
+                        m_state = SensorPatternPress::WaitingStart; // Не прошли по таймингам, поэтому начнём с начала.
                     }
                     else
                     {
-                        m_state = SensorPatternPress::Step2;
+                        m_state = SensorPatternPress::Step2Detected;
                         m_stopwatch.Reset(); // Начинаем замерять второй этап.
                     }
                 }
                 break;
-            case SensorPatternPress::PatternMatch:
+            case PatternMatch:
+            case BackToBegining:
                 {
-                    m_state = SensorPatternPress::Ready;
-                }
-                break;
-            case SensorPatternPress::BackToBegining:
-                {
-                    m_state = SensorPatternPress::Ready;
+                    m_state = SensorPatternPress::WaitingStart;
                 }
                 break;
             default:

@@ -11,13 +11,12 @@ public:
         , m_releaseTimeMsec(release_time_msec),
         m_physicalButtonPressedFunc(button_pressed_func)
     {
-        m_stopwatch.Reset();
     }
     
     // Возвращает true если логическая кнопка считается нажатой.
     bool IsPressed()
     {
-        UpdateLogicPress();
+        UpdateState();
         return m_state == ButtonDebounce::LogicalPressed;
     }
     
@@ -26,7 +25,7 @@ private:
     enum State
     {
         WaitingPhysicalPress,
-        AccumulatingPhisicalPress,
+        AccumulatingPhysicalPress,
         LogicalPressed,
         AccumulatingReset // Отсчитывыем времени отпущенной кнопки.
     }; 
@@ -37,7 +36,7 @@ private:
     Stopwatch m_stopwatch;
     State m_state = State::WaitingPhysicalPress;
     
-    void UpdateLogicPress()
+    void UpdateState()
     {   
         if (m_physicalButtonPressedFunc()) // Кнопка физически зажата.
         {
@@ -45,18 +44,23 @@ private:
             {
             case WaitingPhysicalPress:
                 {
-                    m_state = ButtonDebounce::AccumulatingPhisicalPress;
+                    m_state = ButtonDebounce::AccumulatingPhysicalPress;
                     m_stopwatch.Reset(); // Начать отсчет времени зажатой кнопки.
                 }
                 break;
-            case AccumulatingPhisicalPress:
+            case AccumulatingPhysicalPress:
                 {
                     if (m_stopwatch.GetElapsedMsec() >= m_pressTimeMsec) // Кнопка должна быть зажата некоторое время.
                     {
                         m_state = ButtonDebounce::LogicalPressed;
                     }
                 }
+                break;
             case LogicalPressed:
+                {
+                    m_state = ButtonDebounce::AccumulatingReset;
+                    m_stopwatch.Reset(); // Начать отсчет времени отпущенной кнопки.
+                }
                 break;
             case AccumulatingReset: // Произошло нажатие но оно еще запрещено гистерезисом.
                 {
@@ -73,7 +77,7 @@ private:
             {
             case WaitingPhysicalPress:
                 break;
-            case AccumulatingPhisicalPress: // Отпустили кнопку слишком рано или дребезг контактов?
+            case AccumulatingPhysicalPress: // Отпустили кнопку слишком рано или дребезг контактов?
                 {
                     m_state = ButtonDebounce::WaitingPhysicalPress;
                 }
