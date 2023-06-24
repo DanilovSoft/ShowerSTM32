@@ -302,7 +302,7 @@ public:
     // От 1 до 10 секунд.
     static uint16_t FixButtonLongPressTimeMsec(const uint16_t time_msec)
     {
-        if (time_msec < 1000 || time_msec > 10000)
+        if (time_msec < 1000 || time_msec > 3500)
         {
             return 3000;
         }

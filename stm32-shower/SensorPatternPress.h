@@ -35,9 +35,9 @@ private:
         BackToBegining // Когда сенсор включен но патерн отмерять не нужно.
     };
     
-    const static uint16_t MinimumTimeMsec = 160;
-    const static uint16_t MaximumTimeMsec = 400;
-    const static uint16_t MaxDeviationMsec = 80;
+    const static uint16_t MinimumTimeMsec = 200;
+    const static uint16_t MaximumTimeMsec = 600;
+    const static uint16_t MaxDeviationMsec = 100;
     
     Stopwatch m_stopwatch;
     uint32_t m_lastTime;
