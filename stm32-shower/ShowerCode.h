@@ -51,12 +51,6 @@ enum ShowerCode
     kGetTempSensorInternalTempAverageSize = 47,
     kSetTempSensorInternalTempAverageSize = 48,
     
-//    kGetWaterLevelUsecPerDeg = 49,
-//    kSetWaterLevelUsecPerDeg = 50,
-    
-    //kGetWaterValveTimeoutSec = 51,
-    //kSetWaterValveTimeoutSec = 52,
-    
     kGetWaterLevelRaw = 53,
     
     kGetButtonTimeMsec = 54,
@@ -79,6 +73,9 @@ enum ShowerCode
     
     kGetWaterLevelErrorThreshold = 80,
     kSetWaterLevelErrorThreshold = 81,
+    
+    kGetWaterLevelOverflowCounter = 82,
+    kGetWaterLevelNoiseErrorCounter = 83,
     
     kOK = 200,
     kUnknownCode = 253,

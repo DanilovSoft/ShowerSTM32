@@ -39,7 +39,7 @@ void Common::InitWaterLevel(const PropertyStruct* const properties)
     GPIO_ResetBits(WL_GPIO_TIM, WL_GPIO_TIM_Pin);
     
     const uint16_t prescaler = SystemCoreClock / 1000000 - 1;      // 1 микросекунда.
-    const uint16_t period = properties->WaterLevelEmpty + (usec_per_percent * 10);       // Диаппазон таймера с запасом на пару процентов.
+    const uint16_t period = properties->WaterLevelEmpty + round(usec_per_percent * 20);       // Диаппазон таймера с запасом на пару процентов (20%).
     
     TIM_TimeBaseInitTypeDef base_timer =
     {
@@ -59,7 +59,8 @@ void Common::InitWaterLevel(const PropertyStruct* const properties)
         .TIM_ICPolarity = TIM_ICPolarity_Rising,
         .TIM_ICSelection = TIM_ICSelection_DirectTI,
         .TIM_ICPrescaler = TIM_ICPSC_DIV1,
-        .TIM_ICFilter = 15     // Максимальное значение 15 или 0b1111.
+        //.TIM_ICFilter = 15     // Максимальное значение 15 или 0b1111.
+        .TIM_ICFilter = 0     // не знаю какое значение лучше подойдёт для датчика расстояния.
     };
     
     TIM_ICInit(WL_TIM, &tim_ic_init_struct);

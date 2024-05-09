@@ -229,6 +229,16 @@ private:
                 m_request.SendResponse(g_waterLevelTask.GetAvgUsec());
                 break;
             }
+        case ShowerCode::kGetWaterLevelOverflowCounter:
+            {
+                m_request.SendResponse(g_waterLevelTask.GetOverflowCounter());
+                break;
+            }
+        case ShowerCode::kGetWaterLevelNoiseErrorCounter:
+            {
+                m_request.SendResponse(g_waterLevelTask.GetNoiseErrorCounter());
+                break;
+            }
         case ShowerCode::kGetWaterLevelRaw:
             {
                 m_request.SendResponse(g_waterLevelTask.GetUsecRaw());

@@ -20,7 +20,7 @@
 
 extern "C"
 {
-    extern volatile uint8_t TIM_CAPTURE_STATE;
+    extern volatile WaterLevelTimerState TIM_CAPTURE_STATE;
     extern volatile uint16_t TIM_CAPTURE_VALUE;
 }
 
@@ -39,6 +39,12 @@ public:
         m_minimumAllowedUsec = g_properties.WaterLevelFull * 0.8; // На 20% меньше минимально допустимого значения.
     }
     
+    // Значение -1 означает что последнее измерение не удалось.
+    uint16_t GetUsecRaw() volatile
+    {
+        return m_usecRaw;
+    }
+    
     // Уровень воды в баке от 0 до 99, %.
     uint8_t GetPercent() volatile
     {
@@ -51,10 +57,14 @@ public:
         return m_avgUsec;
     }
     
-    // Значение -1 означает что последнее измерение не удалось.
-    uint16_t GetUsecRaw() volatile
+    uint16_t GetOverflowCounter() volatile
     {
-        return m_usecRaw;
+        return m_overflowCounter;
+    }
+    
+    uint16_t GetNoiseErrorCounter() volatile
+    {
+        return m_noiseErrorCounter;
     }
     
     // True если было получено хоть одно показание с датчика уровня.
@@ -95,8 +105,9 @@ private:
     static constexpr uint8_t kBDash = 0b11111101; // Горизонтальный прочерк во втором разряде индикатора.
     static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
     
-    //const PropertyStruct* const m_properties;
     uint16_t m_usecRange;  // Ширина полного диаппазона в микросекундах.
+    uint16_t m_overflowCounter = 0;
+    uint16_t m_noiseErrorCounter = 0;
     uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
     // Показания датчика меньше этого значения будут считаться не валидными 
     // (например когда датчик заслонён или ловит своё эхо от зеркала).
@@ -319,7 +330,7 @@ private:
     bool GetRawUsecTime(uint16_t &usec)
     {
         // Разрешить работу таймера.
-        TIM_CAPTURE_STATE = 0;
+        TIM_CAPTURE_STATE = WL_NONE;
 
         // Сбросить счетчик таймера.
         TIM_SetCounter(WL_TIM, 0);
@@ -333,7 +344,7 @@ private:
         GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
     
         // Ждём флаг завершения (когда сработает прерывание таймера по заднему фронту или по переполнению).
-        while(!(TIM_CAPTURE_STATE & WL_SUCCESS))
+        while (!(TIM_CAPTURE_STATE & WL_SUCCESS))
         {
             taskYIELD();
         }
@@ -345,15 +356,19 @@ private:
 
         // По ДШ расстояние может быть от 2см т.е. примерно 116 мкс.
         // Иногда значение получается 15..16 по непонятным причинам.
-        if(usec < 116)
+        if (usec < 116)
         {
+            m_noiseErrorCounter++;
             return false;
         }
 
-        // true если не было переполнения таймера.
-        bool success = (!(TIM_CAPTURE_STATE & WL_OVERFLOW));
-    
-        return success;
+        if (TIM_CAPTURE_STATE & WL_OVERFLOW)
+        {
+            m_overflowCounter++;
+            return false;
+        }
+        
+        return true;
     }
     
     float GetFloatPercent(uint16_t usec)

@@ -63,13 +63,20 @@
 #define GPIO_LED					(GPIOB)
 #define GPIO_Pin_LED				(GPIO_Pin_7)
 #define LED_TIM						(TIM4)
-
-#define WL_SUCCESS                  (0b10000000)
-#define WL_RISING_EDGE              (0b01000000)
-#define WL_OVERFLOW                 (0b00100000)
-
 #define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
+
+enum WaterLevelTimerState {
+    WL_NONE        = 0,
+    WL_SUCCESS     = 1 << 0, // 0b_00000001
+    WL_RISING_EDGE = 1 << 1, // 0b_00000010
+    WL_OVERFLOW    = 1 << 2  // 0b_00000100
+};
+
+inline WaterLevelTimerState operator|(WaterLevelTimerState a, WaterLevelTimerState b)
+{
+    return static_cast<WaterLevelTimerState>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 // Делегат нажатия на кнопку.
 typedef bool(*ButtonPressedFunc)();
