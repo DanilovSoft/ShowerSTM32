@@ -74,8 +74,6 @@
 // Делегат нажатия на кнопку.
 typedef bool(*ButtonPressedFunc)();
 
-static constexpr auto kDefaultEmptyTankDistanceCm = 45.1379;         // Расстояние от датчика до дна пустого бака.
-static constexpr auto kDefaultFullTankDistanceCm = 15.8965;          // Расстояние от датчика до воды при полном баке.
 static constexpr auto kDefaultWaterTankVolumeLitre = 37.32212;    
 static constexpr auto kDefaultWiFiPower = 60;                        // 60 = 15.0 dBm
 static constexpr auto kDefaultWaterHeaterPowerKWatt = 1.247616;      // Полтора-киловатный ТЭН с учётом КПД.
@@ -94,8 +92,6 @@ static constexpr uint8_t kAirTempUpperBound = 40;                // Максим
 static constexpr uint8_t kInternalTempAvgFilterSize = 8;         // Максимально допустимый размер фильтра 'скользящее среднее' для температуры в баке.
 static constexpr uint8_t kAirTempAvgFilterSize = 1;              // Максимально допустимый размер фильтра 'скользящее среднее' для температуры окружающего воздуха.
 static constexpr auto kAirTempSteps = kAirTempUpperBound - kAirTempLowerBound;    // Размер таблицы температур делаем исходя из возможных значений температур окружаюшего воздуха.
-static constexpr auto kTankMinimumHeightCm = 30;                 // Минимально возможная высота бака, см.
-static constexpr auto kTankMaximumHeightCm = 50;                 // Максимально возможная высота бака, см.
 static constexpr uint16_t kTempSensorPauseMsec = 2000;           // Пауза между измерениями температуры.
 
 // Всего 8 блоков памяти по 256 байт (по 16 страниц).

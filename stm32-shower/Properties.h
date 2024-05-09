@@ -292,44 +292,50 @@ public:
     static uint8_t FixButtonPressTimeMsec(const uint8_t time_msec)
     {
         // Обычно для антидребезга задают 50 мс.
-        if(time_msec < 20 || time_msec > 80)
+        if (time_msec < 20 || time_msec > 80)
         {
             return 40;
         }
+        
         return time_msec;
     }
     
     // От 1 до 10 секунд.
     static uint16_t FixButtonLongPressTimeMsec(const uint16_t time_msec)
     {
-        if (time_msec < 1000 || time_msec > 3500)
+        if (time_msec < 500 || time_msec > 3500)
         {
             return 3000;
         }
+        
         return time_msec;
     }
     
     static uint16_t FixWaterLevelEmpty(const uint16_t water_level_empty)
     {
         // В одном сантиметре - 58 микросекунд.
-        static const auto minimum = kTankMinimumHeightCm * 58;
-        static const auto maximum = kTankMaximumHeightCm * 58;
+        // пусть минимальное расстояние от датчика до дна пустого бака будет 20 см.
+        // пусть максимальное расстояние от датчика до дна пустого бака будет 70 см.
         
-        if(water_level_empty < minimum || water_level_empty > maximum) 
+        if (water_level_empty < (20 * 58) || water_level_empty > (70 * 58)) 
         {
-            return round(kDefaultEmptyTankDistanceCm * 58);
+            return 3000; // возьмем за дефолт некоторое ровное значение в 3000 (52 см).
         }
+        
         return water_level_empty;
     }
     
     // Минимум 2 сантиметра.
     static uint16_t FixWaterLevelFull(const uint16_t water_level_full, const uint16_t water_level_empty)
     {
-        // 2 сантиметра.
-        if(water_level_full < 116 || water_level_full > water_level_empty)
+        // В одном сантиметре - 58 микросекунд.
+        // по даташиту расстояние не может быть меньше 2 см.
+        
+        if (water_level_full < (2 * 58) || water_level_full >= water_level_empty)
         {
-            return round(kDefaultFullTankDistanceCm * 58);
+            return 1000; // возьмем за дефолт некоторое ровное значение в 1000 (17 см).
         }
+        
         return water_level_full;
     }
     

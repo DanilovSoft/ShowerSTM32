@@ -20,8 +20,8 @@
 
 extern "C"
 {
-    extern volatile uint8_t TIM_CAPTURE_STA;
-    extern volatile uint16_t TIM_CAPTURE_VAL;
+    extern volatile uint8_t TIM_CAPTURE_STATE;
+    extern volatile uint16_t TIM_CAPTURE_VALUE;
 }
 
 class WaterLevelTask final : public TaskBase
@@ -112,6 +112,7 @@ private:
     volatile uint16_t m_avgUsec = 0;
     
     // Значение -1 означает что последнее измерение не удалось.
+    // Это значение используется только для API.
     volatile int16_t m_usecRaw = -1;
     
     // Уровень воды в баке от 0 до 99, %.
@@ -136,8 +137,8 @@ private:
     
         while (true)
         {
-            uint16_t usec_raw;  // Сырые показания датчика в микросекундах.
-            if(GetRawUsecTime(usec_raw))
+            uint16_t usec_raw; // Сырые показания датчика в микросекундах.
+            if (GetRawUsecTime(usec_raw))
             {
                 // Скопировать сырые показания микросекунд в публичную переменную.
                 m_usecRaw = usec_raw;
@@ -177,13 +178,11 @@ private:
 
                     // Отобразить на LED.
                     TaskDisplayPercent(percent);
-                
                     DecrementError();
                 }
                 else
                 {
                     // Датчик чем-то заслонён — расстояние слишком короткое.
-                    
                     // Считаем это ошибкой получения уровня воды.
                     IncrementError();
                 }
@@ -320,7 +319,7 @@ private:
     bool GetRawUsecTime(uint16_t &usec)
     {
         // Разрешить работу таймера.
-        TIM_CAPTURE_STA = 0;
+        TIM_CAPTURE_STATE = 0;
 
         // Сбросить счетчик таймера.
         TIM_SetCounter(WL_TIM, 0);
@@ -334,7 +333,7 @@ private:
         GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
     
         // Ждём флаг завершения (когда сработает прерывание таймера по заднему фронту или по переполнению).
-        while(!(TIM_CAPTURE_STA & WL_SUCCESS))
+        while(!(TIM_CAPTURE_STATE & WL_SUCCESS))
         {
             taskYIELD();
         }
@@ -342,7 +341,7 @@ private:
         TIM_Cmd(WL_TIM, DISABLE);
     
         // Копируем volatile.
-        usec = TIM_CAPTURE_VAL;
+        usec = TIM_CAPTURE_VALUE;
 
         // По ДШ расстояние может быть от 2см т.е. примерно 116 мкс.
         // Иногда значение получается 15..16 по непонятным причинам.
@@ -352,7 +351,7 @@ private:
         }
 
         // true если не было переполнения таймера.
-        bool success = (!(TIM_CAPTURE_STA & WL_OVERFLOW));
+        bool success = (!(TIM_CAPTURE_STATE & WL_OVERFLOW));
     
         return success;
     }
