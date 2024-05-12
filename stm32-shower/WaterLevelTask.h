@@ -105,7 +105,7 @@ private:
     static constexpr uint8_t kBDash = 0b11111101; // Горизонтальный прочерк во втором разряде индикатора.
     //static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
     
-    uint16_t m_usecRange;  // Ширина полного диаппазона в микросекундах.
+    uint16_t m_usecRange; // Ширина полного диаппазона в микросекундах.
     uint16_t m_overflowCounter = 0;
     uint16_t m_noiseErrorCounter = 0;
     uint8_t m_intervalPauseMsec; // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
@@ -140,11 +140,11 @@ private:
     
         while (true)
         {
-            DoMesure(xLastWakeTime, last_point);
+            DoMesure(xLastWakeTime);
         }
     }
 
-    void DoMesure(TickType_t &xLastWakeTime, uint8_t &last_point)
+    void DoMesure(TickType_t &xLastWakeTime)
     {
         uint16_t usec_raw; // Сырые показания датчика в микросекундах.
         if (GetRawUsecTime(usec_raw))
@@ -177,7 +177,7 @@ private:
                 //point = Hysteresis(point, last_point);
 
                 // Запомнить прошлое значение c гистерезисом.
-                last_point = point;
+                //last_point = point;
             
                 // Уровень воды от 0% до 99%
                 uint8_t percent = GetPercent(point);
