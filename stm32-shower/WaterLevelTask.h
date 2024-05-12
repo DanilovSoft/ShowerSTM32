@@ -103,7 +103,7 @@ private:
     
     static constexpr uint8_t kADash = 0b11011111; // Горизонтальный прочерк в первом разряде индикатора.
     static constexpr uint8_t kBDash = 0b11111101; // Горизонтальный прочерк во втором разряде индикатора.
-    static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
+    //static constexpr uint8_t kHysteresisPoints = 4; // Гистерезис на 4 пункта.
     
     uint16_t m_usecRange;  // Ширина полного диаппазона в микросекундах.
     uint16_t m_overflowCounter = 0;
@@ -118,19 +118,11 @@ private:
     bool m_waterIsRising = true; // По умолчанию для гистерезиса считать что вода подымается.
     volatile bool m_initialized = false;
     volatile uint8_t m_errorCounter = 0;
-    
-    // Последнее измеренное значение после усреднений.
-    volatile uint16_t m_avgUsec = 0;
-    
-    // Значение -1 означает что последнее измерение не удалось.
-    // Это значение используется только для API.
+    volatile uint16_t m_avgUsec = 0; // Последнее измеренное значение после усреднений.
+    // Значение -1 означает что последнее измерение не удалось. -1 используется только для API.
     volatile int16_t m_usecRaw = -1;
-    
-    // Уровень воды в баке от 0 до 99, %.
-    volatile uint8_t m_percent = 0;
-    
-    // True если было получено хоть одно показание с датчика уровня.
-    volatile bool m_hasPercent = false;
+    volatile uint8_t m_percent = 0; // Уровень воды в баке от 0 до 99, %.
+    volatile bool m_hasPercent = false; // True если было получено хоть одно показание с датчика уровня.
 
     virtual void Run() override
     {
@@ -148,67 +140,72 @@ private:
     
         while (true)
         {
-            uint16_t usec_raw; // Сырые показания датчика в микросекундах.
-            if (GetRawUsecTime(usec_raw))
-            {
-                // Скопировать сырые показания микросекунд в публичную переменную.
-                m_usecRaw = usec_raw;
-
-                // Проверить не заслонен ли датчик.
-                if (!SensorIsBlocked(usec_raw))
-                {
-                    // Медианный фильтр.
-                    uint16_t median = m_medianFilter.AddValue(usec_raw);
-
-                    // Скользящее среднее.
-                    uint16_t avg = m_movingAverageFilter.AddValue(median);
-
-                    // Скопировать фильтрованное значение микросекунд в публичную переменную.
-                    m_avgUsec = avg;
-            
-                    // Поправка на выход из диаппазона.
-                    avg = ClampRange(avg);
-            
-                    // Уровень воды в дробных пунктах.
-                    float pointf = GetPoint(avg);
-            
-                    // Целое количество пунктов.
-                    uint8_t point = GetIntPoint(pointf);
-            
-                    // Пункты с учетом гистерезиса.
-                    point = Hysteresis(point, last_point);
-
-                    // Запомнить прошлое значение c гистерезисом.
-                    last_point = point;
-            
-                    // Уровень воды от 0% до 99%
-                    uint8_t percent = GetPercent(point);
-
-                    // Скопировать уровень воды в процентах в публичную переменную.
-                    m_percent = percent;
-
-                    // Отобразить на LED.
-                    TaskDisplayPercent(percent);
-                    DecrementError();
-                }
-                else
-                {
-                    // Датчик чем-то заслонён — расстояние слишком короткое.
-                    // Считаем это ошибкой получения уровня воды.
-                    IncrementError();
-                }
-            }
-            else
-            {
-                m_usecRaw = -1;
-                IncrementError();
-            }
-
-            // Пауза для затухания эха.
-            vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
+            DoMesure(xLastWakeTime, last_point);
         }
     }
 
+    void DoMesure(TickType_t &xLastWakeTime, uint8_t &last_point)
+    {
+        uint16_t usec_raw; // Сырые показания датчика в микросекундах.
+        if (GetRawUsecTime(usec_raw))
+        {
+            // Скопировать сырые показания микросекунд в публичную переменную.
+            m_usecRaw = usec_raw;
+
+            // Проверить не заслонен ли датчик.
+            if (!SensorIsBlocked(usec_raw))
+            {
+                // Медианный фильтр.
+                uint16_t median = m_medianFilter.AddValue(usec_raw);
+
+                // Скользящее среднее.
+                uint16_t avg = m_movingAverageFilter.AddValue(median);
+
+                // Скопировать фильтрованное значение микросекунд в публичную переменную.
+                m_avgUsec = avg;
+            
+                // Поправка на выход из диаппазона.
+                avg = ClampRange(avg);
+            
+                // Уровень воды в дробных пунктах.
+                float pointf = GetPoint(avg);
+            
+                // Целое количество пунктов.
+                uint8_t point = GetIntPoint(pointf);
+            
+                // Пункты с учетом гистерезиса.
+                //point = Hysteresis(point, last_point);
+
+                // Запомнить прошлое значение c гистерезисом.
+                last_point = point;
+            
+                // Уровень воды от 0% до 99%
+                uint8_t percent = GetPercent(point);
+
+                // Скопировать уровень воды в процентах в публичную переменную.
+                m_percent = percent;
+
+                // Отобразить на LED.
+                TaskDisplayPercent(percent);
+                DecrementError();
+            }
+            else
+            {
+                // Датчик чем-то заслонён — расстояние слишком короткое.
+                // Считаем это ошибкой получения уровня воды.
+                IncrementError();
+            }
+        }
+        else
+        {
+            m_usecRaw = -1;
+            IncrementError();
+        }
+
+        // Пауза для затухания эха.
+        vTaskDelayUntil(&xLastWakeTime, m_intervalPauseMsec);
+    }
+    
     void IncrementError()
     {
         if (m_errorCounter < g_properties.WaterLevelErrorThreshold)
@@ -259,13 +256,13 @@ private:
         uint8_t last_point;
         for (uint16_t i = 0; i < warmup_count;)
         {
-            uint16_t usec_raw;  // Сырые показания датчика.
-            if(GetRawUsecTime(usec_raw)) 
+            uint16_t usec_raw; // Сырые показания датчика.
+            if (GetRawUsecTime(usec_raw)) 
             {
                 m_usecRaw = usec_raw;
             
                 // Проверить не заслонен ли датчик.
-                if(!SensorIsBlocked(usec_raw))
+                if (!SensorIsBlocked(usec_raw))
                 {
                     // Медианный фильтр.
                     uint16_t median = m_medianFilter.AddValue(usec_raw);
@@ -276,7 +273,7 @@ private:
                     if (i < g_properties.WaterLevelAvgFilterSize)
                     {
                         // Фильтр 'скользящее среднее' заполнен НЕ полностью, поэтому делим его значение на коэффициент заполненности.
-                        avg = m_movingAverageFilter.GetAverage() / (i + 1);      // Точность с кажной итерацией будет увеличиваться.
+                        avg = m_movingAverageFilter.GetAverage() / (i + 1); // Точность с кажной итерацией будет увеличиваться.
                     }
             
                     // Инициализировать глобальную переменную.
@@ -302,14 +299,12 @@ private:
 
                     m_hasPercent = true;
 
-                    i++;    // Считаем только успешные измерения.
-
+                    i++; // Считаем только успешные измерения.
                     DecrementError();
                 }
                 else
                 {
                     // Датчик чем-то заслонён — расстояние слишком короткое.
-                    
                     IncrementError();
                 }
             }
@@ -385,8 +380,7 @@ private:
         uint32_t tmp = usec * 99;
         
         // Сколько пунктов из 99.
-        float point = tmp / (float)m_usecRange; 
-        
+        float point = tmp / (float)m_usecRange;
         return point;
     }
     
@@ -417,69 +411,69 @@ private:
     
     // Функция предотвращает плавание показаний когда уровень воды неподвижен.
     // Возвращает или point или last_point.
-    uint8_t Hysteresis(uint8_t point, uint8_t last_point)
-    {
-        // На сколько пунктов изменился уровень воды.
-        int16_t diff = (point - last_point);
-    
-        // Небольшая оптимизация.
-        if(diff != 0)
-        {
-            // Если уровень воды хоть как-то изменился.
-            
-            if(m_waterIsRising)
-            {
-                // Считается что уровень воды увеличивается.
-                    
-                if(diff < 0)
-                {
-                    // Вода начала убывать.
-                            
-                    if(diff <= -kHysteresisPoints)
-                    {
-                        // Уровень воды уменьшился более чем на 4 пункта.
-                                    
-                        // Считать что вода теперь убывает.
-                        m_waterIsRising = false;
-                    }
-                    else
-                    {
-                        // Уровень воды уменьшился не значительно.
-                                    
-                        // Возвращаем прошлое значение.
-                        return last_point;
-                    }
-                }
-            }
-            else
-            {
-                // Считается что уровень воды уменьшается.
-                    
-                if(diff > 0)
-                {
-                    // Уровень воды начал увеличиваться.
-                    
-                    if(diff >= kHysteresisPoints)
-                    {
-                        // Уровень увеличился более чем на 4 пункта.
-                            
-                        // Считать что вода теперь прибывает.
-                        m_waterIsRising = true;
-                    }
-                    else
-                    {
-                        // Уровень воды увеличился не значительно.
-                            
-                        // Возвращаем прошлое значение.
-                        return last_point;
-                    }
-                }
-            }
-        }
-    
-        // По умолчанию возвращаем без гистерезиса.
-        return point;
-    }
+//    uint8_t Hysteresis(uint8_t point, uint8_t last_point)
+//    {
+//        // На сколько пунктов изменился уровень воды.
+//        int16_t diff = (point - last_point);
+//    
+//        // Небольшая оптимизация.
+//        if(diff != 0)
+//        {
+//            // Если уровень воды хоть как-то изменился.
+//            
+//            if(m_waterIsRising)
+//            {
+//                // Считается что уровень воды увеличивается.
+//                    
+//                if(diff < 0)
+//                {
+//                    // Вода начала убывать.
+//                            
+//                    if(diff <= -kHysteresisPoints)
+//                    {
+//                        // Уровень воды уменьшился более чем на 4 пункта.
+//                                    
+//                        // Считать что вода теперь убывает.
+//                        m_waterIsRising = false;
+//                    }
+//                    else
+//                    {
+//                        // Уровень воды уменьшился не значительно.
+//                                    
+//                        // Возвращаем прошлое значение.
+//                        return last_point;
+//                    }
+//                }
+//            }
+//            else
+//            {
+//                // Считается что уровень воды уменьшается.
+//                    
+//                if(diff > 0)
+//                {
+//                    // Уровень воды начал увеличиваться.
+//                    
+//                    if(diff >= kHysteresisPoints)
+//                    {
+//                        // Уровень увеличился более чем на 4 пункта.
+//                            
+//                        // Считать что вода теперь прибывает.
+//                        m_waterIsRising = true;
+//                    }
+//                    else
+//                    {
+//                        // Уровень воды увеличился не значительно.
+//                            
+//                        // Возвращаем прошлое значение.
+//                        return last_point;
+//                    }
+//                }
+//            }
+//        }
+//    
+//        // По умолчанию возвращаем без гистерезиса.
+//        return point;
+//    }
 
     // От 0 до 99.
     static uint8_t GetIntPoint(float pointf)
