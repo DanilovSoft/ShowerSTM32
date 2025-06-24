@@ -34,7 +34,7 @@ public:
             m_internal[index] = value;
 
             // Сделать точки слева не меньше текущего значения. Массив идет от большего к меньшему: [40, 40, 40, 39, 38, 37, 37, 37, 36, 36].
-            if(index > 0)
+            if (index > 0)
             {
                 uint8_t left_points = index;
 
@@ -51,13 +51,13 @@ public:
             uint8_t prev_value = value;
 
             // Сделать точки справа с шагом не больше 1 градуса.
-            for(uint8_t i = (index + 1) ; i < kAirTempSteps ; i++) // От текущей точки не включительно к началу массива.
+            for (uint8_t i = (index + 1); i < kAirTempSteps; i++) // От текущей точки не включительно к началу массива.
             {
                 auto& t = m_internal[i];
 
-                auto nextT = (prev_value - 1);     // Не должно быть меньше.
+                auto nextT = (prev_value - 1); // Не должно быть меньше.
 
-                if(t < nextT)
+                if (t < nextT)
                 {
                     t = nextT;
                 }
@@ -78,18 +78,18 @@ public:
         uint8_t value = m_internal[index];
 
         // проверка на всякий случай.
-        if(value > 0)
+        if (value > 0)
         {
-            --value;     // Уменьшить на 1 градус.
+            --value; // Уменьшить на 1 градус.
 
-            if(value <= kInternalTempLimit)
+            if (value <= kInternalTempLimit)
             {
                 // Значение в допустимом пределе.
                     
-                m_internal[index] = value;     // Установить новое значение.
+                m_internal[index] = value; // Установить новое значение.
 
                 // Сделать точки справа не больше текущего значени¤.  [40, 40, 40, 39, 38, 37, 37, 37, 36, 36].
-                for(uint8_t i = (index + 1) ; i < kAirTempSteps ; i++) // От следующей точки к концу массива.
+                for (uint8_t i = (index + 1); i < kAirTempSteps; i++) // От следующей точки к концу массива.
                 {
                     auto& t = m_internal[i];
                     if (t > value)
@@ -104,12 +104,12 @@ public:
                     uint8_t left_points = index;
 
                     // Сделать точки слева с шагом не больше 1 градуса.
-                    while(left_points--)
+                    while (left_points--)
                     {
                         auto& t = m_internal[left_points];
-                        auto nextT = (prev_value + 1);   // Не должно превышать.
+                        auto nextT = (prev_value + 1); // Не должно превышать.
 
-                        if(t > nextT)
+                        if (t > nextT)
                         {
                             t = nextT;
                         }
@@ -236,10 +236,10 @@ public:
     uint16_t ButtonLongPressTimeMsec;
     
     // 64-битный идентификатор датчика температуры воды внутри бака. (DS18B20)
-    uint8_t InternalTempSensorId[8] = {};
+    uint8_t InternalTempSensorId[8] = { };
     
     // 64-битный идентификатор датчика температуры окружающего воздуха. (DS18B20)
-    uint8_t ExternalTempSensorId[8] = {};
+    uint8_t ExternalTempSensorId[8] = { };
     
     // Объём воды полного бака в литрах.
     float WaterTankVolumeLitre;
@@ -292,10 +292,11 @@ public:
     static uint8_t FixButtonPressTimeMsec(const uint8_t time_msec)
     {
         // Обычно для антидребезга задают 50 мс.
-        if(time_msec < 20 || time_msec > 80)
+        if (time_msec < 20 || time_msec > 80)
         {
             return 40;
         }
+        
         return time_msec;
     }
     
@@ -306,6 +307,7 @@ public:
         {
             return 4000;
         }
+        
         return time_msec;
     }
     
@@ -315,7 +317,7 @@ public:
         static const auto minimum = kTankMinimumHeightCm * 58;
         static const auto maximum = kTankMaximumHeightCm * 58;
         
-        if(water_level_empty < minimum || water_level_empty > maximum) 
+        if (water_level_empty < minimum || water_level_empty > maximum) 
         {
             return round(kDefaultEmptyTankDistanceCm * 58);
         }
@@ -326,7 +328,7 @@ public:
     static uint16_t FixWaterLevelFull(const uint16_t water_level_full, const uint16_t water_level_empty)
     {
         // 2 сантиметра.
-        if(water_level_full < 116 || water_level_full > water_level_empty)
+        if (water_level_full < 116 || water_level_full > water_level_empty)
         {
             return round(kDefaultFullTankDistanceCm * 58);
         }
@@ -406,6 +408,7 @@ public:
         {
             return 60;
         }
+        
         return water_level_measure_interval_msec;
     }
     
