@@ -134,9 +134,6 @@ private:
         // Уровень воды инициализирован.
         m_initialized = true;
     
-        // Для гистерезиса по умолчанию считаем что уровень воды поднимается (Что-бы не допустить перелив).
-        //m_waterIsRising = true;
-    
         while (true)
         {
             // Пауза для затухания эха.
@@ -235,9 +232,7 @@ private:
         // Дать датчику эксклюзивное время на инициализацию 
         // И выполнить прогрев. (Почему-то сказывается при включенной оптимизации -O1 и выше).
         EchoPause(&xLastWakeTime);
-        Common::WaterLevelEnableTrig();
-        DELAY_US(10);
-        Common::WaterLevelDisableTrig();
+        Trig();
         
         // Размер медианного фильтра + буфера скользящее среднее.
         uint16_t warmup_count = g_properties.WaterLevelMedianFilterSize + g_properties.WaterLevelAvgFilterSize;
@@ -312,9 +307,7 @@ private:
         TIM_Cmd(WL_TIM, ENABLE);
     
         // Отправить звуковой сигнал.
-        GPIO_SetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
-        DELAY_US(10);
-        GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
+        Trig();
     
         // Ждём флаг завершения (когда сработает прерывание таймера по заднему фронту или по переполнению).
         while (!(TIM_CAPTURE_STATE & SoundSensorTimerState::COMPLETED))
@@ -408,6 +401,15 @@ private:
 //        return point;
 //    }
 
+    // Trig на 10 микро секунд
+    inline static void Trig()
+    {
+        // Отправить звуковой сигнал.
+        GPIO_SetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
+        DELAY_US(10);
+        GPIO_ResetBits(WL_GPIO_Trig, WL_GPIO_Trig_Pin);
+    }
+    
     // От 0 до 99.
     static uint8_t ClampFloatToInt(float pointf)
     {
