@@ -31,6 +31,8 @@
 #define GPIO_Buzzer_Pin				(GPIO_Pin_0)
 #define WL_SPI                      (SPI2)
 #define WL_TIM                      (TIM1)
+#define WL_GPIO_TIM                 (GPIOA)
+#define WL_GPIO_TIM_Pin             (GPIO_Pin_8)
 #define WL_GPIO_Trig                (GPIOA)
 #define WL_GPIO_Trig_Pin            (GPIO_Pin_9)
 #define WL_GPIO_LATCH               (GPIOB)
@@ -38,8 +40,6 @@
 #define WL_GPIO_SPI                 (GPIOB)
 #define WL_GPIO_SPI_SCK_Pin         (GPIO_Pin_13)
 #define WL_GPIO_SPI_MOSI_Pin        (GPIO_Pin_15)
-#define WL_GPIO_TIM                 (GPIOA)
-#define WL_GPIO_TIM_Pin             (GPIO_Pin_8)
 #define I2C_EE_LCD					(I2C1)
 #define GPIO_I2C_SCL_Pin			(GPIO_Pin_8)
 #define GPIO_I2C_SDA_Pin			(GPIO_Pin_9)
@@ -51,8 +51,6 @@
 #define OW_DMA_FLAG					(DMA1_FLAG_TC5)
 #define WIFI_GPIO					(GPIOB)
 #define WIFI_GPIO_CH_PD_Pin			(GPIO_Pin_1) // Chip power-down.
-#define GPIO_WPS					(GPIOB)
-#define GPIO_WPS_Pin				(GPIO_Pin_12)
 #define Button_GPIO                 (GPIOA)
 #define Button_Temp_Minus           (GPIO_Pin_2)
 #define Button_Temp_Plus            (GPIO_Pin_3)
@@ -62,19 +60,19 @@
 #define GPIO_Pin_LED				(GPIO_Pin_7)
 #define LED_TIM						(TIM4)
 
-#define WL_SUCCESS                  (0b10000000)
-#define WL_RISING_EDGE              (0b01000000)
-#define WL_OVERFLOW                 (0b00100000)
-
 #define BIT_IS_SET(var,pos) ((var) & (1<<(pos)))
 #define BIT_IS_NOT_SET(var,pos) (!BIT_IS_SET(var,pos))
 
 // Делегат нажатия на кнопку.
 typedef bool(*ButtonPressedFunc)();
 
-static constexpr auto kDefaultEmptyTankDistanceCm = 45.1379;         // Расстояние от датчика до дна пустого бака.
-static constexpr auto kDefaultFullTankDistanceCm = 15.8965;          // Расстояние от датчика до воды при полном баке.
+static constexpr auto kDefaultEmptyTankDistanceCm = 75;//31.2414;     // Расстояние от датчика до дна пустого бака.
+static constexpr auto kDefaultFullTankDistanceCm = 2.0;          // Расстояние от датчика до воды при полном баке.
 static constexpr auto kDefaultWaterTankVolumeLitre = 37.32212;    
+static constexpr auto kWaterLevelTimeoutDistanceCm = 90;        // Настраиваем таймер на максимальное расстояние
+
+// Мощность WiFi в единицах по 0.25 dBm.
+// От 40 до 82 (10..20.5 dBm)
 static constexpr auto kDefaultWiFiPower = 60;                        // 60 = 15.0 dBm
 static constexpr auto kDefaultWaterHeaterPowerKWatt = 1.247616;      // Полтора-киловатный ТЭН с учётом КПД.
 static constexpr auto kDefaultMinimumWaterHeatingPercent = 25;

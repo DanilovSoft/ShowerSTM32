@@ -44,7 +44,7 @@ public:
         xSemaphoreGive(m_xLockSemaphore);
     }
     
-    bool GetInitialized()
+    bool IsInitialized()
     {
         return m_xLockSemaphore != NULL;
     }

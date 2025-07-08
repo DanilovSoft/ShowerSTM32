@@ -162,13 +162,19 @@ void PreInitPeripheral()
 }
 
 // Поток который инициализарует остальные потоки.
-static void InitialThread(void* parm)
+static void InitialTask(void* parm)
 {
     // Инициализируем шину I²C.
     g_i2cHelper.Init();
     
+#if DEBUG
     // Параметры прочитанные из EEPROM.
-    g_eepromHelper.DeserializeProperties(g_properties);   // Использует шину I²C.
+    g_eepromHelper.InitDefaults(g_properties);
+#else
+    // (!) тут зависнет если не подключена материнская плата.
+    g_eepromHelper.ReadProperties(g_properties);   // Использует шину I²C.
+#endif
+    
     g_properties.Initialized = true;
     
     // Инициализируем структуру актуальными значениями.
@@ -194,7 +200,7 @@ static void InitialThread(void* parm)
 }
 
 // Инициализирует I²C и записывает параметры из EEPROM в Property и завершается.
-InitializationTask initialization_task(InitialThread);
+InitializationTask initialization_task(InitialTask);
 
 int main(void)
 {

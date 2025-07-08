@@ -38,8 +38,8 @@ void Common::InitWaterLevel(const PropertyStruct* const properties)
     GPIO_Init(WL_GPIO_TIM, &gpio_init);
     GPIO_ResetBits(WL_GPIO_TIM, WL_GPIO_TIM_Pin);
     
-    const uint16_t prescaler = SystemCoreClock / 1000000 - 1;      // 1 микросекунда.
-    const uint16_t period = properties->WaterLevelEmpty + (usec_per_percent * 10);       // Диаппазон таймера с запасом на пару процентов.
+    const uint16_t prescaler = SystemCoreClock / 1000000 - 1; // 1 микросекунда.
+    const uint16_t period = kWaterLevelTimeoutDistanceCm * 57.5; // Диаппазон таймера с запасом на пару процентов.
     
     TIM_TimeBaseInitTypeDef base_timer =
     {
@@ -262,18 +262,26 @@ void Common::InitWaterLevelPeripheral()
 
     SPI_InitTypeDef spi_init_struct = 
     {
-        .SPI_Direction = SPI_Direction_1Line_Tx, // Только передача.
-        .SPI_Mode = SPI_Mode_Master, // Режим - мастер.
-        .SPI_DataSize = SPI_DataSize_16b, // Передаём по 16 бит.
-        .SPI_CPOL = SPI_CPOL_Low, // Полярность и
-        .SPI_CPHA = SPI_CPHA_1Edge, // фаза тактового сигнала.
-        .SPI_NSS = SPI_NSS_Soft, // Управлять состоянием сигнала NSS программно.
-        .SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2, // Предделитель SCK.
-        .SPI_FirstBit = SPI_FirstBit_MSB, // Первым отправляется старший бит.
+        .SPI_Direction = SPI_Direction_1Line_Tx,
+        // Только передача.
+        .SPI_Mode = SPI_Mode_Master,
+        // Режим - мастер.
+        .SPI_DataSize = SPI_DataSize_16b,
+        // Передаём по 16 бит.
+        .SPI_CPOL = SPI_CPOL_Low,
+        // Полярность и
+        .SPI_CPHA = SPI_CPHA_1Edge,
+        // фаза тактового сигнала.
+        .SPI_NSS = SPI_NSS_Soft,
+        // Управлять состоянием сигнала NSS программно.
+        .SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2,
+        // Предделитель SCK.
+        .SPI_FirstBit = SPI_FirstBit_MSB,
+        // Первым отправляется старший бит.
         .SPI_CRCPolynomial = 7
     };
-    SPI_Init(WL_SPI, &spi_init_struct);      // Настраиваем SPI.
-    SPI_Cmd(WL_SPI, ENABLE);                 // Включаем модуль SPI.
+    SPI_Init(WL_SPI, &spi_init_struct); // Настраиваем SPI.
+    SPI_Cmd(WL_SPI, ENABLE); // Включаем модуль SPI.
     SPI_NSSInternalSoftwareConfig(WL_SPI, SPI_NSSInternalSoft_Set);
 
     // LED LATCH.
@@ -331,7 +339,7 @@ void Common::InitUartPeripheral(const uint32_t memory_base_addr)
 
     // В методе USART_Init есть ошибка, подробности по ссылке
     // http://we.easyelectronics.ru/STM32/nastroyka-uart-v-stm32-i-problemy-dvoichno-desyatichnoy-arifmetiki.html
-    USART_Init(WIFI_USART, &uart_struct);     // Инициализируем UART.
+    USART_Init(WIFI_USART, &uart_struct); // Инициализируем UART.
         
     DMA_DeInit(WIFI_DMA_CH_RX);
     DMA_DeInit(WIFI_DMA_CH_TX);

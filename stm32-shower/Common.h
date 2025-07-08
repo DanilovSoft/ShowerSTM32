@@ -427,6 +427,22 @@ public:
     // Включает I²C.
     static void InitI2C();
     
+    inline static float Clamp(float value, float min, float max)
+    {
+        //Debug::Assert(max >= min);
+
+        if (value < min)
+        {
+            return min;
+        }
+        else if (value > max)
+        {
+            return max;
+        }
+
+        return value;
+    }
+    
 private:
     
     static void InnerInitPeripheral(const PropertyStruct* const properties)
@@ -447,4 +463,13 @@ private:
     static void InitLedLight(const PropertyStruct* const properties);
     static void InitButtons();
     static void InitValve();
+};
+
+enum SoundSensorTimerState : uint8_t
+{
+    UNKNOWN                 = 0,
+    WAITING_RISING_EDGE     = 1 << 0,
+    WAITING_FALLING_EDGE    = 1 << 1,
+    COMPLETED               = 1 << 2, // уловили нисходящий фронт ИЛИ произошло переполнение
+    OVERFLOW                = 1 << 3
 };

@@ -204,36 +204,36 @@ public:
     TempStep Chart;
     
     // Максимальный уровень воды в микросекундах (полный бак).
-    uint16_t WaterLevelFull;
+    uint16_t WaterLevelFull = 2 * 57.5; // мёртвая зона датчика = 2 см
     
     // Минимальный уровень воды в микросекундах (пустой бак).
-    uint16_t WaterLevelEmpty;
+    uint16_t WaterLevelEmpty = 100 * 57.5; // максимум датчика = 300 см
     
     // Минимальный уровень воды в баке (%) для включения нагревателя.
-    uint8_t MinimumWaterHeatingPercent;
+    uint8_t MinimumWaterHeatingPercent = 25;
     
     // Абсолютное время нагрева, (от 1 до 24ч.)
     // Если на протяжении заданного времени автомат нагревателя не был 
     // физически выключен, то нагрев прекращается и алгоритм переходит в аварийное состояние.
-    uint8_t AbsoluteHeatingTimeLimitHours;
+    uint8_t AbsoluteHeatingTimeLimitHours = 8;
     
     // Максимальное время нагрева в минутах.
     // Если на протяжении заданного времени не была достигнута желаемая температура воды в баке, 
     // то нагрев прекращается и алгоритм переходит в аварийное состояние.
-    uint8_t HeatingTimeLimitMin;
+    uint8_t HeatingTimeLimitMin = 90;
     
     // Яркость освещения от 0 до 100 (%).
-    uint8_t LightBrightness;
+    uint8_t LightBrightness = 100;
 
     // Мощность WiFi в единицах по 0.25 dBm.
     // От 40 до 82 (10..20.5 dBm)
-    uint8_t WiFiPower;
+    uint8_t WiFiPower = kDefaultWiFiPower;
     
     // Минимальное время зажатой кнопки для её срабатывания (антидребезг).
-    uint8_t ButtonPressTimeMsec;
+    uint8_t ButtonPressTimeMsec = 40;
     
     // Минимальное время зажатой кнопки для срабатывания длительного нажатия.
-    uint16_t ButtonLongPressTimeMsec;
+    uint16_t ButtonLongPressTimeMsec = 1500;
     
     // 64-битный идентификатор датчика температуры воды внутри бака. (DS18B20)
     uint8_t InternalTempSensorId[8] = { };
@@ -242,13 +242,13 @@ public:
     uint8_t ExternalTempSensorId[8] = { };
     
     // Объём воды полного бака в литрах.
-    float WaterTankVolumeLitre;
+    float WaterTankVolumeLitre = kDefaultWaterTankVolumeLitre;
     
     // Электрическая мощность нагревательного элемента — ТЭНа, кВТ.
-    float WaterHeaterPowerKWatt;
+    float WaterHeaterPowerKWatt = kDefaultWaterHeaterPowerKWatt;
     
     // Рекомендуют измерять не чаще 60мс что бы не получить эхо прошлого сигнала.
-    uint8_t WaterLevelMeasureIntervalMsec;
+    uint8_t WaterLevelMeasureIntervalMsec = 60;
         
     // Размер буфера медианного фильтра для сырых показаний датчика уровня воды.
     uint8_t WaterLevelMedianFilterSize;
@@ -256,14 +256,14 @@ public:
     // Размер буфера для усреднения показаний после медианного фильтра.
     uint8_t WaterLevelAvgFilterSize;
         
-    // Порог отключения клапана набора воды.
-    uint8_t WaterValveCutOffPercent;
+    // Порог отключения клапана набора воды (%).
+    uint8_t WaterValveCutOffPercent = 90;
         
     // Размер скользящего окна для температуры внутри бака.
-    uint8_t InternalTempAvgFilterSize;
+    uint8_t InternalTempAvgFilterSize = 4;
     
     // Число ошибок определения уровня воды, при достижении которого, на LED дисплее должны отобразиться прочерки.
-    uint8_t WaterLevelErrorThreshold;
+    uint8_t WaterLevelErrorThreshold = 50;
     
     void SelfFix()
     {
@@ -313,14 +313,15 @@ public:
     
     static uint16_t FixWaterLevelEmpty(const uint16_t water_level_empty)
     {
-        // В одном сантиметре - 58 микросекунд.
-        static const auto minimum = kTankMinimumHeightCm * 58;
-        static const auto maximum = kTankMaximumHeightCm * 58;
+        // В одном сантиметре - 57.5 микросекунд.
+        static const auto minimum = kTankMinimumHeightCm * 57.5;
+        static const auto maximum = kTankMaximumHeightCm * 57.5;
         
         if (water_level_empty < minimum || water_level_empty > maximum) 
         {
-            return round(kDefaultEmptyTankDistanceCm * 58);
+            return round(kDefaultEmptyTankDistanceCm * 57.5);
         }
+        
         return water_level_empty;
     }
     
@@ -332,6 +333,7 @@ public:
         {
             return round(kDefaultFullTankDistanceCm * 58);
         }
+        
         return water_level_full;
     }
     
@@ -341,6 +343,7 @@ public:
         {
             return kDefaultMinimumWaterHeatingPercent;
         }
+        
         return minimum_water_heating_percent;
     }
     
@@ -350,6 +353,7 @@ public:
         {
             return 70;
         }
+        
         return heating_time_limit_min;
     }
     
@@ -360,6 +364,7 @@ public:
         {
             return 100;
         }
+        
         return light_brightness;
     }
     
@@ -370,6 +375,7 @@ public:
         {
             return 6;
         }
+        
         return absolute_heating_time_limit_hours;
     }
     
@@ -380,6 +386,7 @@ public:
         {
             return kDefaultWiFiPower;
         }
+        
         return wifi_power;
     }
     
@@ -389,6 +396,7 @@ public:
         {
             return kDefaultWaterTankVolumeLitre;
         }
+        
         return water_tank_volume_litre;
     }
     
@@ -398,6 +406,7 @@ public:
         {
             return kDefaultWaterHeaterPowerKWatt;
         }
+        
         return water_heater_power_kwatt;
     }
     
@@ -419,6 +428,7 @@ public:
         {
             return 191;   // Лучше не чётное число.
         }
+        
         return water_level_median_filter_size;
     }
     
@@ -428,6 +438,7 @@ public:
         {
             return 30;
         }
+        
         return water_level_avg_filter_size;
     }
     
@@ -438,6 +449,7 @@ public:
         {
             return 90;
         }
+        
         return water_valve_cut_off_percent;
     }
     
@@ -447,6 +459,7 @@ public:
         {
             return 4;
         }
+        
         return internal_temp_avg_filter_size;
     }
     
@@ -457,6 +470,7 @@ public:
         {
             return 50;
         }
+        
         return water_level_error_threshold;
     }
     

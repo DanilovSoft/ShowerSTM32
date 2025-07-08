@@ -13,9 +13,18 @@ class EepromHelper final
 {	
 public:
 
-    void DeserializeProperties(PropertyWrapper& out_properties)
+    // Полезно использовать для отладки когда EEPROM не подключен
+    void InitDefaults(PropertyWrapper& out_properties)
     {
-        Debug::Assert(g_i2cHelper.GetInitialized());
+        g_writeProperties.SelfFix();
+    
+        // Копируем всю структуру.
+        out_properties = g_writeProperties;
+    }
+    
+    void ReadProperties(PropertyWrapper& out_properties)
+    {
+        Debug::Assert(g_i2cHelper.IsInitialized());
         
         while (!TryInitProperties())
         {

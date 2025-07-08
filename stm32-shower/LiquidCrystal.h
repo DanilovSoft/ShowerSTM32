@@ -20,7 +20,7 @@ public:
 
     void Init()
     {
-        Debug::Assert(g_i2cHelper.GetInitialized());
+        Debug::Assert(g_i2cHelper.IsInitialized());
     }
     
     /* When the display powers up, it is configured as follows:
