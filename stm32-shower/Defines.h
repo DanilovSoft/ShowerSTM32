@@ -92,7 +92,7 @@ static constexpr uint8_t kAirTempAvgFilterSize = 1;              // Максим
 static constexpr auto kAirTempSteps = kAirTempUpperBound - kAirTempLowerBound;    // Размер таблицы температур делаем исходя из возможных значений температур окружаюшего воздуха.
 static constexpr auto kTankMinimumHeightCm = 30;                 // Минимально возможная высота бака, см.
 static constexpr auto kTankMaximumHeightCm = 50;                 // Максимально возможная высота бака, см.
-static constexpr uint16_t kTempSensorPauseMsec = 2000;           // Пауза между измерениями температуры.
+static constexpr uint16_t kTempSensorPauseMsec = 5000;           // Пауза между измерениями температуры (менее 2 сек разогревают датчик)
 
 // Всего 8 блоков памяти по 256 байт (по 16 страниц).
 // Каждый блок имеет свой уникальный адрес как отдельное устройство,

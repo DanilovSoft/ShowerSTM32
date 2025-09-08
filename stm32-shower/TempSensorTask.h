@@ -303,12 +303,12 @@ private:
     
         while (!TryGetFirstTemps())
         {
-            Pause();
+            Cooldown();
         }
     
         while (true)
         {
-            Pause();
+            Cooldown();
             TryUpdateTemp();   
         }
     }
@@ -760,7 +760,7 @@ repeat:
         return false;
     }
 
-    void Pause()
+    void Cooldown()
     {
         vTaskDelay(kTempSensorPauseMsec / portTICK_PERIOD_MS);
     }
