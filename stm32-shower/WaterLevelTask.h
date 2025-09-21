@@ -76,15 +76,7 @@ public:
         DisplayLED(kADash, kBDash);
     }
     
-    //    void WaitInitialization()
-    //    {
-    //        while (!m_initialized)
-    //        {
-    //            taskYIELD();
-    //        }
-    //    }
-    
-        // Возвращает True если датчик, за последнее время, получил слишком много не валидных показаний.
+    // Возвращает True если датчик, за последнее время, получил слишком много не валидных показаний.
     bool GetIsError() volatile
     {
         return m_errorCounter >= g_properties.WaterLevelErrorThreshold;

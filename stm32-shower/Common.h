@@ -45,7 +45,18 @@ public:
     // Включен ли автомат нагревателя.
     static bool CircuitBreakerIsOn()
     {
-        return GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET;
+        auto isOn = GPIO_ReadInputDataBit(GPIO_MainPower, GPIO_Pin_MainPower) == RESET;
+        
+        if (isOn)
+        {
+            GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+        }
+        else
+        {
+            GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
+        }
+        
+        return isOn;
     }
 
     // Включен ли ТЭН (реле).
@@ -188,14 +199,12 @@ public:
     static void TurnOnHeater()
     {
         GPIO_SetBits(GPIO_Heater, GPIO_Pin_Heater);
-        GPIO_ResetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
     }
     
     // Выключает питание ТЭНа и тушит светодиод.
     static void TurnOffHeater()
     {
         GPIO_ResetBits(GPIO_Heater, GPIO_Pin_Heater);
-        GPIO_SetBits(GPIO_Heater_Led, GPIO_Heater_Led_Pin);
     }
     
     static uint8_t DigitsCount(uint16_t value)
