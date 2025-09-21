@@ -66,10 +66,10 @@
 // Делегат нажатия на кнопку.
 typedef bool(*ButtonPressedFunc)();
 
-static constexpr auto kDefaultEmptyTankDistanceCm = 75;//31.2414;     // Расстояние от датчика до дна пустого бака.
-static constexpr auto kDefaultFullTankDistanceCm = 2.0;          // Расстояние от датчика до воды при полном баке.
+static constexpr auto kDefaultEmptyTankDistanceCm = 50;          // Расстояние от датчика до дна пустого бака (см)
+static constexpr auto kDefaultFullTankDistanceCm = 2.0;          // Расстояние от датчика до воды при полном баке (см)
 static constexpr auto kDefaultWaterTankVolumeLitre = 37.32212;    
-static constexpr auto kWaterLevelTimeoutDistanceCm = 90;        // Настраиваем таймер на максимальное расстояние
+static constexpr auto kWaterLevelTimeoutDistanceCm = 100;        // Настраиваем таймер на максимальное расстояние (см)
 
 // Мощность WiFi в единицах по 0.25 dBm.
 // От 40 до 82 (10..20.5 dBm)

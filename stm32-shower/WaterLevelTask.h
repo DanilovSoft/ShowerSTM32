@@ -116,9 +116,6 @@ private:
     virtual void Run() override
     {
         vTaskDelay(510 / portTICK_PERIOD_MS); // DYP-A22 первые 500ms находится в режиме Modbus
-        
-        // Initialise the xLastWakeTime variable with the current time.
-        TickType_t xLastWakeTime = xTaskGetTickCount();
     
         // Хранит прошлое значение пунктов. Используется гистерезисом.
         InitDisplay();
@@ -126,6 +123,8 @@ private:
         // Уровень воды инициализирован.
         m_initialized = true;
     
+        auto xLastWakeTime = xTaskGetTickCount();
+        
         while (true)
         {
             // Пауза для затухания эха.
@@ -168,7 +167,7 @@ private:
 
             // Скопировать уровень воды в процентах в публичную переменную.
             m_percent = point; // volatile
-
+            
             // Отобразить на LED.
             TaskDisplayPercent(point);
                 
@@ -219,7 +218,7 @@ private:
     
     void InitDisplay()
     {
-        TickType_t xLastWakeTime = xTaskGetTickCount(); 
+        auto xLastWakeTime = xTaskGetTickCount(); 
         
         // Дать датчику эксклюзивное время на инициализацию 
         // И выполнить прогрев. (Почему-то сказывается при включенной оптимизации -O1 и выше).
@@ -327,71 +326,6 @@ private:
     
         return true;
     }
-    
-    // Функция предотвращает плавание показаний когда уровень воды неподвижен.
-    // Возвращает или point или last_point.
-//    uint8_t Hysteresis(uint8_t point, uint8_t last_point)
-//    {
-//        // На сколько пунктов изменился уровень воды.
-//        int16_t diff = (point - last_point);
-//    
-//        if (diff == 0)
-//        {
-//            return point;
-//        }
-//            
-//        if (m_waterIsRising)
-//        {
-//            // Считается что уровень воды увеличивается.
-//                    
-//            if (diff < 0)
-//            {
-//                // Вода начала убывать.
-//                            
-//                if (diff <= -kHysteresisPoints)
-//                {
-//                    // Уровень воды уменьшился более чем на 4 пункта.
-//                                    
-//                    // Считать что вода теперь убывает.
-//                    m_waterIsRising = false;
-//                }
-//                else
-//                {
-//                    // Уровень воды уменьшился не значительно.
-//                                    
-//                    // Возвращаем прошлое значение.
-//                    return last_point;
-//                }
-//            }
-//        }
-//        else
-//        {
-//            // Считается что уровень воды уменьшается.
-//                    
-//            if (diff > 0)
-//            {
-//                // Уровень воды начал увеличиваться.
-//                    
-//                if (diff >= kHysteresisPoints)
-//                {
-//                    // Уровень увеличился более чем на 4 пункта.
-//                            
-//                    // Считать что вода теперь прибывает.
-//                    m_waterIsRising = true;
-//                }
-//                else
-//                {
-//                    // Уровень воды увеличился не значительно.
-//                            
-//                    // Возвращаем прошлое значение.
-//                    return last_point;
-//                }
-//            }
-//        }
-//    
-//        // По умолчанию возвращаем без гистерезиса.
-//        return point;
-//    }
 
     // Trig на 10 микро секунд
     inline static void Trig()
@@ -415,8 +349,22 @@ private:
     // От 0 до 99.
     float TimeToPoints(uint16_t usec)
     {
-        // Уровень воды в микросекундах.
-        usec = m_usecRange - (usec - g_properties.WaterLevelFull);
+        if (usec < g_properties.WaterLevelFull)
+        {
+            return 99;
+        }
+        
+        // уровень воды в микросекундах
+        usec -= g_properties.WaterLevelFull;
+        
+        // если расстояние слишком большое
+        if (usec > m_usecRange)
+        {
+            return 0;
+        }
+        
+        // инвертируем значение
+        usec = m_usecRange - usec;
 
         // Сколько пунктов из 99
         float point = usec * m_pointsPerUsec;

@@ -207,7 +207,7 @@ public:
     uint16_t WaterLevelFull = 2 * 57.5; // мёртвая зона датчика = 2 см
     
     // Минимальный уровень воды в микросекундах (пустой бак).
-    uint16_t WaterLevelEmpty = 100 * 57.5; // максимум датчика = 300 см
+    uint16_t WaterLevelEmpty = 100 * 57.5;
     
     // Минимальный уровень воды в баке (%) для включения нагревателя.
     uint8_t MinimumWaterHeatingPercent = 25;
